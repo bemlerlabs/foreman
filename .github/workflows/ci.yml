@@ -1,0 +1,23 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build contract (wasm)
+        run: cargo build --release --target wasm32-unknown-unknown --manifest-path contracts/foreman/Cargo.toml
+      - name: Unit tests
+        run: cargo test --manifest-path contracts/foreman/Cargo.toml
+  placeholders:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Core import smoke
+        run: python3 -c "import sys; sys.path.insert(0,'core'); import foreman_core"

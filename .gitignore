@@ -1,0 +1,17 @@
+target/
+node_modules/
+.env
+.env.*
+!.env.example
+*.wasm
+!artifacts/*.wasm
+dist/
+.webpack/
+.next/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+neardev/
+credentials/
+*.json!package.json

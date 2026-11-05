@@ -1,0 +1,222 @@
+/// Foreman Escrow-Contract — v0-Skelett gemäß docs/SEQUENCE.md + RULES.md
+/// API: new · post_job · place_bid · counter_offer · award · attach_receipt · submit_work · accept · refund_expired · get_*
+/// Status: T0-Skelett. Phase-1-Härtung (Tests, Edge-Cases, Gas) erfolgt 06.11. — RULES.md ist verbindlich.
+use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
+use near_sdk::collections::LookupMap;
+use near_sdk::serde::{Deserialize, Serialize};
+use near_sdk::{env, near, require, AccountId, Balance, PanicOnDefault, Promise};
+
+pub type JobId = u64;
+pub const BID_WINDOW_SECONDS: u64 = 120;
+pub const FOREMAN_FEE_NUM: Balance = 10; // 10 % (RULES.md)
+pub const DENOM: Balance = 100;
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq)]
+pub enum JobState {
+    Open,
+    Bidding,
+    Awarded,
+    Delivered,
+    Accepted,
+    Refunded,
+    Expired,
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug)]
+pub struct Bid {
+    pub bidder: AccountId,
+    pub price: Balance,
+    pub eta_secs: u64,
+    pub rep_snapshot: u32,
+    pub placed_at: u64, // nanos
+}
+
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug)]
+pub struct Job {
+    pub id: JobId,
+    pub spec: String,
+    pub acceptance_criteria: Vec<String>,
+    pub budget: Balance,
+    pub deadline_nanos: u64,
+    pub created_by: AccountId,
+    pub state: JobState,
+    pub bids: Vec<Bid>,
+    pub counter_offer: Option<Bid>, // GENAU 1 erlaubt (07-Prompt-Regel)
+    pub winner: Option<AccountId>,
+    pub receipt_hash: Option<String>, // sha256 des signierten Ephemora-Execution-Reports
+    pub artifact_hash: Option<String>,
+}
+
+#[near(contract_state)]
+#[derive(PanicOnDefault)]
+pub struct Contract {
+    owner: AccountId,
+    treasury: AccountId,
+    foreman: AccountId,
+    jobs: LookupMap<JobId, Job>,
+    next_id: JobId,
+    reputation: LookupMap<AccountId, u32>, // 0..=100, Start 50
+}
+
+#[near]
+impl Contract {
+    #[init]
+    pub fn new(owner: AccountId, treasury: AccountId, foreman: AccountId) -> Self {
+        Self {
+            owner,
+            treasury,
+            foreman,
+            jobs: LookupMap::new(b"j".to_vec()),
+            next_id: 1,
+            reputation: LookupMap::new(b"r".to_vec()),
+        }
+    }
+
+    /// Owner postet Aufgabe; Escrow = angehängtes Deposit (>= budget).
+    #[payable]
+    pub fn post_job(&mut self, spec: String, acceptance_criteria: Vec<String>, deadline_nanos: u64) -> JobId {
+        let budget = env::attached_deposit();
+        require!(budget.0 > 0, "ESCROW_REQUIRED");
+        require!(env::predecessor_account_id == self.owner || env::predecessor_account_id == self.foreman, "ONLY_OWNER_OR_FOREMAN");
+        let id = self.next_id;
+        self.next_id += 1;
+        let job = Job {
+            id,
+            spec,
+            acceptance_criteria,
+            budget,
+            deadline_nanos,
+            created_by: env::predecessor_account_id(),
+            state: JobState::Bidding,
+            bids: vec![],
+            counter_offer: None,
+            winner: None,
+            receipt_hash: None,
+            artifact_hash: None,
+        };
+        self.jobs.insert(&id, &job);
+        env::log_str(&format!("foreman:job_opened|id={}|budget={}", id, budget.0));
+        id
+    }
+
+    /// Schwarm bietet; nur im Bietfenster, price <= budget, Signatur = Aufrufer (RULES.md).
+    #[payable]
+    pub fn place_bid(&mut self, job_id: JobId, price: Balance, eta_secs: u64) {
+        let mut job = self.get_job(job_id);
+        require!(job.state == JobState::Bidding, "NOT_BIDDING");
+        require!(
+            env::block_timestamp() < job.deadline_nanos && env::block_timestamp() - self.opened_at(job_id) < BID_WINDOW_SECONDS * 1_000_000_000,
+            "BID_WINDOW_CLOSED"
+        );
+        require!(price.0 > 0 && price.0 <= job.budget.0, "PRICE_RANGE");
+        let bidder = env::predecessor_account_id();
+        require!(!job.bids.iter().any(|b| b.bidder == bidder), "ALREADY_BID");
+        let rep = self.get_rep(bidder.clone());
+        job.bids.push(Bid { bidder, price, eta_secs, rep_snapshot: rep, placed_at: env::block_timestamp() });
+        self.jobs.insert(&job_id, &job);
+    }
+
+    /// Foreman platziert GENAU EINE begründete Gegenofferte.
+    pub fn counter_offer(&mut self, job_id: JobId, price: Balance, eta_secs: u64, reason: String) {
+        self.assert_foreman();
+        let mut job = self.get_job(job_id);
+        require!(job.state == JobState::Bidding, "NOT_BIDDING");
+        require!(job.counter_offer.is_none(), "ONLY_ONE_COUNTER");
+        require!(!reason.trim().is_empty(), "REASON_REQUIRED");
+        job.counter_offer = Some(Bid { bidder: env::predecessor_account_id(), price, eta_secs, rep_snapshot: 0, placed_at: env::block_timestamp() });
+        self.jobs.insert(&job_id, &job);
+    }
+
+    /// Zuschlag mit Score-Validierung: günstigster Preis, dann Rep, dann Reihenfolge.
+    pub fn award(&mut self, job_id: JobId) {
+        self.assert_foreman();
+        let mut job = self.get_job(job_id);
+        require!(job.state == JobState::Bidding, "NOT_BIDDING");
+        require!(!job.bids.is_empty(), "NO_BIDS");
+        let mut sorted = job.bids.clone();
+        sorted.sort_by(|a, b| a.price.cmp(&b.price).then(b.rep_snapshot.cmp(&a.rep_snapshot)).then(a.placed_at.cmp(&b.placed_at)));
+        job.winner = Some(sorted[0].bidder.clone());
+        job.state = JobState::Awarded;
+        self.jobs.insert(&job_id, &job);
+    }
+
+    /// Gewinner verankert Hash des signierten Ephemora-Execution-Reports (Pflicht vor submit_work).
+    pub fn attach_receipt(&mut self, job_id: JobId, receipt_hash: String) {
+        let job = self.get_job(job_id);
+        self.assert_winner(&job);
+        let mut job = job;
+        require!(job.state == JobState::Awarded, "NOT_AWARDED");
+        require!(!receipt_hash.trim().is_empty(), "RECEIPT_REQUIRED");
+        job.receipt_hash = Some(receipt_hash);
+        self.jobs.insert(&job_id, &job);
+    }
+
+    pub fn submit_work(&mut self, job_id: JobId, artifact_hash: String) {
+        let job = self.get_job(job_id);
+        self.assert_winner(&job);
+        let mut job = job;
+        require!(job.state == JobState::Awarded && job.receipt_hash.is_some(), "RECEIPT_BEFORE_SUBMIT");
+        job.artifact_hash = Some(artifact_hash);
+        job.state = JobState::Delivered;
+        self.jobs.insert(&job_id, &job);
+    }
+
+    /// Abnahme → Payout: 90 % Gewinner, 10 % Foreman-Fee; Reputation-Update.
+    pub fn accept(&mut self, job_id: JobId, delivery_score: u32) {
+        self.assert_foreman();
+        let mut job = self.get_job(job_id);
+        require!(job.state == JobState::Delivered, "NOT_DELIVERED");
+        let winner = job.winner.clone().expect("WINNER");
+        let fee = job.budget.0 * FOREMAN_FEE_NUM / DENOM;
+        let payout = job.budget.0 - fee;
+        Promise::new(winner.clone()).transfer(Balance(payout));
+        Promise::new(self.foreman.clone()).transfer(Balance(fee));
+        self.update_rep(winner.clone(), delivery_score.min(100));
+        job.state = JobState::Accepted;
+        self.jobs.insert(&job_id, &job);
+        env::log_str(&format!("foreman:paid|id={}|winner={}|payout={}|fee={}", job_id, winner, payout, fee));
+    }
+
+    /// Frist abgelaufen ohne Deliverable → Refund an Owner (permissionless Auslöser, Auszahlung nur an Owner).
+    pub fn refund_expired(&mut self, job_id: JobId) {
+        let mut job = self.get_job(job_id);
+        require!(job.state == JobState::Bidding || job.state == JobState::Awarded, "BAD_STATE");
+        require!(env::block_timestamp() > job.deadline_nanos + 60_000_000_000, "NOT_EXPIRED");
+        Promise::new(job.created_by.clone()).transfer(job.budget);
+        if let Some(w) = job.winner.clone() {
+            self.update_rep(w, 0);
+        }
+        job.state = JobState::Refunded;
+        self.jobs.insert(&job_id, &job);
+    }
+
+    // ---- Views ----
+    pub fn get_job(&self, job_id: JobId) -> Job {
+        self.jobs.get(&job_id).expect("JOB_NOT_FOUND")
+    }
+    pub fn get_bids(&self, job_id: JobId) -> Vec<Bid> {
+        self.get_job(job_id).bids
+    }
+    pub fn get_rep(&self, agent: AccountId) -> u32 {
+        self.reputation.get(&agent).unwrap_or(50)
+    }
+
+    // ---- internal helpers ----
+    fn opened_at(&self, job_id: JobId) -> u64 {
+        // vereinfacht: Deadline-Fenster relativ zur Eröffnung; Phase 1 ersetzt dies durch Job.created_at
+        // (T0-Skelett-Hinweis: Feld folgt in Phase-1-Härtung)
+        let job = self.get_job(job_id);
+        job.deadline_nanos.saturating_sub(3_600_000_000_000)
+    }
+    fn assert_foreman(&self) {
+        require!(env::predecessor_account_id == self.foreman, "ONLY_FOREMAN");
+    }
+    fn assert_winner(&self, job: &Job) {
+        require!(job.winner.as_deref() == Some(env::predecessor_account_id().as_ref()), "ONLY_WINNER");
+    }
+    fn update_rep(&mut self, agent: AccountId, score: u32) {
+        let old = self.get_rep(agent.clone());
+        let new = (old * 9 + score) / 10; // gleitend (RULES.md)
+        self.reputation.insert(&agent, &new);
+    }
+}
