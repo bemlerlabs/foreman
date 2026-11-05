@@ -1,0 +1,40 @@
+{
+  "name": "foreman",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Foreman — eine Aufgabe rein, gelieferte Arbeit raus, abgerechnet in echtem Geld. NEAR HACKATHON 2026. core/intents: Intents Agent API Treasury-Loop (dry:true zuerst).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "quote-demo": "tsx core/intents/cli/quote-demo.ts",
+    "execute-demo": "tsx core/intents/cli/execute-demo.ts",
+    "policy-status": "tsx core/intents/cli/policy-status.ts",
+    "policy:create": "tsx core/intents/sign-policy.ts create",
+    "policy:update": "tsx core/intents/sign-policy.ts update",
+    "policy:submit": "tsx core/intents/sign-policy.ts submit",
+    "grant:prepare": "tsx core/intents/grant-prepare.ts",
+    "owner:sign": "tsx core/intents/owner-sign-helper.ts",
+    "typecheck": "tsc --noEmit -p core/intents/tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bemlerlabs/foreman.git"
+  },
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/bemlerlabs/foreman/issues"
+  },
+  "homepage": "https://github.com/bemlerlabs/foreman#readme",
+  "dependencies": {
+    "@near-intents-agent-api/sdk": "^0.7.3",
+    "dotenv": "^18.0.9",
+    "near-api-js": "^7.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}
