@@ -45,11 +45,11 @@ INIT_ARGS=$(printf '{"owner":"%s","treasury":"%s","foreman":"%s"}' \
 
 cd contracts/foreman
 # cargo-near 0.22 Transaction-Builder-Kette: deploy(build) -> init new() -> prepaid-gas -> network -> sign -> send.
-# Gas/Deposit als rohe Zahlen (100 TGas = 100000000000000 yocto-Gas), um Parser-Formate zu vermeiden.
-cargo near deploy build-non-reproducible-wasm "$CONTRACT_ACCOUNT" \
+# Formate: Gas als "N TGas", Deposit mit Token-Unit ("0NEAR") — cargo-near-Parser verlangt Units (T1-Deploy verifiziert).
+cargo near deploy build-non-reproducible-wasm --no-abi "$CONTRACT_ACCOUNT" \
   with-init-call new json-args "$INIT_ARGS" \
-  prepaid-gas 100000000000000 \
-  attached-deposit 0 \
+  prepaid-gas "100 TGas" \
+  attached-deposit "0NEAR" \
   network-config testnet \
   sign-with-keychain send
 

@@ -29,3 +29,7 @@ Format: Datum | Phase | Behauptung | Artefakt (Tx-ID/Explorer/Pfad/Log) | Status
 | 2026-11-05 | phase3 | bidding-Adapter grün: 12/12 pytest (Bid-Range, Cap-Wurf, eta=Pakete×8s, Jitter, Replay-Determinismus) | core/bidding/tests/test_supernova_adapter.py · `23 passed in 0.04s` (23 = bidding+reputation, Runner supernova-venv Py3.12) | ✅ |
 | 2026-11-05 | phase3 | reputation-Parität: 11/11 pytest, (old*9+score)//10 gegen Contract-Referenz + Handanker 50→55→49→44 | core/reputation/tests/test_kepta_hook.py · Commits 12d120c/96f5d6a | ✅ |
 | 2026-11-05 | phase3 | Supernova real importierbar über Adapter (build_swarm_graph+TaskInput, SUPERNOVA_PATH=/Users/sanji/supernova) — T3-Real-Lauf nur noch Provider-Key-abhängig; Mock ist Demo-Fallback | stdout-Beleg + core/bidding/supernova_adapter.py::RealSupernovaEngine | ✅ |
+| 2026-11-05 | T1 | Contract LIVE auf Testnet: escrow.foreman-team.testnet | cargo-near deploy grün; code_hash Ej3Yk3q8XJbbzGJFdfx2Ue5UoPkqjTQyWCu4WU81NZgZ; near state bestätigt | ✅ |
+| 2026-11-05 | T1 | On-chain Identität: deployed == phase1.1-Build | sha256-base58(target/near/foreman.wasm)==code_hash — MATCH (Verifikation 14:52) | ✅ |
+| 2026-11-05 | T1 | Live-View-Call funktioniert | near view get_rep(agent1.foreman-team.testnet) → 50 | ✅ |
+| 2026-11-05 | T1 | Init-Schutz greift | Re-Init → "already been initialized"; Code-Update via without-init-call | ✅ |
