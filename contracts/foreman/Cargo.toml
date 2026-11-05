@@ -8,13 +8,8 @@ publish = false
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-near-sdk = "4.1.1"
-
-[dev-dependencies]
-near-workspaces = { version = "0.14", optional = true }
-
-[features]
-workspaces = ["near-workspaces"]
+near-sdk = "5"
+serde = { version = "1", features = ["derive"] }
 
 [profile.release]
 codegen-units = 1
