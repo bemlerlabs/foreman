@@ -194,6 +194,7 @@ impl Contract {
     /// Gewinner verankert Hash des signierten Ephemora-Execution-Reports (Pflicht vor submit_work).
     pub fn attach_receipt(&mut self, job_id: JobId, receipt_hash: String) {
         let mut job = self.get_job(job_id);
+        // security: identity check precedes state check
         self.assert_winner(&job);
         require!(job.state == JobState::Awarded, "NOT_AWARDED");
         require!(!receipt_hash.trim().is_empty(), "RECEIPT_REQUIRED");
@@ -214,8 +215,13 @@ impl Contract {
     }
 
     /// Abnahme → Payout: 90 % Gewinner, 10 % Foreman-Fee; Reputation-Update (RULES.md).
+    /// RULES-Konform (Lead-Entscheid 05.11.): Owner ODER Foreman dürfen abnehmen.
     pub fn accept(&mut self, job_id: JobId, delivery_score: u32) {
-        self.assert_foreman();
+        let caller = env::predecessor_account_id();
+        require!(
+            caller == self.owner || caller == self.foreman,
+            "ONLY_OWNER_OR_FOREMAN"
+        );
         let mut job = self.get_job(job_id);
         require!(job.state == JobState::Delivered, "NOT_DELIVERED");
         let winner = job.winner.clone().expect("WINNER");

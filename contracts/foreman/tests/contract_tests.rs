@@ -526,16 +526,27 @@ fn deliver_one(c: &mut Contract) -> u64 {
 }
 
 #[test]
-fn accept_only_foreman() {
+fn accept_rejects_third_party() {
     let mut c = init();
     let job = deliver_one(&mut c);
     expect_panic(
         || {
-            ctx(T0 + 4 * SEC, &owner(), 0);
+            ctx(T0 + 4 * SEC, &agent(9), 0);
             c.accept(job, 80);
         },
-        "ONLY_FOREMAN",
+        "ONLY_OWNER_OR_FOREMAN",
     );
+}
+
+/// RULES-Konformität (Lead-Entscheid 05.11.): Owner darf selbst abnehmen.
+#[test]
+fn accept_by_owner_ok() {
+    let mut c = init();
+    let job = deliver_one(&mut c);
+    ctx(T0 + 4 * SEC, &owner(), 0);
+    c.accept(job, 90);
+    assert_eq!(c.get_job(job).state, JobState::Accepted);
+    assert_eq!(c.get_rep(agent(1)), 54, "sliding avg (50*9+90)/10");
 }
 
 #[test]
