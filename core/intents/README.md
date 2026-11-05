@@ -61,6 +61,15 @@ Das Treasury ist **ein** Konto über die [NEAR Intents Agent API](https://api.ag
 | `INTENTS_GRANT_TOKEN` | für execute | `ngt_…` aus `grant:prepare`-Store. |
 | `INTENTS_TIMELOCK_MS` | nein | Policy-Timelock, Default 60 000 ms. |
 
+## Admissions-Budget (Quota-Disziplin)
+
+**Admission budget: never regenerate the agent within a demo run, reuse grant.** Jede `generate-intent`-Agent-Erstellung
+zählt als Agent-Admission (100/24 h, Demo-Deploy-Baseline 2026-11-05 21:20: 5/100 verbraucht, Rest 95 — siehe
+EVIDENCE_LOG) und ist NICHT erstattungsfähig. Innerhalb einer Demo-Runde gilt daher: Agent genau EINMAL anlegen
+(`policy:create` einmalig), dann alle Aktionen über denselben `agent_id` + wiederverwendeten Grant
+(`grant:prepare`, Token in `.state/grants/`) fahren. `policy:create` niemals in Schleifen/Automation aufrufen —
+der Onchain-Key-Precheck bremst zwar, ersetzt aber nicht diese Regel.
+
 ## Sicherheit — Non-Negotiables (RULES.md §Sicherheit)
 
 1. **Secrets:** `.env` (chmod 600, gitignored) enthält `INTENTS_API_KEY`, `ONECLICK_JWT` u. a. — dieser
