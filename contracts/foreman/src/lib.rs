@@ -5,7 +5,7 @@ use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::store::LookupMap;
 use near_sdk::NearToken;
-use near_sdk::{env, near, require, AccountId, PanicOnDefault, Promise};
+use near_sdk::{env, near, require, AccountId, NearSchema, PanicOnDefault, Promise};
 
 pub type JobId = u64;
 pub const BID_WINDOW_SECONDS: u64 = 120;
@@ -14,8 +14,11 @@ pub const DENOM: u128 = 100;
 /// Gas-Disziplin (Phase 1): hartes Bid-Limit je Job — keine unbounded Vec-Loops.
 pub const MAX_BIDS: usize = 20;
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq)]
+#[derive(
+    BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, NearSchema,
+)]
 #[borsh(crate = "near_sdk::borsh")]
+#[abi(json)] // NEP-330 ABI (phase1.2): JsonSchema-Impl bei __abi-generate
 pub enum JobState {
     Open,
     Bidding,
@@ -26,8 +29,9 @@ pub enum JobState {
     Expired,
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, NearSchema)]
 #[borsh(crate = "near_sdk::borsh")]
+#[abi(json)] // NEP-330 ABI (phase1.2)
 pub struct Bid {
     pub bidder: AccountId,
     pub price: NearToken,
@@ -36,8 +40,9 @@ pub struct Bid {
     pub placed_at: u64, // nanos
 }
 
-#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug)]
+#[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, NearSchema)]
 #[borsh(crate = "near_sdk::borsh")]
+#[abi(json)] // NEP-330 ABI (phase1.2)
 pub struct Job {
     pub id: JobId,
     pub spec: String,
