@@ -35,6 +35,15 @@ Jede Zeile ist 1:1 ausführbar. Status: ✅ = verifiziert in docs/EVIDENCE_LOG.m
 | **Fix** | rustup-Pfad prüfen (s. PREREQUISITES); dev-dependency `near-sdk = { features = ["unit-testing"] }` muss gesetzt sein (bereits in Cargo.toml) |
 | **Status** | ⏳ (Tests geschrieben, Artefakt fehlt noch — EVIDENCE T1) |
 
+### 1.5 — Contract-Deploy per cargo-near (Phase-1.5, Konten aus Schritt 2 vorausgesetzt)
+| | |
+|---|---|
+| **Do** | `cd contracts/foreman && cargo near deploy testnet --id escrow.foreman-team.testnet --key-path ~/.near-credentials/testnet/escrow.foreman-team.testnet.json` (baut wasm selbst, cargo-near 0.22.0) |
+| **See** | `Deploy done` + `near state escrow.foreman-team.testnet --networkId testnet | grep code_hash` → `"code_hash": "<64-stellig>"` auf **escrow.foreman-team.testnet** |
+| **Fehlerbild** | `key not found` / `wasm preparation failed` |
+| **Fix** | Schritt 2 (Kaltstart) erneut laufen lassen (idempotent); Build-Target wasm32 + Profile opt-level-z laut Cargo.toml prüfen |
+| **Status** | ⏳ (T1.5-Gate vor Voll-Demo) |
+
 ### 2 — Kaltstart: 8 Testnet-Konten
 | | |
 |---|---|
@@ -81,7 +90,7 @@ Jede Zeile ist 1:1 ausführbar. Status: ✅ = verifiziert in docs/EVIDENCE_LOG.m
 | **supernova** | Schwarm-Runtime der 5 Bieter | Apache-2.0 | Tag `pre-hackathon` (26.04.2026), verifiziert EVIDENCE T0; {SUP_TAG_HASH} |
 | **ephemora-cell** | Sandbox-Ausführung + signierte Receipts | Apache-2.0 | Tag `pre-hackathon` (30.08.2026); {EPH_TAG_HASH} |
 | **kepta** | Reputation-Snapshots (`rep_snapshot_hash`) | MIT | Tag `pre-hackathon` (26.09.2026); {KEP_TAG_HASH} |
-| dieses Repo | NEAR-Integration: Contract, Coordinator-Logik, Bietboard, Intents/Treasury-Anbindung, Agent-Market-Hiring | Apache-2.0 | judged wird **ausschließlich** die Fenster-Integration; TODO vor Freeze: `package.json` license-Feld `ISC` → `Apache-2.0` korrigieren |
+| dieses Repo | NEAR-Integration: Contract, Coordinator-Logik, Bietboard, Intents/Treasury-Anbindung, Agent-Market-Hiring | Apache-2.0 | judged wird **ausschließlich** die Fenster-Integration; `package.json` license-Feld = Apache-2.0 (korrigiert per docs-prep license fix) |
 
 **Q-003 Diff-Referenz:** Baseline-Tags `pre-hackathon` + Finalstand `hackathon-submission` je Repo. Diff dieses Repos: `{BASELINE_SCAFFOLD_HASH}…{HACKATHON_SUBMISSION_HASH}` (`git log --oneline pre-hackathon..hackathon-submission` als Anhang im Evidence-Log).
 
