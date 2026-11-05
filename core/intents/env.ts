@@ -84,7 +84,15 @@ export function treasuryConfig() {
     /** NICHT drucken, NICHT loggen. Nur client.ts liest das für den X-API-Key-Header. */
     apiKey,
     agentId: env("INTENTS_AGENT_ID"),
-    ownerAccount: env("OWNER_ACCOUNT"),
+    // Intents-Flow liest bewusst die MAINNET-Variante (API-Netz=mainnet). OWNER_ACCOUNT
+    // (testnet) gehört zu den Deploy-Skripten — hier NICHT stillschweigend verwenden:
+    // Fallback nur, wenn er erkennbar kein Testnet-Konto ist.
+    ownerAccount:
+      env("OWNER_ACCOUNT_MAINNET") ??
+      (() => {
+        const legacy = env("OWNER_ACCOUNT");
+        return legacy && !legacy.endsWith(".testnet") ? legacy : undefined;
+      })(),
     /** ed25519:… — der Key, mit dem der Mensch den Intent signiert (agent_create braucht ihn). */
     ownerPublicKey: env("OWNER_PUBLIC_KEY"),
     nearRpcMainnet: env("NEAR_RPC_MAINNET") ?? "https://free.rpc.fastnear.com",

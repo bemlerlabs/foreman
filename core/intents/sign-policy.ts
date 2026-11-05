@@ -134,6 +134,7 @@ export async function createAgent(
     );
   }
   await assertQuotaHeadroom(client(), true);
+  await assertOwnerKeyOnChain(cfg, owner, publicKey);
   const policy = buildTreasuryPolicy(cfg);
   console.log("Vorgeschlagene Foreman-Treasury-Policy:");
   console.log(redactJson(policySummary(policy)));
@@ -143,6 +144,53 @@ export async function createAgent(
     owner: { type: "near", account_id: owner, public_key: publicKey },
     policy,
   }, "agent-create");
+}
+
+/**
+ * Onchain-Vorprüfung, damit der Mensch NICHT umsonst signiert: NEP-366-Delegate werden von
+ * der API gegen den Access-Key des Owner-Kontos auf MAINNET validiert. Fehlt OWNER_PUBLIC_KEY
+ * als Access-Key auf dem Konto (z.B. Meteor-Key läuft noch ein), schlägt submit fehl — wir
+ * warnen vor dem Generieren und sparen den Signier-Klick.
+ */
+async function assertOwnerKeyOnChain(
+  cfg: ReturnType<typeof treasuryConfig>,
+  owner: string,
+  publicKey: string,
+): Promise<void> {
+  if (process.argv.includes("--skip-key-precheck")) {
+    console.warn("WARNUNG: Onchain-Key-Vorprüfung per Flag übersprungen.");
+    return;
+  }
+  try {
+    const res = await fetch(cfg.nearRpcMainnet, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        id: "foreman-precheck",
+        method: "query",
+        params: { request_type: "view_access_key_list", account_id: owner, finality: "final" },
+      }),
+      signal: AbortSignal.timeout(15_000),
+      redirect: "error",
+    });
+    const doc = (await res.json()) as { result?: { keys?: Array<{ public_key: string }> }; error?: unknown };
+    const keys = (doc.result?.keys ?? []).map((k) => k.public_key);
+    if (keys.length === 0) {
+      console.warn("Hinweis: keine Access-Keys auf dem Owner-Konto sichtbar (RPC-Ansicht leer) — Vorprüfung unentschieden.");
+      return;
+    }
+    if (!keys.includes(publicKey)) {
+      throw new Error(
+        `OWNER_PUBLIC_KEY ist (noch) kein Access-Key von ${owner} auf mainnet — Signatur würde bei submit als owner_signature_invalid/nonce-Fehler abgewiesen. ` +
+          "Warte bis der Wallet-Key in 'near keys' auftaucht (Meteor-Einlauf abwarten) oder --skip-key-precheck bewusst nutzen.",
+      );
+    }
+    console.log(`Precheck ok: OWNER_PUBLIC_KEY ist Access-Key von ${owner} (mainnet, ${keys.length} Keys gesamt).`);
+  } catch (err) {
+    if (err instanceof Error && err.message.includes("kein Access-Key")) throw err;
+    console.warn(`Vorprüfung nicht möglich (RPC-Fehler ${String((err as Error)?.name ?? "?")}): fahre fort — submit validiert ohnehin.`);
+  }
 }
 
 /** policy_update: liest Revision, baut Policy neu, erwartet Owner-Signatur. */
