@@ -11,6 +11,11 @@ crate-type = ["cdylib", "rlib"]
 near-sdk = "5"
 serde = { version = "1", features = ["derive"] }
 
+[dev-dependencies]
+# near-sdk 5 guard: Host-Targets (cargo test) brauchen das unit-testing-Feature
+# (MockedBlockchain / env::test_utils). Standard-Pattern aus den near-sdk-Examples.
+near-sdk = { version = "5", features = ["unit-testing"] }
+
 [profile.release]
 codegen-units = 1
 opt-level = "z"
