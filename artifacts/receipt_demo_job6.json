@@ -1,0 +1,31 @@
+{
+  "alg": "ES256",
+  "cell_signature": "3045022100aee9e94b96062ca628ea680ba1088e8dfb6873e08377d5834017ef9bd001714202207274eacf9437447061c646acbac41b01ed36e8df23b6aaa79ebe49f08dba64d1",
+  "record": {
+    "status": "SUCCESS",
+    "exit_code": 0,
+    "elapsed_ms": 263.56,
+    "fuel_consumed": 3136034,
+    "fuel_budget": 50000000,
+    "fuel_utilization": 0.0627,
+    "memory_mb": 128.0,
+    "stdout_bytes": 60,
+    "stderr_bytes": 257,
+    "warnings": [],
+    "security_baseline": {
+      "wasmtime_version": "47.0.1",
+      "memory_limit_bytes": 134217728,
+      "fuel": 1000000,
+      "threads_enabled": false,
+      "memory64": false,
+      "multi_memory": false,
+      "preopens": []
+    }
+  },
+  "egress_log_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "artifact_hash": "2166b8a2729ba4a5ed07c79438ce669f07ac564108256b23a6c135ca6a2041d0",
+  "wasm_sha256": "f629a84c5ebceeca55e7fe63b63c1fa90221bf8d05989b7b6b4754539bfde654",
+  "public_key_pem": "-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEo+uT3NJTwYyZjZvWjO+y7EOBzpoB\n+44CbyUjN5xnJceqqMvfL+Cjn4vq0wc2rhfajQO+IsCFKcLo+KQRXq1xxg==\n-----END PUBLIC KEY-----\n",
+  "stdout": "{\"max_ms\":301.2,\"mean_ms\":99.88,\"p50_ms\":55.1,\"packages\":5}\n",
+  "stderr": "error while executing at wasm backtrace:\n    0:  0xac550 - <unknown>!runtime.exit\n    1:  0xb936a - <unknown>!runtime.main\n    2: 0x140c38 - <unknown>!wasm_pc_f_loop\n    3: 0x140cf4 - <unknown>!_rt0_wasm_wasip1\n\nCaused by:\n    Exited with i32 exit status 0\n"
+}
