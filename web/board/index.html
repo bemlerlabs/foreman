@@ -3,127 +3,204 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FOREMAN — Biet-Board · escrow.foreman-team.testnet</title>
+<title>FOREMAN · Biet-Board — escrow.foreman-team.testnet</title>
+<link rel="preconnect" href="https://rsms.me/"><link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <style>
-  :root{
-    --bg:#0b0e14; --panel:#121826; --panel2:#0e1522; --line:#1f2a40;
-    --txt:#e8edf6; --mut:#8b98b0; --acc:#4fd1c5; --gold:#f6c945; --red:#f3727f;
-    --green:#5ee6a8;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--txt);font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
-       font-size:clamp(16px,1.25vw,24px);padding:28px 36px;min-height:100vh}
-  header{display:flex;align-items:center;gap:22px;margin-bottom:26px}
-  header h1{font-size:clamp(26px,2.4vw,44px);letter-spacing:.06em;font-weight:700}
-  header h1 b{color:var(--acc)}
-  .live{display:flex;align-items:center;gap:10px;font-size:clamp(14px,1.1vw,20px);color:var(--mut);text-transform:uppercase;letter-spacing:.14em}
-  .dot{width:14px;height:14px;border-radius:50%;background:var(--green);animation:pulse 1.2s ease-in-out infinite}
-  .dot.off{background:var(--red);animation:none}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(94,230,168,.7)}50%{box-shadow:0 0 0 12px rgba(94,230,168,0)}}
-  .net{margin-left:auto;color:var(--mut);font-size:clamp(12px,.9vw,16px);text-align:right;line-height:1.5}
-  .grid{display:grid;grid-template-columns:1.05fr 1.45fr 1.1fr;grid-template-rows:auto auto;gap:20px}
-  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
-        border-radius:16px;padding:22px 26px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
-  .card h2{font-size:clamp(13px,1vw,17px);text-transform:uppercase;letter-spacing:.18em;color:var(--mut);margin-bottom:14px}
-  .job .spec{font-size:clamp(18px,1.55vw,30px);line-height:1.35;font-weight:600}
-  .meta{display:flex;gap:26px;margin-top:16px;flex-wrap:wrap}
-  .kpi{display:flex;flex-direction:column;gap:4px}
-  .kpi .v{font-size:clamp(22px,1.9vw,36px);font-weight:700}
-  .kpi .l{color:var(--mut);font-size:clamp(11px,.85vw,14px);text-transform:uppercase;letter-spacing:.12em}
-  .countdown .v{color:var(--gold);font-variant-numeric:tabular-nums}
-  .badge{display:inline-block;padding:4px 14px;border-radius:999px;font-size:clamp(12px,.95vw,16px);
-         font-weight:700;letter-spacing:.08em;border:1px solid var(--line)}
-  .bidding{color:var(--acc);border-color:var(--acc)} .awarded{color:var(--gold);border-color:var(--gold)}
-  .accepted{color:var(--green);border-color:var(--green)} .refunded,.expired{color:var(--red);border-color:var(--red)}
-  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-  th{color:var(--mut);text-transform:uppercase;font-size:clamp(11px,.85vw,14px);letter-spacing:.12em;
-     text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600}
-  td{padding:10px;border-bottom:1px solid #182338;font-size:clamp(15px,1.2vw,22px)}
-  tr.winner td{background:rgba(94,230,168,.07)}
-  tr.winner td:first-child{border-left:4px solid var(--green);border-radius:4px}
-  .price{font-weight:700;color:var(--acc)} .usd{color:var(--mut);font-size:.75em;white-space:nowrap}
-  .rank{color:var(--mut);width:2.2em}
-  .reason{font-style:italic;color:var(--txt);line-height:1.45;margin-top:8px}
-  .hash{font-family:ui-monospace,Menlo,monospace;font-size:clamp(13px,1vw,17px);color:var(--gold);
-        word-break:break-all;background:#0a0f1a;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:6px}
-  .row{display:flex;flex-direction:column;gap:4px;margin-top:12px}
-  .lbl{color:var(--mut);text-transform:uppercase;font-size:clamp(11px,.85vw,14px);letter-spacing:.12em}
-  .ok{color:var(--green)} .no{color:var(--red)}
-  a{color:var(--acc);text-decoration:none;word-break:break-all}
-  a:hover{text-decoration:underline}
-  .empty{color:var(--mut);font-style:italic;padding:18px 6px}
-  .repmove b{font-size:clamp(26px,2.2vw,40px);color:var(--green)}
-  .demo-tag{background:var(--red);color:#0b0e14;font-weight:800;padding:4px 12px;border-radius:8px;
-            font-size:clamp(12px,.95vw,15px);letter-spacing:.1em}
-  footer{margin-top:22px;color:var(--mut);font-size:clamp(11px,.85vw,14px);display:flex;gap:24px;flex-wrap:wrap}
+/* FOREMAN Biet-Board — Design-System siehe docs/DESIGN.md (phase4.3).
+   Handgeschriebenes CSS, Custom Properties, 8px-Grid, EIN Akzent-Grün + EIN Amber. */
+:root{
+  --base:#0A0C10; --s1:#0E1116; --s2:#12161D; --s3:#171C25;
+  --hairline:rgba(255,255,255,.06); --hairline-strong:rgba(255,255,255,.10);
+  --t1:#F2F4F8; --t2:#9AA3B2; --t3:#5C6472;
+  --accent:#37D399; --amber:#F2B84B; --danger:#E5695F;
+  --ease:160ms ease-out;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+@media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} }
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{background:var(--base);color:var(--t1);font-family:"Inter","Inter var","SF Pro Text","Segoe UI",system-ui,sans-serif;
+     font-size:clamp(14px,1.05vw,18px);line-height:1.45;padding:20px 40px 16px;min-height:100vh}
+body::before{content:"";position:fixed;inset:0;background:
+  radial-gradient(60% 50% at 15% 0%, rgba(55,211,153,.045), transparent 70%),
+  radial-gradient(50% 40% at 90% 10%, rgba(242,184,75,.03), transparent 70%);pointer-events:none}
+.num{font-variant-numeric:tabular-nums}
+
+/* ---------- Header ---------- */
+header{display:flex;align-items:center;gap:16px;margin-bottom:16px;position:relative}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:26px;height:26px;color:var(--accent)}
+.brand h1{font-size:clamp(18px,1.5vw,24px);font-weight:650;letter-spacing:.14em}
+.brand h1 span{color:var(--t2);font-weight:500;letter-spacing:.02em;margin-left:10px;font-size:.72em}
+.live{display:flex;align-items:center;gap:10px;margin-left:16px;font-size:11px;font-weight:600;
+      letter-spacing:.14em;text-transform:uppercase;color:var(--t2)}
+.dotwrap{position:relative;width:8px;height:8px}
+.dot{position:absolute;inset:0;border-radius:50%;background:var(--t3)}
+.dot.on{background:var(--accent)}
+.dot.on::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--accent);
+  animation:ping 2s ease-out infinite}
+.dot.off{background:var(--danger)}
+@keyframes ping{0%{transform:scale(1);opacity:.35}70%,100%{transform:scale(2.6);opacity:0}}
+.demo-tag{display:none;background:rgba(229,105,95,.12);color:var(--danger);border:1px solid rgba(229,105,95,.35);
+  font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;padding:4px 10px;border-radius:6px}
+.net{margin-left:auto;text-align:right;font-size:11px;color:var(--t3);letter-spacing:.04em;line-height:1.6}
+
+/* ---------- Grid ---------- */
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;position:relative}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 40%),var(--s1);
+      border:1px solid var(--hairline);border-radius:12px;padding:18px 24px}
+.card h2{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.12em;
+         text-transform:uppercase;color:var(--t2);margin-bottom:16px}
+.card h2 svg{width:14px;height:14px;color:var(--t3);flex:none}
+.c-job{grid-column:1/8}.c-counter{grid-column:8/13}.c-bids{grid-column:1/8}
+.c-receipt{grid-column:8/13}.c-result{grid-column:1/8}.c-ops{grid-column:8/13}
+
+/* ---------- Job (dominant) ---------- */
+.spec{font-size:clamp(22px,2vw,34px);font-weight:650;line-height:1.25;letter-spacing:-.01em;max-width:56ch}
+.jobmeta{display:flex;align-items:center;gap:32px;margin-top:20px}
+.kpi .v{font-size:clamp(22px,1.8vw,32px);font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.kpi .l{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-top:4px}
+.kpi.money .v{color:var(--amber)}
+.ringwrap{position:relative;width:72px;height:72px;flex:none}
+.ringwrap svg{width:72px;height:72px;transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:var(--s3);stroke-width:3}
+.ring-fg{fill:none;stroke:var(--amber);stroke-width:3;stroke-linecap:round;
+         stroke-dasharray:175.9;stroke-dashoffset:175.9;transition:stroke-dashoffset .95s linear}
+.ring-fg.closed{stroke:var(--t3)}
+#countdown{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.pill{display:inline-flex;align-items:center;gap:8px;background:var(--s3);border:1px solid var(--hairline);
+      border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--t2)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--t3)}
+.pill.bidding::before,.pill.accepted::before{background:var(--accent)}
+.pill.awarded::before{background:var(--amber)}
+.pill.refunded::before,.pill.expired::before{background:var(--danger)}
+.crit{margin-top:16px;border-top:1px solid var(--hairline);padding-top:12px;font-size:.9em;color:var(--t2)}
+.crit div{padding:2px 0}
+.crit li{list-style:none;display:flex;gap:10px;align-items:baseline}
+.crit li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--t3);flex:none;transform:translateY(-2px)}
+
+/* ---------- Bid-Wand ---------- */
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);
+   text-align:left;padding:8px 12px;border-bottom:1px solid var(--hairline-strong)}
+td{padding:8px 12px;border-bottom:1px solid var(--hairline);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.acct{font-family:var(--mono);font-size:.92em;white-space:normal;word-break:break-all}
+tr:last-child td{border-bottom:none}
+tr.win td{background:var(--s2)}
+tr.win td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+.rank{color:var(--t3);width:2.5em;font-weight:600}
+.price{color:var(--amber);font-weight:650}
+.usd{color:var(--t3);font-size:.85em;font-weight:400;margin-left:6px}
+.trophy{width:14px;height:14px;color:var(--accent);vertical-align:-2px;margin-left:8px}
+.eta{color:var(--t2)}.rep{color:var(--t2);font-weight:600}
+.empty{color:var(--t3);font-style:italic;padding:16px 4px}
+
+/* ---------- Counter ---------- */
+.co-head{font-variant-numeric:tabular-nums}
+.co-head b{color:var(--amber);font-weight:650;font-size:1.15em}
+.co-who{color:var(--t3);font-family:var(--mono);font-size:.85em}
+.reason{margin-top:12px;color:var(--t1);line-height:1.55;font-style:italic;
+        border-left:2px solid var(--hairline-strong);padding-left:14px}
+.src{margin-top:12px;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--t3)}
+
+/* ---------- Receipt ---------- */
+.fld{margin-top:12px}
+.resfields{display:flex;gap:48px;flex-wrap:wrap}
+.resfields .fld{flex:1;min-width:220px}
+.fld:first-of-type{margin-top:0}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-bottom:8px}
+.hash{font-family:var(--mono);font-size:13px;line-height:1.5;color:var(--t1);background:var(--s2);
+      border:1px solid var(--hairline);border-radius:8px;padding:10px 12px;word-break:break-all}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.mono{font-family:var(--mono);font-size:.92em;color:var(--t2)}
+
+/* ---------- Ergebnis ---------- */
+.res{display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap;margin-bottom:4px}
+.res .kpi .v.big{font-size:clamp(24px,2vw,36px)}
+.acctname{font-family:var(--mono);font-size:clamp(15px,1.2vw,20px);color:var(--t1);word-break:break-all}
+.rep b{color:var(--accent);font-weight:650}
+@media (max-height:1120px){.foot{display:none}}
+.foot{margin-top:24px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+      border-top:1px solid var(--hairline);padding-top:16px;font-size:11px;color:var(--t3);
+      letter-spacing:.04em}
 </style>
 </head>
 <body>
 <header>
-  <h1><b>FOREMAN</b> · Biet-Board</h1>
-  <div class="live"><span id="dot" class="dot"></span><span id="liveLbl">live</span></div>
-  <span id="demoTag" class="demo-tag" style="display:none">DEMO-MODUS</span>
-  <div class="net" id="netInfo">RPC: —</div>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M12 8v8M8 12h8" opacity=".6"/></svg>
+    <h1>FOREMAN<span>Biet-Board · escrow.foreman-team.testnet</span></h1>
+  </div>
+  <div class="live"><span class="dotwrap"><span id="dot" class="dot"></span></span><span id="liveLbl">verbinde</span></div>
+  <span id="demoTag" class="demo-tag">Demo-Modus</span>
+  <div class="net" id="netInfo">RPC —</div>
 </header>
 
 <div class="grid">
-  <section class="card job" id="jobCard">
-    <h2>1 · Job</h2>
+  <section class="card c-job">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>1 · Job</h2>
     <div class="spec" id="jobSpec">…</div>
-    <div class="meta">
-      <div class="kpi"><span class="v" id="budget">—</span><span class="l">Budget (NEAR-Cent)</span></div>
-      <div class="kpi countdown"><span class="v" id="countdown">--:--</span><span class="l" id="cdLbl">Bid-Fenster</span></div>
-      <div class="kpi"><span class="badge" id="stateBadge">—</span><span class="l">Status</span></div>
+    <div class="jobmeta">
+      <div class="kpi money"><div class="v" id="budget">—</div><div class="l">Budget · NEAR-Cent</div></div>
+      <div>
+        <div class="ringwrap">
+          <svg viewBox="0 0 64 64"><circle class="ring-bg" cx="32" cy="32" r="28"/><circle id="countdownRing" class="ring-fg" cx="32" cy="32" r="28"/></svg>
+          <span id="countdown" class="num">--:--</span>
+        </div>
+        <div class="l" id="cdLbl" style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-top:6px;text-align:center">Bid-Fenster</div>
+      </div>
+      <div><span class="pill" id="stateBadge">—</span><div class="l" style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-top:6px;text-align:center">Status</div></div>
     </div>
-    <div class="row"><span class="lbl">Abnahmekriterien</span><div id="criteria" class="empty">—</div></div>
+    <div class="crit"><div class="lbl">Abnahmekriterien</div><div id="criteria"><li class="empty">—</li></div></div>
   </section>
 
-  <section class="card" id="bidsCard">
-    <h2>2 · Live-Bid-Wand</h2>
+  <section class="card c-counter">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M5 7l7-4 7 4M7 21h10"/></svg>3 · Gegenofferte <span style="text-transform:none;letter-spacing:.02em;color:var(--t3)">— genau eine, begründet</span></h2>
+    <div id="counterBody" class="empty">keine Gegenofferte</div>
+  </section>
+
+  <section class="card c-bids">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>2 · Live-Bid-Wand</h2>
     <table>
       <thead><tr><th></th><th>Bieter</th><th>Preis</th><th>ETA</th><th>Rep</th></tr></thead>
       <tbody id="bidsBody"><tr><td colspan="5" class="empty">warte auf Bids …</td></tr></tbody>
     </table>
   </section>
 
-  <section class="card" id="counterCard">
-    <h2>3 · Gegenofferte (genau eine, begründet)</h2>
-    <div id="counterBody" class="empty">keine Gegenofferte</div>
+  <section class="card c-receipt">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"/><path d="M9 7h6M9 11h6"/></svg>4 · Ephemora-Receipt</h2>
+    <div class="fld"><div class="lbl">receipt_hash · Execution-Report</div><div class="hash" id="receiptHash">—</div></div>
+    <div class="fld"><div class="lbl">artifact_hash</div><div class="hash" id="artifactHash">—</div></div>
+    <div class="fld"><div class="lbl">Verifizieren</div><div id="explorerLink" class="empty">kein tx hash</div></div>
   </section>
 
-  <section class="card" id="receiptCard">
-    <h2>4 · Ephemora-Receipt</h2>
-    <div class="row"><span class="lbl">receipt_hash (Execution-Report)</span>
-      <div class="hash" id="receiptHash">—</div></div>
-    <div class="row"><span class="lbl">artifact_hash</span>
-      <div class="hash" id="artifactHash">—</div></div>
-    <div class="row"><span class="lbl">Verifizieren</span>
-      <div id="explorerLink" class="empty">kein tx hash</div></div>
-  </section>
-
-  <section class="card" id="resultCard">
-    <h2>5 · Ergebnis</h2>
-    <div class="meta">
-      <div class="kpi"><span class="v" id="winner">—</span><span class="l">Gewinner</span></div>
-      <div class="kpi"><span class="v" id="payout" style="color:var(--green)">—</span><span class="l">Payout (NEAR-Cent)</span></div>
-      <div class="kpi repmove"><span class="v" id="repMove">—</span><span class="l">Rep-Move (Formel (old·9+score)/10)</span></div>
+  <section class="card c-result">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5"/><path d="M13.5 12.5 20 19M16 4a5 5 0 0 1 4 8"/></svg>5 · Ergebnis</h2>
+    <div class="res">
+      <div class="kpi"><div class="acctname" id="winner">—</div><div class="l">Gewinner</div></div>
+      <div class="kpi money"><div class="v big" id="payout">—</div><div class="l">Payout · NEAR-Cent</div></div>
+      <div class="kpi rep"><div class="v big" id="repMove">—</div><div class="l">Rep-Move · (old·9+score)/10</div></div>
     </div>
-    <div class="row"><span class="lbl">Foreman-Fee 10 % → Foreman-Konto</span><div id="feeLine" class="empty">—</div></div>
-    <div class="row"><span class="lbl">Payout-tx (nearblocks.io)</span><div id="payoutTxLink" class="empty">—</div></div>
+    <div class="resfields">
+      <div class="fld"><div class="lbl">Foreman-Fee 10 % → Foreman-Konto</div><div class="mono" id="feeLine">—</div></div>
+      <div class="fld"><div class="lbl">Payout-tx · nearblocks.io</div><div id="payoutTxLink" class="empty">—</div></div>
+    </div>
   </section>
 
-  <section class="card" id="opsCard">
-    <h2>Betrieb</h2>
-    <div class="row"><span class="lbl">Contract</span><div id="contractLbl">—</div></div>
-    <div class="row"><span class="lbl">Letzter Poll</span><div id="lastPoll">—</div></div>
-    <div class="row"><span class="lbl">RPC-Kette</span><div id="rpcChain">—</div></div>
+  <section class="card c-ops">
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h4l3-7 4 14 3-7h6"/></svg>Betrieb</h2>
+    <div class="fld"><div class="lbl">Contract</div><div class="mono" id="contractLbl">—</div></div>
+    <div class="fld"><div class="lbl">Letzter Poll</div><div class="mono num" id="lastPoll">—</div></div>
+    <div class="fld"><div class="lbl">RPC-Kette</div><div class="mono" id="rpcChain">—</div></div>
   </section>
 </div>
-<footer>
-  <span>NEAR HACKATHON 2026 · foreman (escrow-Contract einzige Geld-Autorität)</span>
-  <span>RPC: test.rpc.fastnear.com → rpc.testnet.near.org</span>
-  <span>Preise in NEAR-Cent · $-Schätzung @ 2,50 $/NEAR</span>
-</footer>
+
+<div class="foot">
+  <span>NEAR HACKATHON 2026 · escrow-Contract als einzige Geld-Autorität · Bid-Fenster 120 s · Counter genau einer</span>
+  <span>Preise in NEAR-Cent · $-Schätzung @ 2,50 $/NEAR · Design: docs/DESIGN.md</span>
+</div>
 <script src="board.js"></script>
 </body>
 </html>

@@ -161,34 +161,38 @@
   }
 
   var lastJob = null;
+  var TROPHY = "<svg class='trophy' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' aria-label='Gewinner'><path d='M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4Z'/><path d='M7 6H4a3 3 0 0 0 3 5M17 6h3a3 3 0 0 1-3 5'/></svg>";
+  var RING_C = 2 * Math.PI * 28; // r=28 in index.html
+
   function render(job) {
     lastJob = job;
     el("jobSpec").textContent = job.spec || "—";
     el("budget").textContent = cents(job.budget);
     var badge = el("stateBadge");
     badge.textContent = job.state || "—";
-    badge.className = "badge " + stateClass(job.state);
-    el("criteria").innerHTML = (job.acceptance_criteria || []).map(function (c) {
-      return "<div>• " + escapeHtml(c) + "</div>";
-    }).join("") || "—";
+    badge.className = "pill " + stateClass(job.state);
+    el("criteria").innerHTML = (job.acceptance_criteria || []).length
+      ? (job.acceptance_criteria || []).map(function (c) { return "<li>" + escapeHtml(c) + "</li>"; }).join("")
+      : "<li class='empty'>—</li>";
 
     var bids = sortBids(job.bids);
     el("bidsBody").innerHTML = bids.length
       ? bids.map(function (b, i) {
           var win = job.winner && b.bidder === job.winner;
-          return "<tr class='" + (win ? "winner" : "") + "'>" +
+          return "<tr class='" + (win ? "win" : "") + "'>" +
             "<td class='rank'>" + (i + 1) + "</td>" +
-            "<td>" + escapeHtml(b.bidder) + (win ? " 🏆" : "") + "</td>" +
-            "<td><span class='price'>" + cents(b.price) + " ¢</span> <span class='usd'>≈ " + usd(b.price) + " $</span></td>" +
-            "<td>" + b.eta_secs + " s</td><td>" + b.rep_snapshot + "</td></tr>";
+            "<td class='acct'>" + escapeHtml(b.bidder) + (win ? TROPHY : "") + "</td>" +
+            "<td><span class='price'>" + cents(b.price) + " ¢</span><span class='usd'>≈ " + usd(b.price) + " $</span></td>" +
+            "<td class='eta'>" + b.eta_secs + " s</td><td class='rep'>" + b.rep_snapshot + "</td></tr>";
         }).join("")
       : "<tr><td colspan='5' class='empty'>warte auf Bids …</td></tr>";
 
     var co = job.counter_offer;
     el("counterBody").innerHTML = co
-      ? "<div><b>" + cents(co.price) + " ¢ · ETA " + co.eta_secs + " s</b> <span class='usd'>≈ " + usd(co.price) + " $</span> <span class='usd'>— " + escapeHtml(co.bidder) + "</span></div>" +
+      ? "<div class='co-head'><b>" + cents(co.price) + " ¢</b> · ETA " + co.eta_secs + " s <span class='usd'>≈ " + usd(co.price) + " $</span></div>" +
+        "<div class='co-who'>" + escapeHtml(co.bidder) + "</div>" +
         "<div class='reason'>„" + escapeHtml(job.counter_reason || COUNTER_REASONS[job.id] || "—") + "“</div>" +
-        "<div class='lbl' style='margin-top:8px'>" + escapeHtml(job._reasonSource || "Begründung off-chain (Foreman-Log) · on-chain erzwungen: genau ein Counter") + "</div>"
+        "<div class='src'>" + escapeHtml(job._reasonSource || "Begründung off-chain (Foreman-Log) · on-chain erzwungen: genau ein Counter") + "</div>"
       : "<div class='empty'>keine Gegenofferte</div>";
 
     el("receiptHash").textContent = job.receipt_hash || "— noch nicht verankert";
@@ -196,7 +200,7 @@
     var tx = job.tx_payout || job.tx_example || null;
     el("explorerLink").innerHTML = tx
       ? "<a href='" + EXPLORER + (tx.hash || tx) + "' target='_blank' rel='noopener'>" +
-        escapeHtml(tx.label || "Transaction") + ": " + String(tx.hash || tx).slice(0, 24) + "…</a>"
+        escapeHtml(tx.label || "Transaction") + " ↗</a>"
       : "<span class='empty'>kein tx hash</span>";
 
     el("winner").textContent = job.winner || "—";
@@ -205,9 +209,10 @@
     var ptx = job.tx_payout;
     el("payoutTxLink").innerHTML = ptx
       ? "<a href='" + EXPLORER + (ptx.hash || ptx) + "' target='_blank' rel='noopener'>" +
-        escapeHtml(ptx.label || "Payout-tx") + ": " + String(ptx.hash || ptx).slice(0, 24) + "…</a>"
+        escapeHtml(ptx.label || "Payout-tx") + " ↗</a>"
       : "<span class='empty'>—</span>";
     renderRep(job);
+    tickCountdown(); // Sofort-Update nach Datenwechsel
   }
 
   function payoutCents(job) {
@@ -224,23 +229,37 @@
     rm.innerHTML = old + " <b>→</b> " + job._repNow;
   }
 
-  setInterval(function () { // 1-Sekunden-Countdown
+  function tickCountdown() { // dezenter Ring + mm:ss, 1-s-Tick
     if (!lastJob) return;
     var nowNs = BigInt(Date.now()) * 1000000n;
+    var ring = el("countdownRing");
     var openLike = lastJob.state === "Bidding" || lastJob.state === "Open";
+    var frac = 0, msLeft = 0;
     if (openLike) {
-      var endNs = BigInt(lastJob.opened_at || 0) + BigInt(BID_WINDOW_SECONDS) * 1000000000n;
+      var winNs = BigInt(BID_WINDOW_SECONDS) * 1000000000n;
+      var endNs = BigInt(lastJob.opened_at || 0) + winNs;
+      msLeft = Number(endNs - nowNs) / 1e6;
+      frac = Math.max(0, Math.min(1, Number(winNs - (nowNs - BigInt(lastJob.opened_at || 0))) / Number(winNs)));
       el("cdLbl").textContent = nowNs >= endNs ? "Bid-Fenster geschlossen" : "Bid-Fenster";
-      el("countdown").textContent = fmtCountdown(Number(endNs - nowNs) / 1e6);
     } else {
       var dl = BigInt(lastJob.deadline_nanos || 0);
+      var total = Number(dl - BigInt(lastJob.opened_at || 0)) || 1;
+      msLeft = Number(dl - nowNs) / 1e6;
+      frac = Math.max(0, Math.min(1, msLeft / total));
       el("cdLbl").textContent = "Deadline";
-      el("countdown").textContent = (dl && nowNs < dl) ? fmtCountdown(Number(dl - nowNs) / 1e6) : "abgelaufen";
     }
-  }, 1000);
+    el("countdown").textContent = fmtCountdown(msLeft);
+    if (ring) {
+      ring.style.strokeDashoffset = String(RING_C * (1 - frac));
+      ring.classList.toggle("closed", msLeft <= 0);
+    }
+  }
+  setInterval(tickCountdown, 1000);
 
   function setLive(on) {
-    el("dot").classList.toggle("off", !on);
+    var d = el("dot");
+    d.classList.toggle("on", !!on);
+    d.classList.toggle("off", !on);
     el("liveLbl").textContent = on ? "live" : "demo";
     el("demoTag").style.display = on ? "none" : "inline-block";
   }
