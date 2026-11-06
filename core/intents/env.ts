@@ -59,9 +59,12 @@ export function treasuryConfig() {
       "INTENTS_API_KEY fehlt (naa_… aus partners.near-intents.org). Nur in .env oder Prozessumgebung setzen — niemals ins Repo.",
     );
   }
-  if (!apiKey.startsWith("naa_")) {
-    // Format-Check ohne Werte-Ausgabe — schützt vor Tippfehlern, leakt nichts.
-    throw new ConfigError("INTENTS_API_KEY hat kein naa_-Präfix — bitte aus dem Partner-Dashboard kopieren.");
+  // Formate: klassischer naa_-Partner-Key ODER JWT aus dem Partner-Portal (eyJ…, Portal-Migration 06.11.2026).
+  // Format-Check ohne Werte-Ausgabe — schützt vor Tippfehlern, leakt nichts; redact() maskiert beide Muster.
+  if (!apiKey.startsWith("naa_") && !apiKey.startsWith("eyJ")) {
+    throw new ConfigError(
+      "INTENTS_API_KEY hat kein erkennbares Format (naa_… oder Portal-JWT eyJ…) — bitte aus dem Partner-Portal kopieren.",
+    );
   }
 
   const executeGate = env("AGENT_EXECUTE") === "true"; // Default false, streng "true".
