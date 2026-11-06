@@ -96,11 +96,34 @@
     return JSON.parse(new TextDecoder().decode(bytes));
   }
 
+  // Sidecar (web/board/sidecar/job<N>.json, optional): payout_tx/-label für Explorer-Links,
+  // counter_reason als Fallback bis der Contract-View get_counter_reason läuft (task-5).
+  // 404/Netzfehler ⇒ null, Panel verhält sich wie ohne Sidecar.
+  function mergeSidecar(job, sidecar, reasonView) {
+    if (!job) return job;
+    if (sidecar && typeof sidecar === "object") {
+      if (sidecar.payout_tx) job.tx_payout = { hash: sidecar.payout_tx, label: sidecar.payout_tx_label || "Payout-tx" };
+      if (sidecar.tx_example) job.tx_example = sidecar.tx_example;
+    }
+    if (reasonView) {
+      job.counter_reason = String(reasonView);
+      job._reasonSource = "on-chain: get_counter_reason(job=" + job.id + ") live";
+    } else if (sidecar && sidecar.counter_reason) {
+      job.counter_reason = String(sidecar.counter_reason);
+      job._reasonSource = "Sidecar · Contract-View get_counter_reason noch nicht erreichbar";
+    } else if (!job.counter_reason) {
+      job._reasonSource = "Begründung off-chain (Foreman-Log) · on-chain erzwungen: genau ein Counter";
+    } else {
+      job._reasonSource = "off-chain";
+    }
+    return job;
+  }
+
   // ---------------- Browser-Boot (kopfüber geschützt für Node-Validierung) ----------------
   if (typeof document === "undefined" || typeof fetch === "undefined") {
     if (typeof module !== "undefined" && module.exports) {
       module.exports = { cents: cents, usd: usd, fmtCountdown: fmtCountdown, stateClass: stateClass,
-                         sortBids: sortBids, decodeResult: decodeResult, MOCK_JOB: MOCK_JOB };
+                         sortBids: sortBids, decodeResult: decodeResult, mergeSidecar: mergeSidecar, MOCK_JOB: MOCK_JOB };
     }
     return;
   }
@@ -164,8 +187,8 @@
     var co = job.counter_offer;
     el("counterBody").innerHTML = co
       ? "<div><b>" + cents(co.price) + " ¢ · ETA " + co.eta_secs + " s</b> <span class='usd'>≈ " + usd(co.price) + " $</span> <span class='usd'>— " + escapeHtml(co.bidder) + "</span></div>" +
-        "<div class='reason'>„" + escapeHtml(co.reason || COUNTER_REASONS[job.id] || "Begründung im Foreman-Log (on-chain: price/ETA, nur 1 Counter erlaubt)") + "“</div>" +
-        "<div class='lbl' style='margin-top:8px'>Begründung off-chain (Foreman-Log) · on-chain erzwungen: genau ein Counter</div>"
+        "<div class='reason'>„" + escapeHtml(job.counter_reason || COUNTER_REASONS[job.id] || "—") + "“</div>" +
+        "<div class='lbl' style='margin-top:8px'>" + escapeHtml(job._reasonSource || "Begründung off-chain (Foreman-Log) · on-chain erzwungen: genau ein Counter") + "</div>"
       : "<div class='empty'>keine Gegenofferte</div>";
 
     el("receiptHash").textContent = job.receipt_hash || "— noch nicht verankert";
@@ -179,6 +202,11 @@
     el("winner").textContent = job.winner || "—";
     el("payout").textContent = job.winner ? payoutCents(job) + " ¢" : "—";
     el("feeLine").textContent = job.winner ? "10 % von " + payoutCents(job) + " ¢ an Foreman-Konto" : "—";
+    var ptx = job.tx_payout;
+    el("payoutTxLink").innerHTML = ptx
+      ? "<a href='" + EXPLORER + (ptx.hash || ptx) + "' target='_blank' rel='noopener'>" +
+        escapeHtml(ptx.label || "Payout-tx") + ": " + String(ptx.hash || ptx).slice(0, 24) + "…</a>"
+      : "<span class='empty'>—</span>";
     renderRep(job);
   }
 
@@ -217,19 +245,45 @@
     el("demoTag").style.display = on ? "none" : "inline-block";
   }
 
+  // Sidecar + Counter-View: defensiv, pro Job nur einmal, Fehler ⇒ null (Panel wie früher)
+  var _sidecarCache = {}, _reasonCache = {}, _reasonTried = {};
+  function loadSidecar(jobId) {
+    if (_sidecarCache[jobId] !== undefined) return Promise.resolve(_sidecarCache[jobId]);
+    return fetch("sidecar/job" + jobId + ".json", { cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (s) { _sidecarCache[jobId] = s; return s; });
+  }
+  function loadCounterReason(jobId) {
+    if (_reasonTried[jobId]) return Promise.resolve(_reasonCache[jobId]);
+    return viewWithFallback("get_counter_reason", { job_id: jobId })
+      .then(function (v) { return (typeof v === "string" && v) ? v : (v && v.reason) ? String(v.reason) : null; })
+      .catch(function () { return null; })   // View (task-5) noch nicht deployed → fehlbar, ok
+      .then(function (r) { _reasonTried[jobId] = true; _reasonCache[jobId] = r; return r; });
+  }
+
   function poll() {
     if (MOCK) {
-      var m = JSON.parse(JSON.stringify(MOCK_JOB));
-      m._repNow = MOCK_JOB.rep_now;
-      setLive(false);
-      render(m);
-      el("lastPoll").textContent = new Date().toLocaleTimeString() + " (mock-Snapshot Job " + m.id + ")";
-      el("contractLbl").textContent = CONTRACT + " · job " + m.id + " (mock)";
+      Promise.all([loadSidecar(MOCK_JOB.id), loadCounterReason(MOCK_JOB.id)]).then(function (res) {
+        var m = JSON.parse(JSON.stringify(MOCK_JOB));
+        m._repNow = MOCK_JOB.rep_now;
+        mergeSidecar(m, res[0], res[1]);
+        setLive(false);
+        render(m);
+        el("lastPoll").textContent = new Date().toLocaleTimeString() + " (mock-Snapshot Job " + m.id + ")";
+        el("contractLbl").textContent = CONTRACT + " · job " + m.id + " (mock)";
+      });
       return;
     }
-    viewWithFallback("get_job", { job_id: JOB_ID }).then(function (job) {
+    Promise.all([
+      viewWithFallback("get_job", { job_id: JOB_ID }),
+      loadSidecar(JOB_ID),
+      loadCounterReason(JOB_ID)
+    ]).then(function (res) {
+      var job = res[0];
       if (!job || typeof job !== "object" || job.id === undefined) { MOCK = true; setLive(false); return poll(); }
       setLive(true);
+      mergeSidecar(job, res[1], res[2]);
       render(job);
       el("lastPoll").textContent = new Date().toLocaleTimeString();
       el("contractLbl").textContent = CONTRACT + " · job " + JOB_ID;
@@ -246,6 +300,6 @@
 
   if (typeof module !== "undefined" && module.exports) {
     module.exports = { cents: cents, usd: usd, fmtCountdown: fmtCountdown, stateClass: stateClass,
-                       sortBids: sortBids, decodeResult: decodeResult, MOCK_JOB: MOCK_JOB };
+                       sortBids: sortBids, decodeResult: decodeResult, mergeSidecar: mergeSidecar, MOCK_JOB: MOCK_JOB };
   }
 })();

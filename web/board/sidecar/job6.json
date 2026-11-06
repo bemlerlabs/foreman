@@ -1,0 +1,6 @@
+{
+  "_kommentar": "Sidecar für Job 6 (near-feasibility kann hier überschreiben). counter_reason: Fallback bis Contract-View get_counter_reason (task-5) live ist — dann gewinnt automatisch der Onchain-Text. payout_tx: ECHTE Testnet-tx (Job-2-Refund) als Mechanismus-Nachweis, bis der Job-6-Payout-tx-Hash geliefert wird.",
+  "counter_reason": "Bestbid 13,66 ¢ erfüllt #1–#3, aber Budget-Disziplin (RULES: ≤ 3 $): Gegenofferte 12,30 ¢ (−10 %) bei unveränderter ETA — Annahme durch Bieter steht frei.",
+  "payout_tx": "CQ16asmJWmz1GWx1FqHGfTQcxAZXhdBbrnoTKV3X5LLN",
+  "payout_tx_label": "Testnet-tx (echt): Job-2-Refund — Platzhalter bis Job-6-Payout-tx von near-feasibility"
+}
