@@ -88,7 +88,7 @@ Jede Zeile ist 1:1 ausführbar. Status: ✅ = verifiziert in docs/EVIDENCE_LOG.m
 |---|---|---|---|
 | **ephe** (Agent-Host) | Foreman-Host (lokal) | BUSL-1.1 | **nur lokal demonstriert, nicht verteilt/deployed**; {EPHE_REPO}@{EPHE_TAG} / {EPHE_HASH} |
 | **supernova** | Schwarm-Runtime der 5 Bieter | Apache-2.0 | Tag `pre-hackathon` (26.04.2026), verifiziert EVIDENCE T0; {SUP_TAG_HASH} |
-| **ephemora-cell** | Sandbox-Ausführung + signierte Receipts | Apache-2.0 | Tag `pre-hackathon` (30.08.2026); {EPH_TAG_HASH}; pip-installierbare Dependency des Receipt-Adapters (`core/receipts/`, Worker-Bau via package-eigenem Go→wasip1-Builder) |
+| **ephemora-cell** | Sandbox-Ausführung + signierte Receipts | Apache-2.0 | **Produkt des Co-Founders**, von uns als Standard-Infra genutzt (auch in ephe); Tag `pre-hackathon` (30.08.2026); {EPH_TAG_HASH}; pip-installierbare Dependency des Receipt-Adapters (`core/receipts/`, Worker-Bau via package-eigenem Go→wasip1-Builder) |
 | **kepta** | Reputation-Snapshots (`rep_snapshot_hash`) | MIT | Tag `pre-hackathon` (26.09.2026); {KEP_TAG_HASH} |
 | dieses Repo | NEAR-Integration: Contract, Coordinator-Logik, Bietboard, Intents/Treasury-Anbindung, Agent-Market-Hiring | Apache-2.0 | judged wird **ausschließlich** die Fenster-Integration; `package.json` license-Feld = Apache-2.0 (korrigiert per docs-prep license fix) |
 
