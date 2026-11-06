@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOREMAN — Biet-Board · escrow.foreman-team.testnet</title>
+<style>
+  :root{
+    --bg:#0b0e14; --panel:#121826; --panel2:#0e1522; --line:#1f2a40;
+    --txt:#e8edf6; --mut:#8b98b0; --acc:#4fd1c5; --gold:#f6c945; --red:#f3727f;
+    --green:#5ee6a8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
+       font-size:clamp(16px,1.25vw,24px);padding:28px 36px;min-height:100vh}
+  header{display:flex;align-items:center;gap:22px;margin-bottom:26px}
+  header h1{font-size:clamp(26px,2.4vw,44px);letter-spacing:.06em;font-weight:700}
+  header h1 b{color:var(--acc)}
+  .live{display:flex;align-items:center;gap:10px;font-size:clamp(14px,1.1vw,20px);color:var(--mut);text-transform:uppercase;letter-spacing:.14em}
+  .dot{width:14px;height:14px;border-radius:50%;background:var(--green);animation:pulse 1.2s ease-in-out infinite}
+  .dot.off{background:var(--red);animation:none}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(94,230,168,.7)}50%{box-shadow:0 0 0 12px rgba(94,230,168,0)}}
+  .net{margin-left:auto;color:var(--mut);font-size:clamp(12px,.9vw,16px);text-align:right;line-height:1.5}
+  .grid{display:grid;grid-template-columns:1.05fr 1.45fr 1.1fr;grid-template-rows:auto auto;gap:20px}
+  .card{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);
+        border-radius:16px;padding:22px 26px;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .card h2{font-size:clamp(13px,1vw,17px);text-transform:uppercase;letter-spacing:.18em;color:var(--mut);margin-bottom:14px}
+  .job .spec{font-size:clamp(18px,1.55vw,30px);line-height:1.35;font-weight:600}
+  .meta{display:flex;gap:26px;margin-top:16px;flex-wrap:wrap}
+  .kpi{display:flex;flex-direction:column;gap:4px}
+  .kpi .v{font-size:clamp(22px,1.9vw,36px);font-weight:700}
+  .kpi .l{color:var(--mut);font-size:clamp(11px,.85vw,14px);text-transform:uppercase;letter-spacing:.12em}
+  .countdown .v{color:var(--gold);font-variant-numeric:tabular-nums}
+  .badge{display:inline-block;padding:4px 14px;border-radius:999px;font-size:clamp(12px,.95vw,16px);
+         font-weight:700;letter-spacing:.08em;border:1px solid var(--line)}
+  .bidding{color:var(--acc);border-color:var(--acc)} .awarded{color:var(--gold);border-color:var(--gold)}
+  .accepted{color:var(--green);border-color:var(--green)} .refunded,.expired{color:var(--red);border-color:var(--red)}
+  table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+  th{color:var(--mut);text-transform:uppercase;font-size:clamp(11px,.85vw,14px);letter-spacing:.12em;
+     text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);font-weight:600}
+  td{padding:10px;border-bottom:1px solid #182338;font-size:clamp(15px,1.2vw,22px)}
+  tr.winner td{background:rgba(94,230,168,.07)}
+  tr.winner td:first-child{border-left:4px solid var(--green);border-radius:4px}
+  .price{font-weight:700;color:var(--acc)} .usd{color:var(--mut);font-size:.75em;white-space:nowrap}
+  .rank{color:var(--mut);width:2.2em}
+  .reason{font-style:italic;color:var(--txt);line-height:1.45;margin-top:8px}
+  .hash{font-family:ui-monospace,Menlo,monospace;font-size:clamp(13px,1vw,17px);color:var(--gold);
+        word-break:break-all;background:#0a0f1a;border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin-top:6px}
+  .row{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+  .lbl{color:var(--mut);text-transform:uppercase;font-size:clamp(11px,.85vw,14px);letter-spacing:.12em}
+  .ok{color:var(--green)} .no{color:var(--red)}
+  a{color:var(--acc);text-decoration:none;word-break:break-all}
+  a:hover{text-decoration:underline}
+  .empty{color:var(--mut);font-style:italic;padding:18px 6px}
+  .repmove b{font-size:clamp(26px,2.2vw,40px);color:var(--green)}
+  .demo-tag{background:var(--red);color:#0b0e14;font-weight:800;padding:4px 12px;border-radius:8px;
+            font-size:clamp(12px,.95vw,15px);letter-spacing:.1em}
+  footer{margin-top:22px;color:var(--mut);font-size:clamp(11px,.85vw,14px);display:flex;gap:24px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<header>
+  <h1><b>FOREMAN</b> · Biet-Board</h1>
+  <div class="live"><span id="dot" class="dot"></span><span id="liveLbl">live</span></div>
+  <span id="demoTag" class="demo-tag" style="display:none">DEMO-MODUS</span>
+  <div class="net" id="netInfo">RPC: —</div>
+</header>
+
+<div class="grid">
+  <section class="card job" id="jobCard">
+    <h2>1 · Job</h2>
+    <div class="spec" id="jobSpec">…</div>
+    <div class="meta">
+      <div class="kpi"><span class="v" id="budget">—</span><span class="l">Budget (NEAR-Cent)</span></div>
+      <div class="kpi countdown"><span class="v" id="countdown">--:--</span><span class="l" id="cdLbl">Bid-Fenster</span></div>
+      <div class="kpi"><span class="badge" id="stateBadge">—</span><span class="l">Status</span></div>
+    </div>
+    <div class="row"><span class="lbl">Abnahmekriterien</span><div id="criteria" class="empty">—</div></div>
+  </section>
+
+  <section class="card" id="bidsCard">
+    <h2>2 · Live-Bid-Wand</h2>
+    <table>
+      <thead><tr><th></th><th>Bieter</th><th>Preis</th><th>ETA</th><th>Rep</th></tr></thead>
+      <tbody id="bidsBody"><tr><td colspan="5" class="empty">warte auf Bids …</td></tr></tbody>
+    </table>
+  </section>
+
+  <section class="card" id="counterCard">
+    <h2>3 · Gegenofferte (genau eine, begründet)</h2>
+    <div id="counterBody" class="empty">keine Gegenofferte</div>
+  </section>
+
+  <section class="card" id="receiptCard">
+    <h2>4 · Ephemora-Receipt</h2>
+    <div class="row"><span class="lbl">receipt_hash (Execution-Report)</span>
+      <div class="hash" id="receiptHash">—</div></div>
+    <div class="row"><span class="lbl">artifact_hash</span>
+      <div class="hash" id="artifactHash">—</div></div>
+    <div class="row"><span class="lbl">Verifizieren</span>
+      <div id="explorerLink" class="empty">kein tx hash</div></div>
+  </section>
+
+  <section class="card" id="resultCard">
+    <h2>5 · Ergebnis</h2>
+    <div class="meta">
+      <div class="kpi"><span class="v" id="winner">—</span><span class="l">Gewinner</span></div>
+      <div class="kpi"><span class="v" id="payout" style="color:var(--green)">—</span><span class="l">Payout (NEAR-Cent)</span></div>
+      <div class="kpi repmove"><span class="v" id="repMove">—</span><span class="l">Rep-Move (Formel (old·9+score)/10)</span></div>
+    </div>
+    <div class="row"><span class="lbl">Foreman-Fee 10 % → Foreman-Konto</span><div id="feeLine" class="empty">—</div></div>
+  </section>
+
+  <section class="card" id="opsCard">
+    <h2>Betrieb</h2>
+    <div class="row"><span class="lbl">Contract</span><div id="contractLbl">—</div></div>
+    <div class="row"><span class="lbl">Letzter Poll</span><div id="lastPoll">—</div></div>
+    <div class="row"><span class="lbl">RPC-Kette</span><div id="rpcChain">—</div></div>
+  </section>
+</div>
+<footer>
+  <span>NEAR HACKATHON 2026 · foreman (escrow-Contract einzige Geld-Autorität)</span>
+  <span>RPC: test.rpc.fastnear.com → rpc.testnet.near.org</span>
+  <span>Preise in NEAR-Cent · $-Schätzung @ 2,50 $/NEAR</span>
+</footer>
+<script src="board.js"></script>
+</body>
+</html>
