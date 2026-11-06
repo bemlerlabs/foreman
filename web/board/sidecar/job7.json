@@ -1,0 +1,10 @@
+{
+  "job_id": 7,
+  "payout_tx": "GJo1sDz99HohtUcvRCPdxF4qJzA6MYdFiXVU2MhqmK7U",
+  "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md)",
+  "accept_tx": "GJo1sDz99HohtUcvRCPdxF4qJzA6MYdFiXVU2MhqmK7U",
+  "counter_reason": "Gegenangebot (Foreman boss): alle acceptance_criteria erfuellt — #1 summary <=300 words + #2 CSV data table + #3 cited sources — Festpreis 10 % unter Bestbid, ETA 24s. Referenz: acceptance_criteria #1-#3.",
+  "winner": "agent1.foreman-team.testnet",
+  "e2e_log": "/tmp/foreman_e2e_run3.log",
+  "_kommentar": "Job 7 lief nach phase4.2-Deploy vollstaendig on-chain (post/bids/counter/award/receipt/submit/accept, state=Accepted); der Runner crashte erst NACH accept in einem Sidecar-Zeilenvorfall (bash bug, Behoben in phase4.2-Commit). Diese Datei daher manuell aus run3-Log + live get_counter_reason(7) gesetzt. Der vollautomatische Runner-Beweis incl. Sidecar-Write erfolgte mit Job 8 (phase4.2)."
+}

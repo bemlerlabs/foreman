@@ -675,3 +675,64 @@ fn get_bids_keeps_placement_order() {
     assert_eq!(bids[0].bidder, agent(1));
     assert_eq!(bids[1].bidder, agent(2));
 }
+
+// ---------- counter_reason (phase4.2) ----------
+
+#[test]
+fn counter_offer_persists_reason_and_view_works() {
+    let mut c = init();
+    let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
+    assert_eq!(c.get_counter_reason(job), None, "ohne Counter kein Grund");
+    as_foreman(T0 + SEC);
+    c.counter_offer(
+        job,
+        NearToken::from_yoctonear(500),
+        42,
+        " criterion #2+3 zum Festpreis ".into(),
+    );
+    assert_eq!(
+        c.get_counter_reason(job).as_deref(),
+        Some(" criterion #2+3 zum Festpreis "),
+        "Grund 1:1 persistent (Trim nur fürs Gate, nicht beim Speichern)"
+    );
+}
+
+/// Upgrade-Beweis: Contract-State ohne 7. Feld (Altstate der Deploy-Ära vor phase4.2,
+/// z. B. Jobs 1-6 on-chain) muss weiter deserialisierbar sein — counter_reasons
+/// fällt auf das frische Map b"k" zurück statt EOF-Panic.
+#[test]
+fn legacy_state_without_counter_map_still_deserializes() {
+    use near_sdk::borsh::{to_vec, BorshDeserialize};
+
+    #[derive(near_sdk::borsh::BorshSerialize)]
+    #[borsh(crate = "near_sdk::borsh")]
+    struct OldContractWire {
+        owner: AccountId,
+        treasury: AccountId,
+        foreman: AccountId,
+        jobs_prefix: Vec<u8>, // LookupMap<JobId,Job> serialisiert nur den Präfix
+        next_id: u64,
+        rep_prefix: Vec<u8>, // LookupMap<AccountId,u32> likewise
+    }
+
+    let old = OldContractWire {
+        owner: owner(),
+        treasury: treasury(),
+        foreman: foreman_acct(),
+        jobs_prefix: b"j".to_vec(),
+        next_id: 7,
+        rep_prefix: b"r".to_vec(),
+    };
+    let bytes = to_vec(&old).expect("Altstate Bytes");
+    let c = Contract::try_from_slice(&bytes).expect("Altstate ohne 7. Feld muss lesbar bleiben");
+    assert_eq!(
+        c.get_counter_reason(3),
+        None,
+        "frisches Map => None, kein Panic"
+    );
+    assert_eq!(
+        c.get_rep(agent(1)),
+        50,
+        "Reputation-Map aus Altstate lesbar"
+    );
+}

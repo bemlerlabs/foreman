@@ -53,6 +53,7 @@ REP_BEFORE=$(near_view "$CONTRACT" get_rep "{\"agent\":\"$WINNER\"}" | tr -d '[:
 
 # Abnahme durch Foreman (Payout 90/10 on-chain, rep-Update)
 TX=$(near_call "$FOREMAN" "$CONTRACT" accept "{\"job_id\":$JOB_ID,\"delivery_score\":90}")
+ACCEPT_TX="$TX"
 echo "ACCEPT_OK job=$JOB_ID score=90 txid=$TX" | tee -a "$LOG"
 
 BAL_W_AFTER=$(near_state_amount "$WINNER")
@@ -79,4 +80,32 @@ REP_EXPECT=$(python3 -c "print(($REP_BEFORE * 9 + 90) // 10)")
 [[ "$STATE" == "Accepted" && "$REP" == "$REP_EXPECT" ]] || {
   echo "E2E_FAIL: state=$STATE rep=$REP (erwartet Accepted/$REP_EXPECT bei rep_before=$REP_BEFORE) — $LOG" >&2; exit 1; }
 
-echo "E2E_OK run=$N job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (vorher $REP_BEFORE) log=$LOG" | tee -a "$LOG"
+# 8b) Sidecar fürs Biet-Board (phase4.2, asset-scout liest web/board/sidecar/job<N>.json):
+# payout occurs innerhalb der accept-tx (Transfer-Receipts) — beiden Feldern gleiche Tx-ID.
+COUNTER_REASON_RAW=$(near_view "$CONTRACT" get_counter_reason "{\"job_id\":$JOB_ID}" | tr -d '\n')
+SIDECAR="$REPO_ROOT/web/board/sidecar/job${JOB_ID}.json"
+mkdir -p "$(dirname "$SIDECAR")"
+SC_JOB="$JOB_ID" SC_PAYOUT_TX="$ACCEPT_TX" SC_ACCEPT_TX="$ACCEPT_TX" SC_REASON="$COUNTER_REASON_RAW" \
+  SC_WINNER="$WINNER" SC_LOG="$LOG" \
+  python3 - "$SIDECAR" <<'PY'
+import json, os, sys
+raw = os.environ["SC_REASON"].strip()
+if raw == "null":
+    reason = ""
+else:  # near-cli JS-Objekt-Ausgabe: 'text' oder "text"
+    reason = raw.strip().strip("'\"")
+doc = {
+    "job_id": int(os.environ["SC_JOB"]),
+    "payout_tx": os.environ["SC_PAYOUT_TX"],
+    "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md)",
+    "accept_tx": os.environ["SC_ACCEPT_TX"],
+    "counter_reason": reason,
+    "winner": os.environ["SC_WINNER"],
+    "e2e_log": os.environ["SC_LOG"],
+}
+open(sys.argv[1], "w").write(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
+print("SIDECAR_OK", sys.argv[1])
+PY
+grep SIDECAR_OK "$LOG" || echo "SIDECAR_OK $SIDECAR" >>"$LOG"
+
+echo "E2E_OK run=$N job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (vorher $REP_BEFORE) sidecar=$SIDECAR log=$LOG" | tee -a "$LOG"

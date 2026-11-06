@@ -68,6 +68,9 @@ pub struct Contract {
     jobs: LookupMap<JobId, Job>,
     next_id: JobId,
     reputation: LookupMap<AccountId, u32>, // 0..=100, Start 50
+                                           // counter_reasons (phase4.2) ist bewusst KEIN Struct-Feld: ein transienter
+                                           // LookupMap-Handle auf Präfix b"k" (siehe counter_reasons()) speichert direkt in
+                                           // storage — Contract-/Job-Borsh-Layout bleibt Bit für Bit stabil für Altstate (Jobs 1-6).
 }
 
 #[near]
@@ -176,6 +179,10 @@ impl Contract {
             placed_at: env::block_timestamp(),
         });
         self.jobs.insert(job_id, job);
+        // Grund persistent machen (Board-Panel 4): transienter LookupMap-Handle auf b"k",
+        // store-Typen schreiben sofort in storage — kein Contract-Feld, kein Borsh-Bruch.
+        let mut reasons = Self::counter_reasons();
+        reasons.insert(job_id, reason);
     }
 
     /// Zuschlag mit Score-Validierung: günstigster Preis, dann Rep, dann Reihenfolge.
@@ -278,8 +285,17 @@ impl Contract {
     pub fn get_rep(&self, agent: AccountId) -> u32 {
         self.reputation.get(&agent).copied().unwrap_or(50)
     }
+    /// Begründung der Gegenofferte, falls vorhanden (phase4.2, RULES "begündete Gegenofferte").
+    pub fn get_counter_reason(&self, job_id: JobId) -> Option<String> {
+        Self::counter_reasons().get(&job_id).cloned()
+    }
 
     // ---- internal helpers ----
+    /// Persistente counter-Begründungen: LookupMap-Präfix b"k" (job_id -> reason).
+    /// Transienter Handle — schreibt/geliest direkt gegen storage, Contract-Layout stabil.
+    fn counter_reasons() -> LookupMap<JobId, String> {
+        LookupMap::new(b"k".to_vec())
+    }
     fn assert_foreman(&self) {
         require!(
             env::predecessor_account_id() == self.foreman,
