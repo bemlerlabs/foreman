@@ -45,3 +45,5 @@ Format: Datum | Phase | Behauptung | Artefakt (Tx-ID/Explorer/Pfad/Log) | Status
 | 2026-11-05 | T1 | On-chain Identität: deployed == phase1.2-Build | sha256-base58(target/near/foreman.wasm)==code_hash — MATCH (Verifikation 15:3x, ABI-embedded Build) | ✅ |
 | 2026-11-05 | T1 | Live-View-Call funktioniert | near view get_rep(agent1.foreman-team.testnet) → 50 | ✅ |
 | 2026-11-05 | T1 | Init-Schutz greift | Re-Init → "already been initialized"; Code-Update via without-init-call | ✅ |
+| 2026-11-06 | phase3.1 | Bid-Generator cli_bids.py bereit für bid_loop.sh: --seed Pflicht, 5 Agenten exakt .env SWARM_ACCOUNTS, Preise gestaffelt (22.77–27.56 NEAR-Cent bei seed=foreman-demo), eta=40s, Cap 3$+budget geprüft | core/bidding/cli_bids.py · /tmp/foreman_bids.json · `32 passed in 0.32s` (9 neue CLI-Tests) | ✅ |
+| 2026-11-06 | phase3.1 | T5-Wiederholbarkeits-Gate bewiesen: cmp byte-identisch bei gleichem Seed (2 Läufe), verschiedene Preise bei verschiedenen Seeds | core/bidding/tests/test_cli_bids.py::test_same_seed_byte_identical + test_different_seed_different_prices | ✅ |
