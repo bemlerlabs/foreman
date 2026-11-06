@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><title>Foreman — Key freigeben</title>
+<style>body{font-family:-apple-system,sans-serif;background:#0b0e14;color:#e6e6e6;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.card{background:#141a26;border:1px solid #26324a;border-radius:16px;padding:40px;max-width:520px}
+h1{font-size:22px;margin:0 0 8px}p{color:#9fb0c8;line-height:1.5}
+button{background:#f8d245;color:#111;border:0;border-radius:10px;padding:14px 24px;font-size:16px;font-weight:600;cursor:pointer;margin-top:16px}
+#status{margin-top:16px;font-family:monospace;font-size:13px;white-space:pre-wrap}</style></head><body>
+<div class="card"><h1>🔑 Foreman Owner-Key freigeben</h1>
+<p>Konto: <b>bemlerlabs.near</b><br>Key: <code>ed25519:3FQ8s8RSVA4oJPZzv5hoVDKAJe267NvYWCjt44AyHakb</code><br>
+Meteor öffnet ein Bestätigungsfenster — einmal klicken, fertig.</p>
+<button id="go">Key in Meteor freigeben</button><div id="status"></div></div>
+<script type="module">
+import { setupWalletSelector } from "https://esm.sh/@near-wallet-selector/core@8.9.5?bundle";
+import { setupMeteorWallet } from "https://esm.sh/@near-wallet-selector/meteor-wallet@8.9.5?bundle";
+const s=document.getElementById('status'), PUB="ed25519:3FQ8s8RSVA4oJPZzv5hoVDKAJe267NvYWCjt44AyHakb";
+document.getElementById('go').onclick=async()=>{s.textContent="Öffne Meteor…";try{
+const selector=await setupWalletSelector({network:"mainnet",modules:[setupMeteorWallet()]});
+const meteor=await selector.wallet("meteor-wallet");
+const accounts=await meteor.signIn({contractId:"contracthelper",methodNames:[],publicKeys:[PUB]});
+s.textContent="✅ Signiert als: "+accounts.map(a=>a.accountId).join(", ")+"\nBitte 5s warten, dann führt der Lead den Onchain-Check aus.";
+}catch(e){s.textContent="Fehler: "+(e?.message||JSON.stringify(e));}};
+</script></body></html>
