@@ -16,6 +16,7 @@
     "policy:submit": "tsx core/intents/sign-policy.ts submit",
     "grant:prepare": "tsx core/intents/grant-prepare.ts",
     "owner:sign": "tsx core/intents/owner-sign-helper.ts",
+    "popup": "tsx core/intents/owner-sign-popup-server.ts",
     "typecheck": "tsc --noEmit -p core/intents/tsconfig.json"
   },
   "repository": {

@@ -16,8 +16,10 @@ Das Treasury ist **ein** Konto über die [NEAR Intents Agent API](https://api.ag
 |---|------|-------|
 | 1 | `npm run quote-demo` | `Status: DRY (dry:true — keine Ausführung)` + Quote mit `amount_out`, `fee`, `warnings`, `spend.amount_usd`. Ohne Agent: klarer Hinweis auf Schritt 3. |
 | 2 | `npm run execute-demo` (ohne Flag) | `GATE: AGENT_EXECUTE != 'true' → keine Ausführung` — Abbruch **vor** jedem API-Dispatch. Default false, hart in `treasury.executeDemo()`. |
-| 3 | `npm run policy:create` (Owner-Daten in `.env`) | Generierter `agent_create`-Intent: `correlation_id` (`intent_…`), `preview.policy` (Budget 3 $/Tag, Destinations `only`+Whitelist, Timelock 60 s, assets nur NEAR/USDC) + **Signier-Message für den Menschen**. Kein Auto-Sign. |
-| 4 | Mensch: `npm run owner:sign -- --cid … --keystore … --i-am-the-owner` dann `npm run policy:submit -- --cid … --signed …` | `Intent …: API-Status=… → Lifecycle=…`; bei Erfolg `Agent-ID gemerkt: …` → weiter mit 1. |
+| 3a | **T2-Pfad (Passkey/O3):** `npm run popup` → `http://localhost:8789/register` | Touch-ID-Dialog; danach `✅ Passkey registriert` — `.state/passkey.json` (public-only, 0600) mit `credential_id` + DER-P-256-Key (API-Muster `MFkwEwYHKo…`). |
+| 3b | `npm run policy:create -- --owner-type passkey` | Generierter `agent_create`-Intent (standard=webauthn): `correlation_id` (`intent_…`), `preview.policy` (Budget 3 $/Tag, Destinations `only`+Whitelist, Timelock 60 s, assets nur NEAR/USDC) + Signier-Hinweis auf Popup-Seite. Kein Auto-Sign, **genau ein** generate-Lauf pro Demo-Runde (Admission!). |
+| 3c | Mensch: `http://localhost:8789/sign?cid=…` → Policy lesen → Touch-ID → `npm run policy:submit -- --cid …` | Klartext-Policy-Preview (Vertrauens-Moment), `signed_data` byte-exact aus Original-Intent → `Lifecycle=…`, bei Erfolg `Agent-ID gemerkt: …` → weiter mit 1. |
+| 4 | (Legacy NEAR-Owner) `npm run policy:create` + `npm run owner:sign -- --cid … --keystore … --i-am-the-owner` + `policy:submit` | Wie 3b/3c mit `standard=nep366`/Keystore; funktioniert nur, wenn `OWNER_PUBLIC_KEY` Onchain-Access-Key ist (Precheck). |
 | 5 | `npm run policy-status` | Policy-Revision, `provider_policy_synced`, Budget-Usage (täglich/wöchentlich geladen vs. frei), Timelock-Countdown, letzte Operationen. |
 | 6 | `npm run policy-status -- --cid <correlation_id>` | API-Status + klassifizierter Lifecycle (`PENDING`/`UNCERTAIN`/`NEEDS_REVIEW`/`COMPLETED`/`FAILED`). Nach `UNCERTAIN`: **beobachten, nie neu senden**. |
 | 7 | `AGENT_EXECUTE=true npm run execute-demo` (nach dry-Beweis + Grant) | Live-Micro-Swap NEAR→USDC: `Correlation-ID` + Statusmaschine mit bounded Polling; `min_amount_out` aus der Vorberechtigungs-Quote (1 % Slippage). |
@@ -40,6 +42,11 @@ Das Treasury ist **ein** Konto über die [NEAR Intents Agent API](https://api.ag
   Signier-WERKZEUG, das nur der Eigentümer selbst startet (`--i-am-the-owner`); Produktcode importiert es nie.
 - `grant-prepare.ts` — Grant-Credential (`ngt_…` via SDK, läuft auf Node 22) + `grant_issue`-Intent;
   Token nur in `.state/grants/` (0600) bzw. `INTENTS_GRANT_TOKEN`, nie auf die Konsole.
+- `owner-sign-popup-server.ts` — lokaler Loopback-Server (nur 127.0.0.1, Aufruf via `http://localhost:8789`,
+  Safari-WebAuthn braucht localhost-rpId): `/register` (startRegistration via esm.sh @simplewebauthn/browser@13,
+  Server verifiziert challenge/origin und baut COSE→DER-SPKI) und `/sign?cid=…` (Klartext-Policy-Preview +
+  startAuthentication mit `intent.payload` byte-for-byte → `signed_data` 0600 nach `.state/`). Kein API-Key,
+  keine Secrets in der Seite; Parsing via `vendor/simplewebauthn-helpers.bundle.mjs` (pinned 13.3.3, E2E getestet).
 
 ## benutzte API-Verträge (Referenzen)
 
@@ -54,7 +61,7 @@ Das Treasury ist **ein** Konto über die [NEAR Intents Agent API](https://api.ag
 |---|---|---|
 | `INTENTS_API_KEY` | ja | `naa_…` Partner-Key — NUR `.env`/Prozessumgebung, nie Repo/Log/Commit. |
 | `INTENTS_BASE_URL` | nein | Default **Prod** `https://api.agentsonintents.com`; Demo-Deploy `https://api.demo.agentsonintents.com` nur nach Team-Freigabe. |
-| `OWNER_ACCOUNT` / `OWNER_PUBLIC_KEY` | für create/create-Sign | **mainnet** NEAR-Konto des Menschen + `ed25519:…` Signier-Key (API-Netz: mainnet!). |
+| `OWNER_ACCOUNT_MAINNET` / `OWNER_PUBLIC_KEY` | nur near-owner-Pfad | **mainnet** NEAR-Konto des Menschen + `ed25519:…` Signier-Key (API-Netz: mainnet!). `OWNER_ACCOUNT` (.testnet) gehört zu den Deploy-Skripten — für Intents tabu. Passkey-Pfad braucht beides nicht (`.state/passkey.json`). |
 | `AGENT_EXECUTE` | nein | Default `false` ⇒ nur `dry:true`. `true` erst nach dry-Beweis (RULES.md). |
 | `DEMO_MAX_USD` / `DEMO_AMOUNT_USD` | nein | Cap (hart ≤ 3) / Micro-Betrag (Default 0.25 $). |
 | `TREASURY_DESTINATIONS` | nein | Komma-Liste Whitelist-Einträge (`near:acct`, `intents:acct`, `chain:addr`). |

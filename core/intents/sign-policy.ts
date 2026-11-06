@@ -79,6 +79,15 @@ function printOwnerInstructions(generated: GenerateIntentResponse, file: string)
   console.log("\nZu signierende Message (intent.payload, bytegenau zurückgeben):");
   console.log(redactJson(generated.intent.payload));
   console.log("\nSo signierst du (eine der Varianten):");
+  if (generated.intent.standard === "webauthn") {
+    console.log(
+      `  A) EMPFOHLEN (O3): Popup-Seite mit Klartext-Policy-Preview im Browser des Eigentümers öffnen:`,
+    );
+    console.log(
+      `     http://localhost:8789/sign?cid=${generated.correlation_id}   (Server: npx tsx core/intents/owner-sign-popup-server.ts)`,
+    );
+    console.log("     Touch-ID bestätigen — die Seite legt signed_data selbst ab. Dann submit (unten).");
+  }
   if (generated.intent.standard === "nep366") {
     console.log(
       "  A) Wallet mit NEP-366-Unterstützung: wallet.signDelegateActions({ delegateActions: [payload] })",
@@ -112,36 +121,69 @@ async function generateAndPrint(
   return generated;
 }
 
-/** agent_create: legt das Treasury-Konto mit der Foreman-Policy an (ein Klick für den Menschen). */
+/**
+ * agent_create: legt das Treasury-Konto mit der Foreman-Policy an (Klick für den Menschen).
+ * ownerType "near"    → {type:"near", account_id, public_key} — Onchain-Key-Precheck läuft.
+ * ownerType "passkey" → OwnerWallet.oneOf[2] {type:"passkey", credential_id, public_key(DER-P-256),
+ *                       rp_id, origin} aus .state/passkey.json (Registry: Popup-Server /register).
+ */
 export async function createAgent(
   ownerAccount?: string,
   name?: string,
   ownerPublicKey?: string,
+  ownerType: "near" | "passkey" = "near",
 ): Promise<void> {
   const cfg = treasuryConfig();
-  const owner = ownerAccount ?? cfg.ownerAccount;
-  if (!owner) {
-    throw new Error(
-      "OWNER_ACCOUNT fehlt. .env OWNER_ACCOUNT=<mainnet NEAR-Konto des Menschen> setzen " +
-        "(RULES.md: Owner ≠ Treasury ≠ Contract ≠ Swarms) und erneut: npm run policy:create",
-    );
+  const api = client();
+  let ownerWallet: Record<string, unknown>;
+
+  if (ownerType === "passkey") {
+    const pkFile = path.join(STATE_DIR, "passkey.json");
+    if (!existsSync(pkFile)) {
+      throw new Error(
+        "Kein registrierter Passkey (.state/passkey.json). Erst registrieren: " +
+          "npx tsx core/intents/owner-sign-popup-server.ts → http://localhost:8789/register (Touch-ID #1).",
+      );
+    }
+    const pk = JSON.parse(readFileSync(pkFile, "utf8")) as Record<string, string>;
+    for (const f of ["credential_id", "public_key", "rp_id", "origin"]) {
+      if (!pk[f]) throw new Error(`passkey.json fehlt Feld ${f} — Registrierung wiederholen.`);
+    }
+    // Exakt die 5 Felder des OwnerWallet-passkey-Schemas (additionalProperties:false, openapi-Klarstellung 06.11.).
+    ownerWallet = {
+      type: "passkey",
+      credential_id: pk.credential_id,
+      public_key: pk.public_key,
+      rp_id: pk.rp_id,
+      origin: pk.origin,
+    };
+  } else {
+    const owner = ownerAccount ?? cfg.ownerAccount;
+    if (!owner) {
+      throw new Error(
+        "OWNER_ACCOUNT fehlt. .env OWNER_ACCOUNT_MAINNET=<mainnet NEAR-Konto des Menschen> setzen " +
+          "(RULES.md: Owner ≠ Treasury ≠ Contract ≠ Swarms) und erneut: npm run policy:create",
+      );
+    }
+    const publicKey = ownerPublicKey ?? cfg.ownerPublicKey;
+    if (!publicKey) {
+      throw new Error(
+        "OWNER_PUBLIC_KEY fehlt (ed25519:…). Die API verlangt den Signier-Key des Eigentümers im agent_create-Intent. " +
+          "Setzen in .env oder: npm run policy:create -- --owner-public-key ed25519:…",
+      );
+    }
+    ownerWallet = { type: "near", account_id: owner, public_key: publicKey };
   }
-  const publicKey = ownerPublicKey ?? cfg.ownerPublicKey;
-  if (!publicKey) {
-    throw new Error(
-      "OWNER_PUBLIC_KEY fehlt (ed25519:…). Die API verlangt den Signier-Key des Eigentümers im agent_create-Intent. " +
-        "Setzen in .env oder: npm run policy:create -- --owner-public-key ed25519:…",
-    );
-  }
-  await assertQuotaHeadroom(client(), true);
-  await assertOwnerKeyOnChain(cfg, owner, publicKey);
+
+  await assertQuotaHeadroom(api, true);
+  if (ownerType === "near") await assertOwnerKeyOnChain(cfg, String(ownerWallet.account_id), String(ownerWallet.public_key));
   const policy = buildTreasuryPolicy(cfg);
   console.log("Vorgeschlagene Foreman-Treasury-Policy:");
   console.log(redactJson(policySummary(policy)));
-  await generateAndPrint(client(), {
+  await generateAndPrint(api, {
     type: "agent_create",
     name: name ?? "foreman-treasury",
-    owner: { type: "near", account_id: owner, public_key: publicKey },
+    owner: ownerWallet,
     policy,
   }, "agent-create");
 }
@@ -278,7 +320,8 @@ if (isMainModule()) {
   };
 
   if (cmd === "create" || cmd === undefined) {
-    await createAgent(arg("owner"), arg("name"), arg("owner-public-key"));
+    const ownerType = (arg("owner-type") === "passkey" ? "passkey" : "near") as "near" | "passkey";
+    await createAgent(arg("owner"), arg("name"), arg("owner-public-key"), ownerType);
   } else if (cmd === "update") {
     await updatePolicy();
   } else if (cmd === "submit") {
