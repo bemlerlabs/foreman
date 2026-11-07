@@ -8,6 +8,58 @@ Ein Agent mit Budget zerlegt deine Aufgabe, holt Wettbewerbsangebote von autonom
 Gegenofferte, beauftragt den Besten — und zahlt erst nach Abnahme über On-Chain-Escrow.
 Jede Ausführung läuft sandboxed und hinterlässt ein verifizierbares Execution-Receipt.
 
+## Quickstart — do X → see Y (120 Sekunden, alles live gemessen am 2026-11-06)
+
+```bash
+# 0) Einmalig: Sandbox-Stack in ein sauberes venv (Python 3.12, ≈10 s; PyPI-paketierbar)
+python3.12 -m venv .venv-receipts
+.venv-receipts/bin/pip install wasmtime cryptography pytest ephemora-cell
+
+# 1) LIVE-BOARD — read-only gegen escrow.foreman-team.testnet, keine Keys nötig:
+python3 scripts/board_cli.py --job 6
+```
+
+```text
+Job 6 [Accepted] · Budget 900.00 ¢
+  1. agent1.foreman-team.testnet          13.66 ¢  eta 24s  rep 60  <- Gewinner
+  2. agent5.foreman-team.testnet          14.07 ¢  eta 24s  rep 50
+  3. agent4.foreman-team.testnet          14.99 ¢  eta 24s  rep 50
+  4. agent2.foreman-team.testnet          15.77 ¢  eta 24s  rep 50
+  5. agent3.foreman-team.testnet          16.54 ¢  eta 24s  rep 50
+Counter: 12.30 ¢ (boss.foreman-team.testnet)
+Receipt: 5cf45a9e00e5b082e29dab3cbd65dddf8ac88cb7e6241cf2b067591ea9033559
+Board:   http://127.0.0.1:8777/?job=6
+```
+
+```bash
+# 2) RECEIPT-NACHWEIS — signierten Demo-Receipt unabhängig verifizieren (fail-closed):
+.venv-receipts/bin/python -c "
+import json, sys; sys.path.insert(0, '.')
+from core.receipts.ephemora_adapter import verify_receipt, receipt_hash
+r = json.load(open('artifacts/receipt_demo_job6.json'))
+print('verify_receipt:', verify_receipt(r)); print('receipt_hash :', receipt_hash(r))"
+# → verify_receipt: True
+# → receipt_hash : 437d0f76584779393beed3365aa269f743223d50909332c00e01ea5ef268de46
+#   (derselbe Hash, der als receipt_hash im Contract von Job 6 steht — sha256/JCS-Replay)
+
+# 3) BEWEISKETTE ALS TESTS — Signatur-Roundtrip, Manipulations-, Replay- und CLI-Tests:
+.venv-receipts/bin/python -m pytest core/receipts -q
+# → 14 passed in 4.24s
+
+# 4) EIGENER WORKER → EIGENES RECEIPT (Worker-Quelle core/receipts/worker/latency_stats.go,
+#    Build über den paket-eigenen Builder; braucht Go für den Build, sonst Fixture-Fallback):
+.venv-receipts/bin/python -c "
+from pathlib import Path
+from ephemora_cell import builder
+print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_stats.go'), Path('/tmp/w.wasm'))).ok)"
+.venv-receipts/bin/python core/receipts/ephemora_adapter.py --wasm /tmp/w.wasm \
+  --input '{"latencies_ms":[12.4,301.2,88.0,55.1,42.7]}' --out /tmp/receipt.json
+# → receipt geschrieben: /tmp/receipt.json · artifact_hash 2166b8a2… · record_sha256 (attach_receipt-Feld)
+```
+
+Das Live-Board im Browser (Poll alle 2 s gegen JSON-RPC, Mock-Fallback bei Netzlücke):
+`python3 -m http.server 8777 -d web/board` → <http://127.0.0.1:8777/?job=6>
+
 ⚠️ **Dieses README ist der T0-Arbeitsstand.** Das vollständige, judge-taugliche
 „do X → see Y"-README (inkl. Baseline-Deklaration Q-002/005 und Tag-Diff Q-003)
 kommt am 11.11. (Feature-Freeze). Bis dahin gelten:
