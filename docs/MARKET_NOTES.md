@@ -80,3 +80,45 @@ Demo-Story-Pick: **wallet-activity-lookup** (finance, USDC, echtes NEAR-Thema �
 - Bid/Order: `aat_`-Token Pflicht → Registrierung = USER-Klick (Dashboard market.near.ai), danach in `.env` eintragen. **Nicht blind registriert.**
 - Bid-Beträge sind USD-Strings ("25.00"), nicht yocto — unser Escrow-Budget muss auf USD-Cent gemünzt werden (intents-engineer/lead: DEMO_MAX_USD passt).
 - Mock-Mode im Client spiegelt exakt diese 5 echten Listings (Vertrag identisch, e2e läuft ohne Netz/Token).
+
+## Käufer-Bezahlung — Fakten aus OpenAPI mkt.json v2.0.0 (intents-engineer, 07.11., read-only)
+
+**Wallet-System (Käuferseite):** `GET /v1/wallet/balance` → drei Zahlungs-Schienen:
+`fiat` (USD, via Stripe-Verbindung), `crypto` (USDC, Custody-Provider **OutLayer** via
+`CryptoWalletService::ensure_wallet_and_balance`) und `credit_remaining` ("Allowance left to spend
+on hires, beside the rails… Drawn in USDC" — Ledger-Schienen-Triple fiat|crypto|**credits**).
+Zitat Detailseite: „Balances a hire can be paid from, at one price: USDC, plus USD once the
+builder connected Stripe."
+
+**Wann fließt Geld:** beim Kauf-Aufruf selbst. Competition: „Humans only: the call spends" +
+503 „No USDC rail here, or the pool was not funded"; „The whole prize pool, debited into escrow
+at once". Hiring: `GET /v1/me/job-drafts/{draft_id}/hire` → `DraftHireResponse{jobId,
+assignmentId, funded}` mit funded=false „while the escrow is still being funded" — Job entsteht
+also, aber Escrow-Einzahlung ist ein separater (asynchroner) Schritt aus den Rails. Zuweisung:
+`Assignment{escrowAmount, escrowToken=USDC, slaSeconds, slaDeadlineAt, acceptanceWindowDays}`.
+Storno: „a row reads cancelled… whether or not its escrow made it home" — Rückerstattung ist
+separat nachweisbar (`cancelled_assignment_ids`).
+
+**Einzahlung in die Crypto-Rail:** `GET /v1/wallet/crypto/deposit-intents` (nur GET — Anlage
+offenbar im Webapp-Flow) → `DepositIntentItem{chain, depositAddress, sourceAssetId,
+amountInMinor (Quell-Asset!), amountOutMinor (USDC minor units locked at quote time), status,
+expiresAt}`. Deposit-Adresse akzeptiert ein Quell-Asset beliebiger chain; USDC-Menge wird zum
+Quote-Zeitpunkt fixiert; `DepositChecker`-Worker finalisiert. Kein POST-Endpoint im Spec ⇒
+Intent-Erzeugung braucht die Webapp/Session.
+
+**Order-Payment-Felder:** `Job{budgetAmount ("100.000000000000"), budgetToken, jobKind
+standard|instant|competition, isTestRun, origin(a2a|null), acceptanceWindowDays 3–7,
+requiresVerifiable}`; Competition `poolToken`: „USDC, the default and the only token a prize pool
+is held in".
+
+**Dry-Run/Sandbox:** NEIN für Orders. `sandbox`/`dry_run`/`simulat`: 0 Treffer im Spec.
+`isTestRun` existiert nur im Job-RESPONSE-Schema („A free run by the owner or an allowed admin:
+no bid, nothing held") — in KEINEM Request-Setzfeld ⇒ kein Käufer-Dry-Run.
+`/v1/agents/{id}/webhook/test` ist Worker-seitig, nicht Käufer-seitig.
+Spec-Lücke: `POST /v1/jobs/instant` wird im claim-Text referenziert („takes it as draftId"),
+fehlt aber in den 107 Pfaden (vermutlich Webapp-intern).
+
+**Konsequenz HERO-Shot:** 0.25–0.50-USDC-Fremd-Hire erfordert Marktwallet-Funding (USDC-Rail)
+oder credit_remaining>0 (Höhe erst nach Token-Besitz via /v1/wallet/balance sichtbar).
+Kleiner Funding-Pfad: Portal-Registrierung (USER-Klick) → deposit-intent-Quote abholen →
+kleinstes akzeptiertes Quell-Asset an depositAddress senden → USDC-Rail → instant hire.
