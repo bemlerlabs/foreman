@@ -314,6 +314,22 @@
       }
     }).catch(function () { MOCK = true; setLive(false); });
   }
+  // Phase4.4: Hell/Dunkel — Default dunkel; ?theme=light uebersteuert, Auswahl merkt sich localStorage.
+  function applyTheme(t) {
+    if (t === "light") document.documentElement.setAttribute("data-theme", "light");
+    else document.documentElement.removeAttribute("data-theme");
+    try { localStorage.setItem("foreman-theme", t); } catch (e) {}
+  }
+  var urlTheme = "";
+  try { urlTheme = new URLSearchParams(location.search).get("theme") || ""; } catch (e) {}
+  var stored = "dark";
+  try { stored = localStorage.getItem("foreman-theme") || "dark"; } catch (e) {}
+  applyTheme(urlTheme === "light" || (urlTheme === "" && stored === "light") ? "light" : "dark");
+  var tb = el("themeBtn");
+  if (tb) tb.addEventListener("click", function () {
+    applyTheme(document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light");
+  });
+
   poll();
   setInterval(poll, POLL_MS);
 

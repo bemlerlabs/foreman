@@ -13,17 +13,28 @@
   --hairline:rgba(255,255,255,.06); --hairline-strong:rgba(255,255,255,.10);
   --t1:#F2F4F8; --t2:#9AA3B2; --t3:#5C6472;
   --accent:#37D399; --amber:#F2B84B; --danger:#E5695F;
+  --cardsheen:rgba(255,255,255,.03); --glow-a:rgba(55,211,153,.045); --glow-b:rgba(242,184,75,.03);
   --ease:160ms ease-out;
   --mono:ui-monospace,"SF Mono",Menlo,monospace;
 }
+html[data-theme="light"]{
+  --base:#FAFAF8; --s1:#FFFFFF; --s2:#F3F2ED; --s3:#ECEBE4;
+  --hairline:rgba(0,0,0,.08); --hairline-strong:rgba(0,0,0,.14);
+  --t1:#14171C; --t2:#4A5262; --t3:#898F99;
+  --cardsheen:rgba(0,0,0,.02); --glow-a:rgba(55,211,153,.07); --glow-b:rgba(242,184,75,.06);
+}
+.theme-btn{margin-left:12px;background:var(--s2);border:1px solid var(--hairline);border-radius:999px;
+  color:var(--t2);font:600 11px/1 var(--mono);letter-spacing:.08em;padding:7px 12px;cursor:pointer;
+  transition:color var(--ease),border-color var(--ease)}
+.theme-btn:hover{color:var(--t1);border-color:var(--hairline-strong)}
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{animation:none!important;transition:none!important} }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 body{background:var(--base);color:var(--t1);font-family:"Inter","Inter var","SF Pro Text","Segoe UI",system-ui,sans-serif;
      font-size:clamp(14px,1.05vw,18px);line-height:1.45;padding:20px 40px 16px;min-height:100vh}
 body::before{content:"";position:fixed;inset:0;background:
-  radial-gradient(60% 50% at 15% 0%, rgba(55,211,153,.045), transparent 70%),
-  radial-gradient(50% 40% at 90% 10%, rgba(242,184,75,.03), transparent 70%);pointer-events:none}
+  radial-gradient(60% 50% at 15% 0%, var(--glow-a), transparent 70%),
+  radial-gradient(50% 40% at 90% 10%, var(--glow-b), transparent 70%);pointer-events:none}
 .num{font-variant-numeric:tabular-nums}
 
 /* ---------- Header ---------- */
@@ -47,7 +58,7 @@ header{display:flex;align-items:center;gap:16px;margin-bottom:16px;position:rela
 
 /* ---------- Grid ---------- */
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;position:relative}
-.card{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent 40%),var(--s1);
+.card{background:linear-gradient(180deg,var(--cardsheen),transparent 40%),var(--s1);
       border:1px solid var(--hairline);border-radius:12px;padding:18px 24px}
 .card h2{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.12em;
          text-transform:uppercase;color:var(--t2);margin-bottom:16px}
@@ -136,6 +147,7 @@ a:hover{text-decoration:underline}
   <div class="live"><span class="dotwrap"><span id="dot" class="dot"></span></span><span id="liveLbl">verbinde</span></div>
   <span id="demoTag" class="demo-tag">Demo-Modus</span>
   <div class="net" id="netInfo">RPC —</div>
+  <button id="themeBtn" class="theme-btn" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel (auch ?theme=light)">☾ / ☀</button>
 </header>
 
 <div class="grid">

@@ -22,6 +22,21 @@ auf Custom Properties; CDN ausschliesslich Fonts (mit vollwertigem System-Stack-
 
 Regeln: Keine weiteren Buntnuancen. Grün≠Geld, Amber=Geld. Farbflächen sparsam, Status über Punkt+Text, nicht über Vollton-Karten.
 
+### 1a. Light-Variante (phase4.4, `data-theme="light"`)
+
+ identische Token-Namen, nur Werte gedreht; Akzente bleiben exakt gleich (Grün≠Geld-Regel gilt in beiden Themes):
+
+| Token | Wert | Anmerkung |
+|---|---|---|
+| `--base` | `#FAFAF8` | warmes Papier-Weiß |
+| `--surface-1/2/3` | `#FFFFFF` / `#F3F2ED` / `#ECEBE4` | Karten bzw. Ebenen wie dunkel |
+| `--hairline(-strong)` | `rgba(0,0,0,.08)` / `rgba(0,0,0,.14)` | Spiegelung der Dunkel-Hairlines |
+| `--text-1/2/3` | `#14171C` / `#4A5262` / `#898F99` | Lesbarkeit ≥ 4,5:1 auf `--base` |
+| `--cardsheen` | `rgba(0,0,0,.02)` | Karten-Glanz gedreht (war weiß .03) |
+| `--glow-a/b` | `rgba(55,211,153,.07)` / `rgba(242,184,75,.06)` | Hintergrund-Glows auf Hell angehoben |
+
+Umschaltung: Toggle oben rechts (Default **dunkel**), Auswahl in `localStorage foreman-theme`, Deep-Link `?theme=light` übersteuert (Screenshot-/Video-tauglich).
+
 ## 2. Typo-Skala
 
 Font: Inter (CDN rsms.me) Fallback-Stack: `Inter, "Inter var", "SF Pro Text", "Segoe UI", system-ui, sans-serif`.
