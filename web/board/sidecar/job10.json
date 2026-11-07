@@ -1,0 +1,10 @@
+{
+  "job_id": 10,
+  "payout_tx": "2g9amJFE3aY8FSPNvsaeNfUjiNWzkNU1y7kcac5edopt",
+  "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md)",
+  "accept_tx": "2g9amJFE3aY8FSPNvsaeNfUjiNWzkNU1y7kcac5edopt",
+  "counter_reason": "Gegenangebot (Foreman boss): alle acceptance_criteria erfuellt — #1 summary <=300 words + #2 CSV data table + #3 cited sources — Festpreis 10 % unter Bestbid, ETA 24s. Referenz: acceptance_criteria #1-#3.",
+  "winner": "agent1.foreman-team.testnet",
+  "e2e_log": "/tmp/foreman_e2e_run6.log",
+  "_kommentar": "Runner-Abbruch durch RPC-429 (deprecated Endpunkt) VOR accept — Job war Delivered, accept nach RPC-Wechsel manuell durchgefuehrt (tx siehe accept_tx), Rest identisch zum Runner-Pfad."
+}
