@@ -1,0 +1,10 @@
+# EPHE_FIELD_NOTES — Beobachtungen aus dem Foreman-Demo-Betrieb (2026-11-06/07)
+
+Nur Verhalten beschrieben, keine Code-Zitate, keine Vorwürfe; wir haben ephe unverändert gelassen (BUSL-1.1-Hygiene, Repo-Regel). Sortiert nach Nutzen für den Erfinder.
+
+1. **CLI-Agent-Loop aktuell defekt:** die Tool-Start-Rückmeldung des Loop übergibt ein Argument mehr, als die Terminal-Senke entgegennimmt — jeder `ephe run`/`code`-Lauf stirbt in Runde 1 („tool_start takes 3 positional arguments but 4 were given“); der Server-/GUI-Pfad ist davon nicht betroffen und lief fehlerfrei.
+2. **Headless-Takes gelingen über den Server:** der SSE-Chat-Endpunkt mit dem offiziellen Opt-in-Flag (autonom) plus Code-Modus verhält sich wie ein einzigmalig klickendes GUI — unsere Take-Beweise entstanden so (write_file/edit_file/run_shell/execute_code, echte Transaktionen).
+3. **Konzept-Lücke FS-Whitelist:** Lese-/Schreib-/List-Tools prüfen eine Wurzel-Whitelist (Home, Desktop, Dokumente, Downloads, Konfig-Wurzel, Server-Arbeitsverzeichnis), das Shell-Tool aber nicht — im autonomen Modus las ein Agent per Katalysator-Kommando die Repo-.env (inkl. Portal-Keys), die ihm die Datei-Tools verweigert hätten; wir haben unsere Take-Logs redigiert, die Keys selbst blieben unverändert und kamen nie ins Repo.
+4. **Shell-Befehls-Whitelist ist hartcodiert** (~50 Befehlsköpfe; bash/near bewusst draußen) — als Default sinnvoll; ein Take mit echten Near-Aufrufen gelingt trotzdem über den sauberen Umweg „Agent schreibt eine Python-Datei und führt sie per python3 aus“ (die Subprozesse im Skript passieren die Segmentprüfung nicht).
+5. **RPC-Kompatibilität:** der near-cli braucht Broadcast-fähige RPCs — der schnelle Testnet-RPC (fastnear) weist dessen Sendeverfahren als „method is not available“ zurück; für Agent-Takes stets den Standard-Testnet-RPC verwenden (in unserem Ready-Treiber korrigiert).
+6. **Nichts davon blockiert die Foreman-Demonstration** — Plugin-Liste, REST-Inspektion, Slash-Commands und der autonome Take (Beweisbilder via EVIDENCE_LOG) laufen; die Punkte 1 und 3 haben für den Erfinder den höchsten Stellenwert.
