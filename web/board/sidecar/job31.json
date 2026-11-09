@@ -1,0 +1,9 @@
+{
+  "job_id": 31,
+  "payout_tx": "9jAwU9tuUGPFVfpYJGpnKFemq4aHZ6QtVt6FNyjZr5C9",
+  "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md) — Video-Runde 09.11.",
+  "accept_tx": "9jAwU9tuUGPFVfpYJGpnKFemq4aHZ6QtVt6FNyjZr5C9",
+  "counter_reason": "Gegenangebot (Foreman boss): alle acceptance_criteria erfuellt — #1 summary <=300 words + #2 CSV data table + #3 cited sources — Festpreis 10 % unter Bestbid, ETA 24s. Referenz: acceptance_criteria #1-#3.",
+  "winner": "agent4.foreman-team.testnet",
+  "e2e_log": "/tmp/foreman_e2e_video_09nov.log"
+}

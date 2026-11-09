@@ -37,15 +37,23 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     echo "$JOB_ID" > "$JOB_FILE"
     say POSTED "job=$JOB_ID txid=$TX seed=$E2E_SEED budget=0.9NEAR deadline=+${DEADLINE_SECONDS}s — JETZT job-ID melden, dann bids-Phase"
     ;;
-  bids)
+  bids|bids+middle)
     JOB_ID=$(cat "$JOB_FILE")
-    say BRAKE "Handbremse ${BREMSE}s laufen lassen (Countdown im Frame prüfen), dann 5 Bids parallel"
+    say BRAKE "Handbremse ${BREMSE}s laufen lassen (Countdown im Frame prüfen), dann 5 Bids parallel (429-gehärtet)"
     sleep "$BREMSE"
-    BIDS_FILE=/tmp/foreman_bids.json "$HERE/bid_loop.sh" "$JOB_ID"
+    BIDS_FILE=/tmp/foreman_bids.json "$HERE/video_bid_loop.sh" "$JOB_ID"
+    if [[ "$PHASE" == "bids+middle" ]]; then
+      say GAP "30s Aufnahme-Pause nach Bids, dann middle automatisch"
+      sleep 30
+      "$HERE/counter_offer.sh" "$JOB_ID" | tee -a "$LOG"
+      TX=$(near_call "$FOREMAN" "$CONTRACT" award "{\"job_id\":$JOB_ID}")
+      WINNER=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['winner'])")
+      say AWARD "job=$JOB_ID winner=$WINNER txid=$TX"
+    fi
     ;;
   middle)
     JOB_ID=$(cat "$JOB_FILE")
-    "$HERE/counter_offer.sh" "$JOB_ID"
+    "$HERE/counter_offer.sh" "$JOB_ID" | tee -a "$LOG"
     TX=$(near_call "$FOREMAN" "$CONTRACT" award "{\"job_id\":$JOB_ID}")
     WINNER=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['winner'])")
     say AWARD "job=$JOB_ID winner=$WINNER txid=$TX"
