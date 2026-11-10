@@ -15,7 +15,7 @@ best = min(bids, key=lambda b: int(b['price_yocto']))
 print(int(int(best['price_yocto']) * 9 // 10), int(best['eta_secs']))")"
 
 CRITERIA_LIST=$(python3 -c "import json,os; print(' + '.join(json.loads(os.environ['DEMO_CRITERIA_JSON'])))")
-REASON="Gegenangebot (Foreman boss): alle acceptance_criteria erfuellt — ${CRITERIA_LIST} — Festpreis 10 % unter Bestbid, ETA ${ETA}s. Referenz: acceptance_criteria #1-#3."
+REASON="Counter-offer (Foreman boss): all acceptance criteria satisfied — ${CRITERIA_LIST} — fixed price 10% under the best bid, ETA ${ETA}s. Reference: acceptance_criteria #1-#3."
 
 ARGS=$(CO_JOB="$JOB_ID" CO_PRICE="$PRICE" CO_ETA="$ETA" CO_REASON="$REASON" python3 -c "
 import json, os

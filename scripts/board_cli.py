@@ -105,11 +105,11 @@ def main(argv=None):
     if args.as_json or args.pretty:
         print(json.dumps(out, indent=2 if args.pretty else None, ensure_ascii=True))
     else:
-        print(f"Job {out['job']['id']} [{out['job']['state']}] · Budget {out['job']['budget_near_cent']} ¢")
+        print(f"Job {out['job']['id']} [{out['job']['state']}] · budget {out['job']['budget_near_cent']} NEAR-cent")
         for b in out["bids"]:
-            print(f"  {b['rank']}. {b['bidder']:34} {b['price_near_cent']:>7} ¢  eta {b['eta_secs']}s  rep {b['rep_snapshot']}" + ("  <- Gewinner" if b["is_winner"] else ""))
+            print(f"  {b['rank']}. {b['bidder']:34} {b['price_near_cent']:>7} ¢  eta {b['eta_secs']}s  rep {b['rep_snapshot']}" + ("  <- winner" if b["is_winner"] else ""))
         if out["counter_offer"]:
-            print(f"Counter: {out['counter_offer']['price_near_cent']} ¢ ({out['counter_offer']['bidder']})")
+            print(f"Counter-offer: {out['counter_offer']['price_near_cent']} NEAR-cent ({out['counter_offer']['bidder']})")
         print(f"Receipt: {out['receipt']['receipt_hash'] or '—'}")
         print(f"Board:   {out['board_url']}")
     return 0

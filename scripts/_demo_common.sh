@@ -36,6 +36,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Fallback nur zum LESEN: https://near-testnet.drpc.org (block/view/gas OK; broadcast_* deaktiviert,
 # send_tx für vorzeichen-signierte Txs vorhanden). Override via RPC_URL=<url>.
 RPC_URL="${RPC_URL:-https://rpc.testnet.near.org}"
+# Reads duerfen auf den Fallback ausweichen (der Primaer-RPC drosselt den Biet-Burst).
+FALLBACK_RPC="${FALLBACK_RPC:-https://near-testnet.drpc.org}"
 export NEAR_TESTNET_RPC="$RPC_URL"
 
 # near_call <signer> <contract> <method> <json-args> [extra near-flags...]
@@ -99,19 +101,56 @@ PY
 }
 
 # near_view <contract> <method> <json-args> — View-Call, schreibt JSON nach stdout.
+# near_view <contract> <method> <json-args>
+# Reads get the same 429 discipline as writes: the public testnet endpoint throttles a burst,
+# and a demo that dies on a balance read is not a failed demo, it is a failed instrument.
 near_view() {
   local contract="$1" method="$2" args="$3"
-  local out
+  local out attempt=1
   echo "+ near view $contract $method '$args' --rpc $RPC_URL" >>"$LOG"
-  out=$(near view "$contract" "$method" "$args" --networkId testnet 2>&1) || { echo "$out" >>"$LOG"; return 1; }
+  while :; do
+    if out=$(near view "$contract" "$method" "$args" --networkId testnet 2>&1); then
+      break
+    fi
+    if grep -qE "429|TooManyRequests|unused for some time" <<<"$out" && (( attempt < 4 )); then
+      echo "  .. view 429, Retry $attempt/3 in $((attempt * 5))s (method=$method)" >>"$LOG"
+      sleep $((attempt * 5)); attempt=$((attempt + 1)); continue
+    fi
+    if grep -qE "429|TooManyRequests" <<<"$out" && [[ -n "${FALLBACK_RPC:-}" ]]; then
+      # Reads are allowed on the fallback; the primary only throttles this demo's burst.
+      echo "  .. view 429 persistent, Lesen via Fallback $FALLBACK_RPC (method=$method)" >>"$LOG"
+      if out=$(NEAR_TESTNET_RPC="$FALLBACK_RPC" near view "$contract" "$method" "$args" --networkId testnet 2>&1); then
+        break
+      fi
+    fi
+    echo "$out" >>"$LOG"; return 1
+  done
   echo "$out" >>"$LOG"
   # near-cli druckt "View call: ..." als Kopfzeile — für Parser entfernen, nur Ergebnis lassen
   sed '/^View call: /d' <<<"$out"
 }
 
 # near_state_amount <account> — Kontostand in yocto (amount-Feld, ohne locked_amount).
+# Same 429 discipline: a throttled read must not end a run that has already paid out.
 near_state_amount() {
-  near state "$1" --networkId testnet 2>&1 | python3 -c "
+  local out attempt=1
+  while :; do
+    if out=$(near state "$1" --networkId testnet 2>&1) && grep -q "amount:" <<<"$out"; then
+      break
+    fi
+    if grep -qE "429|TooManyRequests|unused for some time" <<<"$out" && (( attempt < 4 )); then
+      echo "  .. state 429, Retry $attempt/3 in $((attempt * 5))s" >>"$LOG"
+      sleep $((attempt * 5)); attempt=$((attempt + 1)); continue
+    fi
+    if grep -qE "429|TooManyRequests" <<<"$out" && [[ -n "${FALLBACK_RPC:-}" ]]; then
+      echo "  .. state 429 persistent, Lesen via Fallback $FALLBACK_RPC" >>"$LOG"
+      if out=$(NEAR_TESTNET_RPC="$FALLBACK_RPC" near state "$1" --networkId testnet 2>&1) && grep -q "amount:" <<<"$out"; then
+        break
+      fi
+    fi
+    printf '%s\n' "$out" >>"$LOG"; break
+  done
+  printf '%s\n' "$out" | python3 -c "
 import re, sys
 for line in sys.stdin:
     if 'locked' in line:

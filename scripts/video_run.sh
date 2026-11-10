@@ -9,7 +9,9 @@
 #   bids       — 25-30s Handbremse (Countdown >60s im Frame), dann 5 Bids parallel
 #   middle     — counter_offer (boss) + award (boss)
 #   acceptdemo — S6: accept VOR receipt -> Erwartung NOT_DELIVERED (rc!=0, im Terminal sichtbar)
-#   finish     — attach_receipt+submit_work (winner), Payout-Beweis, accept, Sidecar, VIDEO_OK
+#   finish     — attach_receipt+submit_work (winner), payout proof, accept, sidecar, VIDEO_OK
+#   dashboard  — start the live board server and print the link
+#   recipe     — write recipe.json/md for the settled job and register it as an ephe skill
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/_demo_common.sh"
@@ -35,7 +37,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     JOB_ID=$(call_result "$(cat "${LAST_CALL_FILE:-/tmp/foreman_last_call_out}")")
     [[ -n "$JOB_ID" ]] || { echo "VIDEO_FAIL job_id parse — $LOG" >&2; exit 1; }
     echo "$JOB_ID" > "$JOB_FILE"
-    say POSTED "job=$JOB_ID txid=$TX seed=$E2E_SEED budget=0.9NEAR deadline=+${DEADLINE_SECONDS}s — JETZT job-ID melden, dann bids-Phase"
+    say POSTED "job=$JOB_ID txid=$TX seed=$E2E_SEED budget=0.9NEAR deadline=+${DEADLINE_SECONDS}s — report the job id, then run the bids phase"
     ;;
   bids|bids+middle)
     JOB_ID=$(cat "$JOB_FILE")
@@ -43,7 +45,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     sleep "$BREMSE"
     BIDS_FILE=/tmp/foreman_bids.json "$HERE/video_bid_loop.sh" "$JOB_ID"
     if [[ "$PHASE" == "bids+middle" ]]; then
-      say GAP "30s Aufnahme-Pause nach Bids, dann middle automatisch"
+      say GAP "30s capture pause after bids, then middle runs automatically"
       sleep 30
       "$HERE/counter_offer.sh" "$JOB_ID" | tee -a "$LOG"
       TX=$(near_call "$FOREMAN" "$CONTRACT" award "{\"job_id\":$JOB_ID}")
@@ -66,7 +68,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     RC=$?
     set -e
     if [[ $RC -ne 0 ]] && grep -q "NOT_DELIVERED" "${LAST_CALL_FILE:-/tmp/foreman_last_call_out}"; then
-      say S6_OK "accept ohne Deliverable abgewiesen: NOT_DELIVERED (rc=$RC) — Board zeigt weiter Awarded"
+      say S6_OK "accept without a deliverable rejected: NOT_DELIVERED (rc=$RC) — board stays Awarded"
     else
       echo "VIDEO_FAIL S6: accept wurde NICHT wie erwartet abgewiesen (rc=$RC) — LAUF HALTEN, lead informieren" >&2
       exit 3
@@ -86,7 +88,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     REP_BEFORE=$(near_view "$CONTRACT" get_rep "{\"agent\":\"$WINNER\"}" | tr -d '[:space:]')
     TX=$(near_call "$FOREMAN" "$CONTRACT" accept "{\"job_id\":$JOB_ID,\"delivery_score\":90}")
     ACCEPT_TX="$TX"
-    say ACCEPT "job=$JOB_ID score=90 txid=$TX — JETZT accept gemeldet: S7/S8-Shots"
+    say ACCEPT "job=$JOB_ID score=90 txid=$TX — accept confirmed"
     BAL_W_AFTER=$(near_state_amount "$WINNER")
     BAL_F_AFTER=$(near_state_amount "$FOREMAN")
     python3 - "$BAL_W_BEFORE" "$BAL_W_AFTER" "$BAL_F_BEFORE" "$BAL_F_AFTER" "$WINNER" "$FOREMAN" >>"$LOG" <<'PY'
@@ -115,7 +117,7 @@ reason = "" if raw == "null" else raw.strip().strip("'\"")
 doc = {
     "job_id": int(os.environ["SC_JOB"]),
     "payout_tx": os.environ["SC_ACCEPT_TX"],
-    "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md) — Video-Runde 09.11.",
+    "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md) — demo run",
     "accept_tx": os.environ["SC_ACCEPT_TX"],
     "counter_reason": reason,
     "winner": os.environ["SC_WINNER"],
@@ -124,10 +126,23 @@ doc = {
 open(sys.argv[1], "w").write(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
 print("SIDECAR_OK", sys.argv[1])
 PY
-    say OK "job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (vorher $REP_BEFORE) sidecar=$SIDECAR log=$LOG"
+    say OK "job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (before $REP_BEFORE) sidecar=$SIDECAR log=$LOG"
+    ;;
+  dashboard)
+    if ! lsof -nP -iTCP:8777 -sTCP:LISTEN >/dev/null 2>&1; then
+      (cd "$REPO_ROOT/web/board" && python3 -m http.server 8777 --bind 127.0.0.1 > /tmp/foreman_dashboard.log 2>&1 &)
+      sleep 2
+    fi
+    JOB_ID=$(cat "$JOB_FILE" 2>/dev/null || echo 1)
+    say DASHBOARD "board server=http://127.0.0.1:8777/?job=$JOB_ID — open it any time"
+    ;;
+  recipe)
+    JOB_ID=$(cat "$JOB_FILE")
+    python3 "$HERE/make_recipe.py" "$JOB_ID" | tee -a "$LOG"
+    say RECIPE "job=$JOB_ID recipe written + registered as an ephe skill"
     ;;
   *)
-    echo "usage: scripts/video_run.sh <post|bids|middle|acceptdemo|finish>" >&2
+    echo "usage: scripts/video_run.sh <post|bids|middle|acceptdemo|finish|dashboard|recipe>" >&2
     exit 2
     ;;
 esac

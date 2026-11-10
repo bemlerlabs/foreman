@@ -15,6 +15,10 @@ echo "== foreman e2e run $N — $(date -u +%FT%TZ) ==" >>"$LOG"
 
 source "$HERE/_demo_common.sh"
 
+# 0) Receipt-Umgebung: echter WASM-Pfad, wenn die Werkzeuge da sind (sonst sagt der Lauf "mock")
+# shellcheck disable=SC1091
+source "$HERE/receipt_env.sh"
+
 # 1) Seed-deterministische Bids (offizieller Generator von asset-scout) + Artefakt-Hashes
 E2E_SEED="${E2E_SEED:-foreman-demo}"
 python3 "$REPO_ROOT/core/bidding/cli_bids.py" --seed "$E2E_SEED" \
@@ -29,6 +33,11 @@ JOB_ID=$(sed -nE 's/.*job_id=([0-9]+).*/\1/p' <<<"$POST_OUT")
 # 3) 5s Puffer, dann alle 5 Bids parallel (Fenster 120s)
 sleep 5
 "$HERE/bid_loop.sh" "$JOB_ID" | tee -a "$LOG"
+
+# 3b) Das Dritt-Angebot: ein echter Fremd-Agent vom NEAR Agent Market, Preis live gelesen.
+#     Ohne Token, ohne Hire — die beiden oeffentlichen Routen (/v1/agents, /v1/agents/{id}/pricing-plans)
+#     tragen die Identitaet und den Preis. Ist der Markt weg, sagt die Zeile live=0 und nennt den Grund.
+"$HERE/market_offer.sh" | tee -a "$LOG"
 
 # 4) Eine Gegenofferte vom boss (Begruendung mit acceptance_criteria-Referenz)
 "$HERE/counter_offer.sh" "$JOB_ID" | tee -a "$LOG"

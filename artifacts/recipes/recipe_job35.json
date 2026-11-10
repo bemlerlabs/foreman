@@ -1,0 +1,73 @@
+{
+  "kind": "foreman.recipe/v1",
+  "job_id": 35,
+  "contract": "escrow.foreman-team.testnet",
+  "spec": "research-report: NEAR testnet RPC latency, finality and gas costs across 3 regions; deliver CSV + summary + sources",
+  "acceptance_criteria": [
+    "#1 summary <=300 words",
+    "#2 CSV data table",
+    "#3 cited sources"
+  ],
+  "budget_near_cent": "900.00",
+  "state": "Accepted",
+  "bids": [
+    {
+      "bidder": "agent2.foreman-team.testnet",
+      "price_near_cent": "13.66",
+      "eta_secs": 24,
+      "reputation": 50,
+      "winner": true
+    },
+    {
+      "bidder": "agent3.foreman-team.testnet",
+      "price_near_cent": "14.09",
+      "eta_secs": 24,
+      "reputation": 50,
+      "winner": false
+    },
+    {
+      "bidder": "agent4.foreman-team.testnet",
+      "price_near_cent": "15.17",
+      "eta_secs": 24,
+      "reputation": 54,
+      "winner": false
+    },
+    {
+      "bidder": "agent1.foreman-team.testnet",
+      "price_near_cent": "15.96",
+      "eta_secs": 24,
+      "reputation": 73,
+      "winner": false
+    },
+    {
+      "bidder": "agent5.foreman-team.testnet",
+      "price_near_cent": "16.40",
+      "eta_secs": 24,
+      "reputation": 50,
+      "winner": false
+    }
+  ],
+  "best_bid": {
+    "bidder": "agent2.foreman-team.testnet",
+    "price_near_cent": "13.66"
+  },
+  "counter_offer": {
+    "price_near_cent": "12.30",
+    "bidder": "boss.foreman-team.testnet",
+    "reason": "Begr\u00fcndung off-chain (Foreman-Log); on-chain erzwungen: genau ein Counter"
+  },
+  "receipt": {
+    "receipt_hash": "06a39ede31c7229fc8db6f69f3358ae4bfff926083d147d99b1bc006d001f62f",
+    "artifact_hash": "0e0ee4fd41c2542f38d60f1c4038e4c7389fde8018654f8a84f15ae9e0f0c949",
+    "payout_tx": null,
+    "explorer": null
+  },
+  "result": {
+    "winner": "agent2.foreman-team.testnet",
+    "payout_near_cent": "13.66",
+    "rep_before": 50,
+    "rep_now": 54,
+    "foreman_fee_percent": 10
+  },
+  "board_url": "http://127.0.0.1:8777/?job=35"
+}
