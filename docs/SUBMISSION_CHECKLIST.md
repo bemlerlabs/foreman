@@ -12,7 +12,7 @@ Was hier steht, ist belegt; was fehlt, ist als USER-Schritt markiert.
 | Dritt-Angebot | live vom NEAR Agent Market gelesen (`web-research`, 0,50 USD) | `MARKET_OFFER_OK … live=1` in beiden Läufen |
 | Judge-Quickstart kalt | Sandbox-Wheel **im Repo** (Apache-2.0, 99 kB) + gebauter Worker im Repo | `vendor/`, `artifacts/worker/latency_stats.wasm` |
 | Board | Sidecars der Gate-Jobs 44/45 liegen bei, `board_cli.py --job 44` | `web/board/sidecar/job44.json` |
-| Film | 98 s, 1920×1080, 30 fps, Zahlen aus dem Gate-Lauf | `foreman-film/renders/foreman-film_2026-11-10_09-52-56.mp4` |
+| Film | 98 s, 1920×1080, 30 fps, −13.2 LUFS; neue Narration (Kokoro, 11 Zeilen), Carve + Ducking, Sound-Design, Zahlen aus dem Gate-Lauf | `foreman-film/renders/foreman-film_2026-11-10_13-57-10.mp4` (98 s, −13.2 LUFS, −2.5 dBTP) |
 | Submission-Payload | `requestId` gesetzt, `size "1"`, 4 Tracks, `idea` 1921 Zeichen | `docs/SUBMISSION_2026-11-13.json` |
 | X-Post-Text | Variante 2 (Demo-Moment) passt zum Film; Variante 3 ist gesperrt (kein echter Dritt-Hire) | `docs/X_POST_DRAFT.md` |
 
@@ -35,3 +35,19 @@ Was hier steht, ist belegt; was fehlt, ist als USER-Schritt markiert.
 - Freeze 11.11. 12:00: keine neuen Ideen, README-Q-003-Diff, LICENSE-Notes, Cold-Test (G6).
 - Film-Take mit den neuen Zeilen ist gerendert; wenn der Owner eine Sprecher-Stimme will, bleibt der
   Soundtrack unverändert (Voiceover ist im Sketch optional).
+
+## Am 10.11. gegen die Organizer-Quelle geprüft
+
+[DevGrants Daily](https://devgrantsdaily.com/items/2026-10-24-near-hackathon-build-beyond-boundaries/)
+hat die Angaben am 24.10. gegen die offizielle Seite abgeglichen:
+
+- Build-Fenster **1.11. 00:00 UTC → 14.11. 23:59 UTC**, Judging 16.–18.11., Ergebnisse bis 18.11.
+- **$250.000** Pool, **ein** Grand Prize à **$55.000**, **13 Tracks** mit je $10.000/$3.000/$2.000.
+- Einreichen: Repo **public**, **Demo-Post auf X**, Formular mit beiden Links, Beschreibung, Team-Größe,
+  Tracks, NEAR-Auszahlungskonto. **Eine Einreichung pro Team, nach dem Absenden nicht änderbar.**
+- Offizielle Track-Namen (Auszug): Unstoppable DeFi · Privacy and Private AI · **AI Swarms** ·
+  **Agent Economy** · Games With Real Economies · **Open Innovation**.
+
+Daraus folgt: die Endkarte nennt „AI Swarms · Agent Economy · Open Innovation"; die Payload-Tracks
+bleiben bei den vier IDs aus der Submission-Maske. Filmtitel-Kicker sagt „NEAR HACKATHON 2026 ·
+AGENT SWARMS".
