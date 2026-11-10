@@ -1,0 +1,15 @@
+# Third-party component carried in this repository
+
+## ephemora-cell 2.2.0 — Apache License 2.0
+
+The WASM sandbox that executes a delivery and signs the execution report. Copyright Michael Soppa.
+Redistributed here as an unmodified wheel so a judge can run the receipt path without network access
+to a package index (the project is not published on PyPI).
+
+- `ephemora_cell-2.2.0-py3-none-any.whl` — built from the Apache-2.0 source, no changes
+- `LICENSE.ephemora-cell` — the licence text as shipped with the source
+- `README.ephemora-cell.md` — the project's own readme
+
+Install together with its one runtime dependency:
+
+    pip install wasmtime vendor/ephemora_cell-2.2.0-py3-none-any.whl

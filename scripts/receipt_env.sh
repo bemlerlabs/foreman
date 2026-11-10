@@ -12,7 +12,7 @@ export EMPHORA_WASM="${EMPHORA_WASM:-$REPO_ROOT/artifacts/worker/latency_stats.w
 export EPHEMORA_CELL_PATH="${EPHEMORA_CELL_PATH:-$HOME/ephemora-cell}"
 
 if [[ -z "${EPHEMORA_PY:-}" ]]; then
-  for candidate in "$REPO_ROOT/.venv/bin/python" /tmp/rcpt313/bin/python python3.13 python3.12 python3; do
+  for candidate in "$REPO_ROOT/.venv-receipts/bin/python" "$REPO_ROOT/.venv/bin/python" /tmp/rcpt313/bin/python python3.13 python3.12 python3; do
     command -v "$candidate" >/dev/null 2>&1 || [[ -x "$candidate" ]] || continue
     if PYTHONPATH="$EPHEMORA_CELL_PATH" "$candidate" -c "import wasmtime, cryptography, ephemora_cell" 2>/dev/null; then
       EPHEMORA_PY="$candidate"; break

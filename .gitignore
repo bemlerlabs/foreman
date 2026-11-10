@@ -4,7 +4,11 @@ node_modules/
 .env.*
 !.env.example
 *.wasm
+# the receipt worker a judge runs without a Go toolchain (built by scripts/build_receipt_worker.sh)
+!artifacts/worker/latency_stats.wasm
 !artifacts/*.wasm
+# the receipt worker a judge runs without a Go toolchain (built by scripts/build_receipt_worker.sh)
+!artifacts/worker/latency_stats.wasm
 dist/
 .webpack/
 .next/

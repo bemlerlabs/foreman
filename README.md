@@ -11,9 +11,11 @@ Jede Ausführung läuft sandboxed und hinterlässt ein verifizierbares Execution
 ## Quickstart — do X → see Y (120 Sekunden, alles live gemessen am 2026-11-06)
 
 ```bash
-# 0) Einmalig: Sandbox-Stack in ein sauberes venv (Python 3.12, ≈10 s; PyPI-paketierbar)
+# 0) Einmalig: Sandbox-Stack in ein sauberes venv (Python 3.12)
+#    ephemora-cell liegt als Apache-2.0-Wheel IM Repo (vendor/), weil das Projekt nicht auf
+#    PyPI veroeffentlicht ist — der Judge braucht keinen Netzzugang und keine Registrierung.
 python3.12 -m venv .venv-receipts
-.venv-receipts/bin/pip install wasmtime cryptography pytest ephemora-cell
+.venv-receipts/bin/pip install wasmtime cryptography pytest vendor/ephemora_cell-2.2.0-py3-none-any.whl
 
 # 1) LIVE-BOARD — read-only gegen escrow.foreman-team.testnet, keine Keys nötig:
 python3 scripts/board_cli.py --job 6
@@ -46,8 +48,9 @@ print('verify_receipt:', verify_receipt(r)); print('receipt_hash :', receipt_has
 .venv-receipts/bin/python -m pytest core/receipts -q
 # → 14 passed in 4.24s
 
-# 4) EIGENER WORKER → EIGENES RECEIPT (Worker-Quelle core/receipts/worker/latency_stats.go,
-#    Build über den paket-eigenen Builder; braucht Go für den Build, sonst Fixture-Fallback):
+# 4) EIGENER WORKER → EIGENES RECEIPT (der gebaute Worker liegt bei: artifacts/worker/latency_stats.wasm,
+#    Quelle core/receipts/worker/latency_stats.go; neu bauen mit scripts/build_receipt_worker.sh,
+#    das nur zum Neubauen Go braucht — der Lauf selbst nicht):
 .venv-receipts/bin/python -c "
 from pathlib import Path
 from ephemora_cell import builder

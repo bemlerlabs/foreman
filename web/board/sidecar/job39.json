@@ -1,0 +1,9 @@
+{
+  "job_id": 39,
+  "payout_tx": "LH6EDLKNYtNmXLVpz9vwbkXrWgWhbTn12Tb9dhNf2zS",
+  "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md)",
+  "accept_tx": "LH6EDLKNYtNmXLVpz9vwbkXrWgWhbTn12Tb9dhNf2zS",
+  "counter_reason": "Counter-offer (Foreman boss): all acceptance criteria satisfied — #1 summary <=300 words + #2 CSV data table + #3 cited sources — fixed price 10% under the best bid, ETA 24s. Reference: acceptance_criteria #1-#3.",
+  "winner": "agent1.foreman-team.testnet",
+  "e2e_log": "/tmp/foreman_e2e_run12.log"
+}
