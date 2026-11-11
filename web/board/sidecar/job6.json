@@ -1,8 +1,8 @@
 {
   "job_id": 6,
   "payout_tx": "G9rQAo9eSxtM2dSD7qQjny3xAtqJUwZJ9EXEmGyugQpQ",
-  "payout_tx_label": "accept-tx mit payout-transfer (90 % agent1 / 10 % boss, yocto via near state verifiziert)",
+  "payout_tx_label": "accept tx with payout transfer (90 % agent1 / 10 % boss, yocto verified via near state)",
   "accept_tx": "G9rQAo9eSxtM2dSD7qQjny3xAtqJUwZJ9EXEmGyugQpQ",
   "counter_reason": "",
-  "_kommentar": "Echte Daten aus /tmp/foreman_e2e_run2.log (phase3-Lauf, job=6, state=Accepted). counter_reason leer: Gegenofferte lag VOR phase4.2-Deploy, on-chain via get_counter_reason(6) = null (ehrlich, kein Nachtrag). Ab job7 schreibt der Runner Grund + Tx-IDs automatisch."
+  "_comment": "Real data from the phase3 e2e run (job=6, state=Accepted). counter_reason empty: the counter-offer predates the phase4.2 deploy, on-chain get_counter_reason(6) = null (honest, no backfill). From job 7 on, the runner writes reason + tx ids automatically."
 }

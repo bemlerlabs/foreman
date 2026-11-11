@@ -1,8 +1,8 @@
 /**
- * CLI: execute-demo — Live-Swap NEAR→USDC im Cent-Bereich. NUR mit AGENT_EXECUTE=true
- * (hartes Gate in treasury.executeDemo(); ohne Flag bricht es hier ab, bevor ein Request geht).
- * Ausgabe: Quote-/Correlation-ID + Status, OHNE Secrets.
- * Run (nach dry:true-Beweis): AGENT_EXECUTE=true npm run execute-demo
+ * CLI: execute-demo — live swap NEAR→USDC in the cent range. ONLY with AGENT_EXECUTE=true
+ * (hard gate in treasury.executeDemo(); without the flag it aborts here before any request).
+ * Output: quote/correlation id + status, WITHOUT secrets.
+ * Run (after the dry:true proof): AGENT_EXECUTE=true npm run execute-demo
  */
 import { treasuryConfig, redact, redactJson } from "../env.js";
 import { executeDemo } from "../treasury.js";
@@ -13,8 +13,8 @@ try {
   const cfg = treasuryConfig();
   console.log(`Base: ${cfg.baseUrl}`);
   if (!cfg.executeGate) {
-    // Vorab-Botschaft fürs Protokoll; das eigentliche Gate ist treasury.executeDemo().
-    console.log("GATE: AGENT_EXECUTE != 'true' → keine Ausführung, trockener Abbruch ohne API-Dispatch.");
+    // Up-front message for the log; the actual gate is treasury.executeDemo().
+    console.log("GATE: AGENT_EXECUTE != 'true' → no execution, dry abort without API dispatch.");
   }
   const agentId = resolveAgentId();
   const outcome = await executeDemo(agentId, cfg);
@@ -24,9 +24,9 @@ try {
   console.log(redactJson(outcome));
 } catch (err) {
   if (err instanceof ApiError) {
-    console.error(`\nExecute fehlgeschlagen: code=${err.code} layer=${err.layer ?? "?"} http=${err.httpStatus}`);
+    console.error(`\nExecute failed: code=${err.code} layer=${err.layer ?? "?"} http=${err.httpStatus}`);
     if (["UNCERTAIN", "NEEDS_REVIEW"].includes(String(err.code))) {
-      console.error("→ NICHT erneut senden — Status mit gleichem correlation_id beobachten.");
+      console.error("→ DO NOT resend — observe the status with the same correlation_id.");
     }
   } else {
     console.error(`\n${redact(err instanceof Error ? err.message : String(err))}`);

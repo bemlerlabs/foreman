@@ -6,12 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
-const CLI_MODULES = '/Users/sanji/.hermes/node-22.23.4/lib/node_modules/near-cli/node_modules';
-const nearApi = require(path.join(CLI_MODULES, 'near-api-js'));
-const { actionCreators } = require(path.join(
-  CLI_MODULES,
-  '@near-js/transactions/lib/action_creators.js',
-));
+const { nearApi, actionCreators } = require('./near_modules.cjs');
 
 const RPC = process.env.RPC_URL || 'https://near-testnet.drpc.org';
 let lastTxHash = null;
@@ -55,7 +50,7 @@ async function main() {
 }
 
 main().catch((e) => {
-  console.error('near_transfer FEHLER:', String((e && e.message) || e).slice(0, 300));
+  console.error('near_transfer ERROR:', String((e && e.message) || e).slice(0, 300));
   if (lastTxHash) console.log('Transaction Id', lastTxHash);
   process.exit(1);
 });

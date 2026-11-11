@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# phase3: gemeinsame Bibliothek für die Live-Biet-Runde (post_job/bid_loop/counter_offer/e2e_demo).
-# KEINE Secrets hier — Accounts aus .env (Repository-Regel), Signatur via ~/.near-credentials/testnet.
+# phase3: shared library for the live bidding round (post_job/bid_loop/counter_offer/e2e_demo).
+# NO secrets here — accounts from .env (repository rule), signing via ~/.near-credentials/testnet.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -13,35 +13,35 @@ if [[ -f "$REPO_ROOT/.env" ]]; then
   set +a
 fi
 
-# Accounts (.env-Belegung hat Vorrang, Defaults laut deployed-Setup T1)
+# Accounts (.env assignment wins, defaults per deployed setup T1)
 CONTRACT="${CONTRACT_ACCOUNT:-escrow.foreman-team.testnet}"
 OWNER="${OWNER_ACCOUNT:-foreman-team.testnet}"
 FOREMAN="${FOREMAN_ACCOUNT:-boss.foreman-team.testnet}"
 AGENTS_DEFAULT="agent1.foreman-team.testnet,agent2.foreman-team.testnet,agent3.foreman-team.testnet,agent4.foreman-team.testnet,agent5.foreman-team.testnet"
 AGENTS="${SWARM_ACCOUNTS:-$AGENTS_DEFAULT}"
 
-# Demo-Job (KANONISCH — gen_bids.py muss identische Werte sehen, sonst falsche Preise)
+# Demo job (CANONICAL — gen_bids.py must see identical values, otherwise wrong prices)
 export DEMO_SPEC="${DEMO_SPEC:-research-report: NEAR testnet RPC latency, finality and gas costs across 3 regions; deliver CSV + summary + sources}"
 export DEMO_CRITERIA_JSON="${DEMO_CRITERIA_JSON:-[\"#1 summary <=300 words\",\"#2 CSV data table\",\"#3 cited sources\"]}"
 export DEMO_BUDGET_YOCTO="${DEMO_BUDGET_YOCTO:-900000000000000000000000}" # 0.9 NEAR (RULES: Budget <= 3 USD)
-DEADLINE_SECONDS="${DEADLINE_SECONDS:-600}"                                # Lead-Vorgabe: now + 10 min
+DEADLINE_SECONDS="${DEADLINE_SECONDS:-600}"                                # lead directive: now + 10 min
 GAS="${GAS:-100000000000000}"                                              # 100 TGas
 
 LOG="${LOG:-/tmp/foreman_e2e_manual.log}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# Fund 07.11.: Der Default-Testnet-RPC war zeitweise DEPRECATED-429 (TooManyRequests bei Biet-Bursts);
-# 11:15 Uhr wieder gesund (6/6 gas_price OK). near-cli 4 (config.js) liest den Endpoint aus
-# NEAR_TESTNET_RPC; --networkId bleibt testnet (Keychain-Pfad ~/.near-credentials/testnet unverändert).
-# Fallback nur zum LESEN: https://near-testnet.drpc.org (block/view/gas OK; broadcast_* deaktiviert,
-# send_tx für vorzeichen-signierte Txs vorhanden). Override via RPC_URL=<url>.
+# Finding 07.11.: the default testnet RPC was temporarily DEPRECATED-429 (TooManyRequests on bid bursts);
+# healthy again at 11:15 (6/6 gas_price OK). near-cli 4 (config.js) reads the endpoint from
+# NEAR_TESTNET_RPC; --networkId stays testnet (keychain path ~/.near-credentials/testnet unchanged).
+# Fallback for READS only: https://near-testnet.drpc.org (block/view/gas OK; broadcast_* disabled,
+# send_tx available for pre-signed txs). Override via RPC_URL=<url>.
 RPC_URL="${RPC_URL:-https://rpc.testnet.near.org}"
-# Reads duerfen auf den Fallback ausweichen (der Primaer-RPC drosselt den Biet-Burst).
+# Reads may fall back (the primary RPC throttles the bid burst).
 FALLBACK_RPC="${FALLBACK_RPC:-https://near-testnet.drpc.org}"
 export NEAR_TESTNET_RPC="$RPC_URL"
 
 # near_call <signer> <contract> <method> <json-args> [extra near-flags...]
-# Loggt Kommando + Ausgabe in $LOG, prueft auf Failure, gibt Tx-ID auf stdout zurueck.
+# Logs command + output to $LOG, checks for failure, returns the tx id on stdout.
 near_call() {
   local who="$1" contract="$2" method="$3" args="$4"
   shift 4
@@ -50,19 +50,19 @@ near_call() {
   while :; do
     if ! out=$(near call "$contract" "$method" "$args" \
         --accountId "$who" --networkId testnet --gas "$GAS" "$@" 2>&1); then rc=1; else rc=0; fi
-    # T5-Härtung 07.11.: Testnet-RPC drosselt bei Bursts mit -429 (TooManyRequests).
-    # Retry mit Backoff — 429 trifft typisch das Polling/Access-Key-HOLEN vor Broadcast;
-    # methods mit Seiteneffekten werden zusätzlich über View-Checks im Runner verifiziert.
+    # T5 hardening 07.11.: the testnet RPC throttles bursts with -429 (TooManyRequests).
+    # Retry with backoff — 429 typically hits polling/access-key FETCHING before broadcast;
+    # methods with side effects are additionally verified via view checks in the runner.
     if [[ $rc -ne 0 && "$out" == *TooManyRequests* && $attempt -lt 4 ]]; then
-      echo "  .. 429 vom RPC, Retry $attempt/3 in $((attempt * 15))s (method=$method)" >>"$LOG"
+      echo "  .. 429 from RPC, retry $attempt/3 in $((attempt * 15))s (method=$method)" >>"$LOG"
       sleep $((attempt * 15)); attempt=$((attempt + 1)); continue
     fi
     break
   done
-  # Fallback 07.11.: persistenter 429 auf broadcast-Route -> lokal signieren + send_tx
-  # über scripts/near_send.cjs (getestet gegen dRPC; Secrets bleiben in der Keychain).
+  # Fallback 07.11.: persistent 429 on the broadcast route -> sign locally + send_tx
+  # via scripts/near_send.cjs (tested against dRPC; secrets stay in the keychain).
   if [[ $rc -ne 0 && "$out" == *TooManyRequests* ]]; then
-    echo "  .. 429 persistent, Fallback near_send.cjs (lokal signiert, send_tx via \$FALLBACK_RPC)" >>"$LOG"
+    echo "  .. 429 persistent, fallback near_send.cjs (signed locally, send_tx via \$FALLBACK_RPC)" >>"$LOG"
     local dep=0 a prev_flag=""
     for a in "$@"; do
       if [[ "$prev_flag" == "--depositYocto" ]]; then dep="$a"; fi
@@ -71,7 +71,7 @@ near_call() {
     out=$(RPC_URL="${FALLBACK_RPC:-https://near-testnet.drpc.org}" \
       node "$SCRIPT_DIR/near_send.cjs" "$who" "$contract" "$method" "$args" \
       "$dep" "$GAS" 2>&1) && rc=0 || rc=$?
-    # near_send exit 3 = Tx gelandet mit Contract-Failure -> CALL-FAIL-Pfad unten
+    # near_send exit 3 = tx landed with a contract failure -> CALL-FAIL path below
   fi
   echo "$out" >>"$LOG"
   LAST_CALL_FILE="${LAST_CALL_FILE:-/tmp/foreman_last_call_out}"
@@ -81,7 +81,7 @@ near_call() {
     tail -8 <<<"$out" >&2
     return 1
   fi
-  # near-cli 4 druckt "Transaction Id <base58>" — primärer Parser, JSON nur Fallback.
+  # near-cli 4 prints "Transaction Id <base58>" — primary parser, JSON only as fallback.
   txid=$(grep -oE 'Transaction Id [1-9A-HJ-NP-Za-km-z]{40,}' <<<"$out" | awk '{print $3}' | head -1)
   if [[ -z "$txid" ]]; then
     txid=$(python3 - "$out" <<'PY'
@@ -100,8 +100,7 @@ PY
   echo "$txid"
 }
 
-# near_view <contract> <method> <json-args> — View-Call, schreibt JSON nach stdout.
-# near_view <contract> <method> <json-args>
+# near_view <contract> <method> <json-args> — view call, writes JSON to stdout.
 # Reads get the same 429 discipline as writes: the public testnet endpoint throttles a burst,
 # and a demo that dies on a balance read is not a failed demo, it is a failed instrument.
 near_view() {
@@ -113,12 +112,12 @@ near_view() {
       break
     fi
     if grep -qE "429|TooManyRequests|unused for some time" <<<"$out" && (( attempt < 4 )); then
-      echo "  .. view 429, Retry $attempt/3 in $((attempt * 5))s (method=$method)" >>"$LOG"
+      echo "  .. view 429, retry $attempt/3 in $((attempt * 5))s (method=$method)" >>"$LOG"
       sleep $((attempt * 5)); attempt=$((attempt + 1)); continue
     fi
     if grep -qE "429|TooManyRequests" <<<"$out" && [[ -n "${FALLBACK_RPC:-}" ]]; then
       # Reads are allowed on the fallback; the primary only throttles this demo's burst.
-      echo "  .. view 429 persistent, Lesen via Fallback $FALLBACK_RPC (method=$method)" >>"$LOG"
+      echo "  .. view 429 persistent, reading via fallback $FALLBACK_RPC (method=$method)" >>"$LOG"
       if out=$(NEAR_TESTNET_RPC="$FALLBACK_RPC" near view "$contract" "$method" "$args" --networkId testnet 2>&1); then
         break
       fi
@@ -126,11 +125,11 @@ near_view() {
     echo "$out" >>"$LOG"; return 1
   done
   echo "$out" >>"$LOG"
-  # near-cli druckt "View call: ..." als Kopfzeile — für Parser entfernen, nur Ergebnis lassen
+  # near-cli prints "View call: ..." as a header — strip it for parsers, keep only the result
   sed '/^View call: /d' <<<"$out"
 }
 
-# near_state_amount <account> — Kontostand in yocto (amount-Feld, ohne locked_amount).
+# near_state_amount <account> — balance in yocto (amount field, without locked_amount).
 # Same 429 discipline: a throttled read must not end a run that has already paid out.
 near_state_amount() {
   local out attempt=1
@@ -139,11 +138,11 @@ near_state_amount() {
       break
     fi
     if grep -qE "429|TooManyRequests|unused for some time" <<<"$out" && (( attempt < 4 )); then
-      echo "  .. state 429, Retry $attempt/3 in $((attempt * 5))s" >>"$LOG"
+      echo "  .. state 429, retry $attempt/3 in $((attempt * 5))s" >>"$LOG"
       sleep $((attempt * 5)); attempt=$((attempt + 1)); continue
     fi
     if grep -qE "429|TooManyRequests" <<<"$out" && [[ -n "${FALLBACK_RPC:-}" ]]; then
-      echo "  .. state 429 persistent, Lesen via Fallback $FALLBACK_RPC" >>"$LOG"
+      echo "  .. state 429 persistent, reading via fallback $FALLBACK_RPC" >>"$LOG"
       if out=$(NEAR_TESTNET_RPC="$FALLBACK_RPC" near state "$1" --networkId testnet 2>&1) && grep -q "amount:" <<<"$out"; then
         break
       fi
@@ -162,7 +161,7 @@ else:
     print('')"
 }
 
-# call_result <text> — JobId aus dem Contract-Log foreman:job_opened|id=N (primär), sonst Result-Feld.
+# call_result <text> — JobId from the contract log foreman:job_opened|id=N (primary), else the Result field.
 call_result() {
   local txt="$1" id
   id=$(grep -oE 'foreman:job_opened\|id=[0-9]+' <<<"$txt" | grep -oE '[0-9]+$' | head -1)

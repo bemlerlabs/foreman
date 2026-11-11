@@ -1,13 +1,13 @@
 /**
- * grant-prepare.ts — Bereitet den Grant für delegierte Executions vor (Mission: Quote-Lifecycle
- * braucht X-Grant-Token für Live-Aktionen).
+ * grant-prepare.ts — prepares the grant for delegated executions (mission: the quote lifecycle
+ * needs an X-Grant-Token for live actions).
  *
- * Ablauf:
- *   1. createGrantCredential() (SDK, läuft auf Node 22) erzeugt token (ngt_…) + commitment.
- *   2. Token wird lokal persistiert (.state/grants/, 0600, gitignored) und zusätzlich als
- *      INTENTS_GRANT_TOKEN in die PROZESSUMGEBUNG des späteren execute-demo gehört — der Token
- *      wird hier NICHT auf die Konsole gedruckt.
- *   3. grant_issue-Intent wird generiert — der MENSCH signiert (kein Auto-Sign).
+ * Flow:
+ *   1. createGrantCredential() (SDK, runs on Node 22) creates token (ngt_…) + commitment.
+ *   2. The token is persisted locally (.state/grants/, 0600, gitignored) and additionally
+ *      belongs into the PROCESS ENV of the later execute-demo as INTENTS_GRANT_TOKEN —
+ *      the token is NOT printed to the console here.
+ *   3. The grant_issue intent is generated — the HUMAN signs (no auto-sign).
  *
  * Run: npm run grant:prepare [-- --label bot-1] [-- --expires 2026-11-15T00:00:00Z]
  */
@@ -37,12 +37,12 @@ const storeFile = path.join(grantsDir, `${label}.json`);
 let credential: { token: string; commitment: string };
 if (existsSync(storeFile)) {
   credential = JSON.parse(readFileSync(storeFile, "utf8"));
-  console.log(`Vorhandener Grant "${label}" wiederverwendet.`);
+  console.log(`Reusing existing grant "${label}".`);
 } else {
   credential = createGrantCredential();
   mkdirSync(grantsDir, { recursive: true, mode: 0o700 });
   writeFileSync(storeFile, JSON.stringify({ label, agent_id: agentId, ...credential }, null, 2), { mode: 0o600 });
-  console.log(`Grant-Credential erzeugt und lokal gespeichert (0600): core/intents/.state/grants/${label}.json`);
+  console.log(`Grant credential created and stored locally (0600): core/intents/.state/grants/${label}.json`);
 }
 
 const generated = await api.generateIntent(
@@ -59,10 +59,10 @@ console.log(redactJson({
   type: generated.type,
   standard: generated.intent.standard,
   expires_at: expires,
-  token_printed: false, // Token bewusst nie auf die Konsole — nur via .state/grants/ oder INTENTS_GRANT_TOKEN
+  token_printed: false, // token deliberately never on the console — only via .state/grants/ or INTENTS_GRANT_TOKEN
 }));
-console.log("\nSCHRITT FÜR DEN MENSCHEN: Signier-Message bestätigen, dann einreichen:");
+console.log("\nSTEP FOR THE HUMAN: confirm the signing message, then submit:");
 console.log(`  npm run owner:sign -- --cid ${generated.correlation_id} --keystore <credential.json> --i-am-the-owner`);
 console.log(`  npm run policy:submit -- --cid ${generated.correlation_id} --signed core/intents/.state/intents/${generated.correlation_id}.signed.json`);
-console.log("\nDanach execute-demo mit dem Token aus .state/grants/ (nie committen):");
+console.log("\nThen execute-demo with the token from .state/grants/ (never commit it):");
 console.log(`  INTENTS_GRANT_TOKEN=$(cat core/intents/.state/grants/${label}.json | node -e 'process.stdin.on("data",d=>console.log(JSON.parse(d).token))') AGENT_EXECUTE=true npm run execute-demo`);

@@ -1,4 +1,4 @@
-"""core.bidding — Schwarm-Bieten für den Foreman-Escrow (RULES.md §Bieten).
+"""core.bidding — swarm bidding for the Foreman escrow (RULES.md §Bidding).
 
-Baseline-Bibliotheken (Q-005): supernova (/Users/sanji/supernova, Apache-2.0, PyPI supernova-swarm).
+Baseline libraries (Q-005): supernova (Apache-2.0, PyPI supernova-swarm; local checkout via SUPERNOVA_PATH).
 """

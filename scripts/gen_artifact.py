@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""phase3: deterministische Artefakt-/Receipt-Hashes für die Live-Biet-Runde.
+"""phase3: deterministic artifact/receipt hashes for the live bidding round.
 
-Liest /tmp/foreman_bids.json (vom offizielen core/bidding/cli_bids.py, asset-scout),
-bestimmt den Gewinner (guenstigster Bid, RULES-Reihenfolge price -> rep -> zeit) und
-rechnet dessen Deliverable-Hash ueber die MOCK-Engine des Adapters (deterministisch:
-Payload ohne ran_at). Schreibt /tmp/foreman_artifact.json
+Reads /tmp/foreman_bids.json (from the official core/bidding/cli_bids.py),
+picks the winner (cheapest bid, RULES order price -> rep -> time) and computes
+its deliverable hash through the adapter's MOCK engine (deterministic: payload
+without ran_at). Writes /tmp/foreman_artifact.json
   {winner, artifact_hash, receipt_hash}
-Seed-Identitaet: gleicher cli_bids-Seed + gleiches ADAPTER_JOB => byte-identisch (T5).
+Seed identity: same cli_bids seed + same ADAPTER_JOB => byte-identical (T5).
 """
 import hashlib
 import json
@@ -40,17 +40,17 @@ BIDS_FILE = Path(os.environ.get("BIDS_FILE", "/tmp/foreman_bids.json"))
 
 bids = json.load(open(BIDS_FILE))
 if len(bids) != 5:
-    sys.exit(f"gen_artifact: 5 Bids erwartet, gefunden: {len(bids)}")
+    sys.exit(f"gen_artifact: expected 5 bids, found: {len(bids)}")
 
 winner = min(bids, key=lambda b: (int(b["price_yocto"]), bids.index(b)))["bidder"]
 
-# Mock-Engine: gleiche (adapter-job, packages) => gleicher Deliverable (asset-scout-Vertrag).
+# Mock engine: same (adapter job, packages) => same deliverable.
 job = JobRequest(
     spec=SPEC, budget_yocto=BUDGET, deadline_secs=600,
     job_id=ADAPTER_JOB, acceptance_criteria=CRITERIA,
 )
 deliverable = MockSupernovaEngine().run(job, decompose_spec(job.spec))
-artifact_hash = deliverable.artifact_hash  # sha256 ueber kanonische Paketrepraesentation
+artifact_hash = deliverable.artifact_hash  # sha256 over the canonical package representation
 
 # ---- Receipt: real when the tools are named ---------------------------------------------
 # The mock below is a hash formula, and that is enough to drive the chain. A T5 gate that claims

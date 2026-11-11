@@ -1,12 +1,12 @@
 /**
- * Env-Loader + Secret-Hygiene für den Foreman-Intents-Treasury.
+ * Env loader + secret hygiene for the Foreman Intents treasury.
  *
- * Regeln (RULES.md §Sicherheit, Mission):
- * - `INTENTS_API_KEY` (naa_…) und alle Tokens werden NUR aus der Prozessumgebung bzw. der
- *   gitignorierten `.env` im Repo-Root gelesen. Dieser Module druckt niemals Secret-Werte.
- * - Jede Ausgabe, die aus der API stammt (Fehlertexte, details), läuft durch `redact()`,
- *   damit auch ein undichtes API-Feld kein `naa_`/`ngt_`/JWT durchsickern lässt.
- * - AGENT_EXECUTE default false; DEMO_MAX_USD default 3, hart gedeckelt auf HARD_MAX_DEMO_USD.
+ * Rules (RULES.md §Security, mission):
+ * - `INTENTS_API_KEY` (naa_…) and all tokens are read ONLY from the process environment or the
+ *   gitignored `.env` at the repo root. This module never prints secret values.
+ * - Every output originating from the API (error texts, details) passes through `redact()`,
+ *   so even a leaky API field cannot let a `naa_`/`ngt_`/JWT slip through.
+ * - AGENT_EXECUTE default false; DEMO_MAX_USD default 3, hard-capped at HARD_MAX_DEMO_USD.
  */
 import { config as loadDotenv } from "dotenv";
 import { existsSync } from "node:fs";
@@ -14,22 +14,22 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-/** Repo-Root = zwei Ebenen über core/intents/ */
+/** Repo root = two levels above core/intents/ */
 export const REPO_ROOT = path.resolve(HERE, "..", "..");
 export const STATE_DIR = path.join(HERE, ".state");
 
-// .env nur laden, wenn die Variable nicht schon explizit in der Umgebung steht:
-// Prozessumgebung schlägt .env (dotenv überschreibt per Default nichts).
+// Load .env only when the variable is not already explicitly set in the environment:
+// process env beats .env (dotenv does not override by default).
 const dotenvPath = path.join(REPO_ROOT, ".env");
 if (existsSync(dotenvPath)) loadDotenv({ path: dotenvPath, quiet: true });
 
-/** Produktions-API. Demo-Deploy nur via INTENTS_BASE_URL-Override (Lead klärt Nutzung). */
+/** Production API. Demo deploy only via INTENTS_BASE_URL override (lead clarifies usage). */
 export const PROD_BASE_URL = "https://api.agentsonintents.com";
 export const DEMO_BASE_URL = "https://api.demo.agentsonintents.com";
 
-/** Harte Demo-Deckel — unabhängig von .env. RULES.md: Budgets ≤ 3 $ Gegenwert. */
+/** Hard demo caps — independent of .env. RULES.md: budgets ≤ $3 equivalent. */
 export const HARD_MAX_DEMO_USD = 3;
-/** Nur diese Assets dürfen in der Demo bewegt werden (Mission: NUR NEAR/USDC). */
+/** Only these assets may move in the demo (mission: NEAR/USDC ONLY). */
 export const ALLOWED_ASSETS = {
   NEAR: "nep141:wrap.near",
   USDC: "nep141:17208628f84f5d6ad33f0da3bbbeb27ffcb398eac501a31bd6ad2011e36133a1",
@@ -56,54 +56,54 @@ export function treasuryConfig() {
   const apiKey = env("INTENTS_API_KEY");
   if (!apiKey) {
     throw new ConfigError(
-      "INTENTS_API_KEY fehlt (naa_… aus partners.near-intents.org). Nur in .env oder Prozessumgebung setzen — niemals ins Repo.",
+      "INTENTS_API_KEY missing (naa_… from partners.near-intents.org). Set it only in .env or the process environment — never in the repo.",
     );
   }
-  // Formate: klassischer naa_-Partner-Key ODER JWT aus dem Partner-Portal (eyJ…, Portal-Migration 06.11.2026).
-  // Format-Check ohne Werte-Ausgabe — schützt vor Tippfehlern, leakt nichts; redact() maskiert beide Muster.
+  // Formats: classic naa_ partner key OR JWT from the partner portal (eyJ…, portal migration 2026-11-06).
+  // Format check without printing values — guards against typos, leaks nothing; redact() masks both patterns.
   if (!apiKey.startsWith("naa_") && !apiKey.startsWith("eyJ")) {
     throw new ConfigError(
-      "INTENTS_API_KEY hat kein erkennbares Format (naa_… oder Portal-JWT eyJ…) — bitte aus dem Partner-Portal kopieren.",
+      "INTENTS_API_KEY has no recognizable format (naa_… or portal JWT eyJ…) — please copy it from the partner portal.",
     );
   }
 
-  const executeGate = env("AGENT_EXECUTE") === "true"; // Default false, streng "true".
+  const executeGate = env("AGENT_EXECUTE") === "true"; // default false, strictly "true".
 
   const rawCap = Number(env("DEMO_MAX_USD") ?? "3");
   if (!Number.isFinite(rawCap) || rawCap <= 0) {
-    throw new ConfigError(`DEMO_MAX_USD ist keine positive Zahl: ${env("DEMO_MAX_USD")}`);
+    throw new ConfigError(`DEMO_MAX_USD is not a positive number: ${env("DEMO_MAX_USD")}`);
   }
-  const demoMaxUsd = Math.min(rawCap, HARD_MAX_DEMO_USD); // harter Cap, auch bei .env-Fehler
+  const demoMaxUsd = Math.min(rawCap, HARD_MAX_DEMO_USD); // hard cap, even on .env errors
 
   const rawAmount = Number(env("DEMO_AMOUNT_USD") ?? "0.25");
   if (!Number.isFinite(rawAmount) || rawAmount <= 0 || rawAmount > demoMaxUsd) {
     throw new ConfigError(
-      `DEMO_AMOUNT_USD muss in (0, ${demoMaxUsd}] liegen (Cap aus DEMO_MAX_USD, hart bei ${HARD_MAX_DEMO_USD}).`,
+      `DEMO_AMOUNT_USD must lie in (0, ${demoMaxUsd}] (cap from DEMO_MAX_USD, hard at ${HARD_MAX_DEMO_USD}).`,
     );
   }
 
   return {
     baseUrl,
-    /** NICHT drucken, NICHT loggen. Nur client.ts liest das für den X-API-Key-Header. */
+    /** DO NOT print, DO NOT log. Only client.ts reads this for the X-API-Key header. */
     apiKey,
     agentId: env("INTENTS_AGENT_ID"),
-    // Intents-Flow liest bewusst die MAINNET-Variante (API-Netz=mainnet). OWNER_ACCOUNT
-    // (testnet) gehört zu den Deploy-Skripten — hier NICHT stillschweigend verwenden:
-    // Fallback nur, wenn er erkennbar kein Testnet-Konto ist.
+    // The Intents flow deliberately reads the MAINNET variant (API network=mainnet). OWNER_ACCOUNT
+    // (testnet) belongs to the deploy scripts — do NOT use it silently here:
+    // fallback only when it is recognizably not a testnet account.
     ownerAccount:
       env("OWNER_ACCOUNT_MAINNET") ??
       (() => {
         const legacy = env("OWNER_ACCOUNT");
         return legacy && !legacy.endsWith(".testnet") ? legacy : undefined;
       })(),
-    /** ed25519:… — der Key, mit dem der Mensch den Intent signiert (agent_create braucht ihn). */
+    /** ed25519:… — the key the human signs the intent with (agent_create needs it). */
     ownerPublicKey: env("OWNER_PUBLIC_KEY"),
     nearRpcMainnet: env("NEAR_RPC_MAINNET") ?? "https://free.rpc.fastnear.com",
     executeGate,
     demoMaxUsd,
     demoAmountUsd: rawAmount,
     timelockMs: intEnv("INTENTS_TIMELOCK_MS", 60_000),
-    /** Whitelist für Policy-Destinations: Komma-liste "chain:address[:memo]" bzw. NEAR-Intents-Receiver. */
+    /** Whitelist for policy destinations: comma list "chain:address[:memo]" or NEAR Intents receivers. */
     destinations: (env("TREASURY_DESTINATIONS") ?? "")
       .split(",")
       .map((s) => s.trim())
@@ -117,24 +117,24 @@ function intEnv(name: string, fallback: number): number {
   const raw = env(name);
   if (raw === undefined) return fallback;
   const n = Number(raw);
-  if (!Number.isInteger(n) || n < 0) throw new ConfigError(`${name} muss eine nicht-negative Ganzzahl sein.`);
+  if (!Number.isInteger(n) || n < 0) throw new ConfigError(`${name} must be a non-negative integer.`);
   return n;
 }
 
-/** Secret-Muster, die in keiner Ausgabe landen dürfen. */
+/** Secret patterns that must never land in any output. */
 const SECRET_PATTERNS: Array<[RegExp, string]> = [
   [/\bnaa_[A-Za-z0-9_]+/g, "naa_[redacted]"],
   [/\bngt_[A-Za-z0-9_]+/g, "ngt_[redacted]"],
   [/\bwk_[A-Za-z0-9_]+/g, "wk_[redacted]"],
   [/\baat_[A-Za-z0-9_]+/g, "aat_[redacted]"],
-  [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, "jwt_[redacted]"], // ONECLICK_JWT u.ä.
+  [/\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b/g, "jwt_[redacted]"], // ONECLICK_JWT etc.
   [/\bed25519:[A-Za-z0-9]+/g, "ed25519_[redacted]"],
   [/\bsk_[A-Za-z0-9]{16,}/g, "sk_[redacted]"],
 ];
 
 /**
- * Redact Secret-Muster aus Text, bevor er in Logs/Evidenz/CLI-Ausgabe geht.
- * Wird in client.ts und in allen CLI-Ausgabe-Pfaden Pflicht verwendet.
+ * Redact secret patterns from text before it goes into logs/evidence/CLI output.
+ * Mandatory in client.ts and on every CLI output path.
  */
 export function redact(text: string, knownSecrets: string[] = []): string {
   let out = text;
@@ -145,7 +145,7 @@ export function redact(text: string, knownSecrets: string[] = []): string {
   return out;
 }
 
-/** JSON -> roter Text für Konsole/Evidenz. */
+/** JSON -> redacted text for console/evidence. */
 export function redactJson(value: unknown, knownSecrets: string[] = []): string {
   return redact(JSON.stringify(value, null, 2), knownSecrets);
 }

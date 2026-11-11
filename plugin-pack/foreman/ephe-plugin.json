@@ -1,0 +1,37 @@
+{
+  "manifest_version": 1,
+  "name": "foreman",
+  "version": "0.2.0",
+  "description": "Foreman escrow workflow for ephe: hire an agent on NEAR, watch the live bid board, place exactly ONE reasoned counter-offer, and accept only against a fail-closed verified delivery receipt. Every action runs through the foreman CLI (Apache-2.0) against escrow.foreman-team.testnet; the built-in shell keeps its approval gate.",
+  "permissions": {
+    "tool_families": [
+      "read",
+      "shell"
+    ],
+    "data_roots": [
+      "{{FOREMAN_REPO}}"
+    ]
+  },
+  "components": {
+    "skills": [
+      "foreman"
+    ],
+    "commands": [
+      {
+        "name": "foreman-hire",
+        "description": "Post a job with the foreman CLI and show the live bid round",
+        "template": "Hire a job with the foreman CLI: post '{input}' with budget 0.9 NEAR on testnet, then show the live bid board for the new job id."
+      },
+      {
+        "name": "foreman-board",
+        "description": "Board status of a job as JSON (bids, counter-offer, receipt, result)",
+        "template": "Run the foreman board for job {input} and show the bids, the single counter-offer with its reason, and the receipt state."
+      },
+      {
+        "name": "foreman-accept",
+        "description": "Accept a delivery \u2014 only against a valid signed receipt",
+        "template": "Accept the delivery for job {input}, but first verify the signed receipt fail-closed. If verification fails, do not accept and show me the rejection."
+      }
+    ]
+  }
+}

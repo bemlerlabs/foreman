@@ -1,18 +1,18 @@
 /**
- * Owner-Policy-Builder für das Foreman-Treasury (RULES.md §Rollen/§Sicherheit):
+ * Owner policy builder for the Foreman treasury (RULES.md §Roles/§Security):
  *
- * - Budget-Deckel: daily/weekly USD aus DEMO_MAX_USD (hart ≤ 3 $ Gegenwert).
- * - Destinations-Whitelist: `mode: "only"` — Einträge sind NUR Contract-/Payout-Adressen
- *   (TREASURY_DESTINATIONS in .env). Neue Konten starten sicher: `only` + leere Liste ⇒
- *   Geld bleibt im Agenten.
- * - Timelock: timelock_ms (Default 60 s) — jede Geld-Aktion wartet sichtbar.
- * - Assets: Verkauf/Transfer nur NEAR (nep141:wrap.near) und USDC (nep141:17208…) —
- *   rote Liste: BTC etc. sind tabu.
- * - actions: nur `swap` (Settlement der Demo); transfer/withdraw erst wenn der
- *   Escrow-Contract-Settlement-Pfad (task-1) verdrahtet und freigegeben ist.
- * - native: komplett aus (kein Block ⇒ alle Agent-eigenen Keys aus).
- * - confidential: false (intents.far ist permissioned, nicht beweisbar — rote Liste #2).
- * - owner_approval: optional via INTENTS_OWNER_APPROVAL=true (dann PENDING_APPROVAL für den Menschen).
+ * - Budget caps: daily/weekly USD from DEMO_MAX_USD (hard ≤ $3 equivalent).
+ * - Destinations whitelist: `mode: "only"` — entries are ONLY contract/payout addresses
+ *   (TREASURY_DESTINATIONS in .env). New accounts start safe: `only` + empty list ⇒
+ *   money stays with the agent.
+ * - Timelock: timelock_ms (default 60 s) — every money action waits visibly.
+ * - Assets: sell/transfer only NEAR (nep141:wrap.near) and USDC (nep141:17208…) —
+ *   red list: BTC etc. are taboo.
+ * - actions: only `swap` (settlement of the demo); transfer/withdraw only once the
+ *   escrow contract settlement path (task-1) is wired and approved.
+ * - native: completely off (no block ⇒ all agent-owned keys off).
+ * - confidential: false (intents.far is permissioned, not provable — red list #2).
+ * - owner_approval: optional via INTENTS_OWNER_APPROVAL=true (then PENDING_APPROVAL for the human).
  */
 import { ALLOWED_ASSETS, HARD_MAX_DEMO_USD, type TreasuryConfig } from "./env.js";
 
@@ -34,16 +34,16 @@ export type DestinationEntry =
   | { action: "transfer"; address: string; confidential: false };
 
 /**
- * TREASURY_DESTINATIONS-Formate (Komma-liste):
- *   "near:<account>"                    → withdraw auf NEAR-Konto (Payout-/Contract-Account)
- *   "<chain>:<address>"                 → withdraw auf anderer Chain
- *   "intents:<account>"                 → transfer an NEAR-Intents-Account
- *   "<account>"                         → withdraw auf NEAR (chain=near implizit)
- * Alles andere wird abgewiesen — Whitelist heißt: exakte Einträge, kein Ratetn.
+ * TREASURY_DESTINATIONS formats (comma list):
+ *   "near:<account>"                    → withdraw to a NEAR account (payout/contract account)
+ *   "<chain>:<address>"                 → withdraw on another chain
+ *   "intents:<account>"                 → transfer to a NEAR Intents account
+ *   "<account>"                         → withdraw on NEAR (chain=near implicit)
+ * Everything else is rejected — whitelist means: exact entries, no guessing.
  */
 export function parseDestination(raw: string): DestinationEntry {
   const value = raw.trim();
-  if (!value) throw new Error("Leere Destination nicht erlaubt");
+  if (!value) throw new Error("Empty destination not allowed");
   const parts = value.split(":");
   if (parts[0] === "intents") {
     const address = parts.slice(1).join(":");
@@ -53,7 +53,7 @@ export function parseDestination(raw: string): DestinationEntry {
   if (parts.length >= 2 && parts[0].length <= 12 && /^[a-z0-9]+$/.test(parts[0])) {
     const chain = parts[0];
     const address = parts.slice(1).join(":");
-    if (!address) throw new Error(`Destination ohne Adresse: ${redactedName(value)}`);
+    if (!address) throw new Error(`Destination without address: ${redactedName(value)}`);
     if (chain === "near") assertNearLike(address, value);
     return { action: "withdraw", chain, address, memo: null };
   }
@@ -62,29 +62,29 @@ export function parseDestination(raw: string): DestinationEntry {
 }
 
 function assertNearLike(address: string, source: string): void {
-  // NEAR-Account-Id oder implicit (64 hex); validiert der Server nochmal (invalid_address).
+  // NEAR account id or implicit (64 hex); the server validates again (invalid_address).
   const ok =
     /^[0-9a-f]{64}$/.test(address) ||
     /^[0-9a-z_-]{2,62}(\.[0-9a-z_-]{2,62})*$/.test(address);
-  if (!ok) throw new Error(`Unzulässiger Destinations-Eintrag: ${redactedName(source)}`);
+  if (!ok) throw new Error(`Invalid destination entry: ${redactedName(source)}`);
 }
 
 function redactedName(value: string): string {
-  // Destinations sind keine Secrets, aber wir ziehen Account-Namen nicht durch Fehlerstacks.
+  // Destinations are not secrets, but we do not drag account names through error stacks.
   return value.length > 70 ? `${value.slice(0, 24)}…` : value;
 }
 
 /**
- * Policy für Foreman-Treasury bauen. `contractPayoutAddresses` = WHITELIST, typischerweise
- * nur der Escrow-Contract und die Payout-Adressen des Contracts (RULES.md: „Destinations-
- * Whitelist = nur Contract-/Payout-Adressen des Contracts").
+ * Build the policy for the Foreman treasury. `contractPayoutAddresses` = WHITELIST, typically
+ * only the escrow contract and the contract's payout addresses (RULES.md: "destinations
+ * whitelist = only the contract's contract/payout addresses").
  */
 export function buildTreasuryPolicy(
   cfg: TreasuryConfig,
   contractPayoutAddresses: string[] = cfg.destinations,
 ): TreasuryPolicy {
   if (!contractPayoutAddresses.every((d) => typeof d === "string")) {
-    throw new Error("Destinations müssen Strings sein");
+    throw new Error("Destinations must be strings");
   }
   const cap = Math.min(cfg.demoMaxUsd, HARD_MAX_DEMO_USD).toFixed(2);
   return {
@@ -93,7 +93,7 @@ export function buildTreasuryPolicy(
     confidential: false,
     owner_approval: cfg.ownerApproval,
     assets: [ALLOWED_ASSETS.NEAR, ALLOWED_ASSETS.USDC],
-    limits: {}, // USD-Budget + max_actions_per_hour genügen für die Demo; per-Asset-Limits nach Bedarf
+    limits: {}, // USD budget + max_actions_per_hour suffice for the demo; per-asset limits as needed
     max_actions_per_hour: 10,
     destinations: {
       mode: "only",
@@ -104,7 +104,7 @@ export function buildTreasuryPolicy(
   };
 }
 
-/** Kurzfassung für Konsole/Evidenz — keine Secrets, nur Regeln. */
+/** Short form for console/evidence — no secrets, only rules. */
 export function policySummary(policy: TreasuryPolicy) {
   return {
     actions: policy.actions,

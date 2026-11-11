@@ -1,4 +1,4 @@
-"""core.reputation — KEPTA-Snapshot-Hash + Offline-Replikation der Contract-Reputation.
+"""core.reputation — KEPTA snapshot hash + offline replication of the contract reputation.
 
-Baseline-Bibliotheken (Q-005): kepta (/Users/sanji/kepta, MIT, PyPI kepta, npm kepta-mcp).
+Baseline libraries (Q-005): kepta (MIT, PyPI kepta, npm kepta-mcp).
 """

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# phase7: Video-Biet-Schleife — nutzt die 429-gehärtete near_call aus _demo_common.sh,
-# incl. Retry+Backoff und near_send.cjs-Fallback gegen dRPC (send_tx).
-# place_bid ist @payable: --depositYocto 0 wird explizit gesetzt (Lead-Hinweis).
-# Aufruf:   ./scripts/video_bid_loop.sh <JOB_ID>
+# phase7: video bid loop — uses the 429-hardened near_call from _demo_common.sh,
+# incl. retry+backoff and the near_send.cjs fallback against dRPC (send_tx).
+# place_bid is @payable: --depositYocto 0 is set explicitly (lead note).
+# call:   ./scripts/video_bid_loop.sh <JOB_ID>
 source "$(dirname "$0")/_demo_common.sh"
 
-JOB_ID="${1:?JOB_ID noetig}"
+JOB_ID="${1:?JOB_ID required}"
 BIDS_FILE="${BIDS_FILE:-/tmp/foreman_bids.json}"
-[[ -f "$BIDS_FILE" ]] || { echo "FEHLT: $BIDS_FILE (zuerst scripts/cli_bids.py laufen lassen)" >&2; exit 1; }
+[[ -f "$BIDS_FILE" ]] || { echo "MISSING: $BIDS_FILE (run scripts/cli_bids.py first)" >&2; exit 1; }
 
 T0=$(date +%s)
 i=0
@@ -32,5 +32,5 @@ for f in /tmp/foreman_bid_*.out; do
   grep -q BID_FAIL "$f" && FAILS=$((FAILS + 1))
 done
 rm -f /tmp/foreman_bid_*.out
-[[ $FAILS -eq 0 ]] || { echo "BID_LOOP_FEHLER: $FAILS von $i Bids fehlgeschlagen" >&2; exit 1; }
-echo "BID_LOOP_OK bids=$i elapsed=${ELAPSED}s (Fenster 120s) job=$JOB_ID" | tee -a "$LOG"
+[[ $FAILS -eq 0 ]] || { echo "BID_LOOP_ERROR: $FAILS of $i bids failed" >&2; exit 1; }
+echo "BID_LOOP_OK bids=$i elapsed=${ELAPSED}s (window 120s) job=$JOB_ID" | tee -a "$LOG"

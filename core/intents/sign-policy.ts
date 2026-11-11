@@ -1,25 +1,25 @@
 /**
- * Owner-Policy-Flow (Mission Punkt 3): Policy erzeugen → MENSCH signiert → submit → Status.
+ * Owner policy flow (mission point 3): generate policy → HUMAN signs → submit → status.
  *
- * KEIN AUTO-SIGNING in diesem Modul. Es erzeugt die Owner-Intents über
- * POST /v1/generate-intent und gibt die Signier-Message (intent.payload) + exakte
- * Anleitung für den Menschen aus. Signiert wird ausschließlich außerhalb dieses Codes:
- *   - im Wallet des Eigentümers (empfohlen), oder
- *   - vom Eigentümer selbst gestartet mit `npm run owner:sign` (owner-sign-helper.ts,
- *     separate Datei, explizites --i-am-the-owner-Bekenntnis, liest den Key des Eigentümers).
+ * NO AUTO-SIGNING in this module. It creates the owner intents via
+ * POST /v1/generate-intent and prints the signing message (intent.payload) + exact
+ * instructions for the human. Signing happens exclusively outside this code:
+ *   - in the owner's wallet (recommended), or
+ *   - started by the owner themselves via `npm run owner:sign` (owner-sign-helper.ts,
+ *     separate file, explicit --i-am-the-owner attestation, reads the owner's key).
  *
- * NEP-366 (DelegateAction) ist gaslos: Der API-Sponsor reicht die Transaktion ein —
- * Policy-Edits (budget/destinations/timelock/schedule) laufen sogar off-chain (NEP-413,
- * transaction_hash: null). Gas-Kosten für den Eigentümer: 0.
+ * NEP-366 (DelegateAction) is gasless: the API sponsor submits the transaction —
+ * policy edits (budget/destinations/timelock/schedule) even run off-chain (NEP-413,
+ * transaction_hash: null). Gas cost for the owner: 0.
  *
- * Verwendung:
- *   npm run policy:create                          # Agent + Policy anlegen (Owner-Signatur nötig)
- *   npm run policy:update                          # Policy ändern (Revision wird gelesen)
- *   npm run policy:submit -- --cid <cid> --signed <datei.json>
- *   npm run policy-status                          # Revision/Status/Budget-Usage ansehen
+ * Usage:
+ *   npm run policy:create                          # create agent + policy (owner signature needed)
+ *   npm run policy:update                          # change policy (revision is read)
+ *   npm run policy:submit -- --cid <cid> --signed <file.json>
+ *   npm run policy-status                          # view revision/status/budget usage
  *
- * Persist-before-dispatch: Jeder generierte Intent liegt vor dem ersten Signatur-Schritt
- * unter .state/intents/<cid>.json — ein Abbruch bricht nichts kaputt.
+ * Persist-before-dispatch: every generated intent is stored at .state/intents/<cid>.json
+ * before the first signing step — aborting breaks nothing.
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -34,14 +34,14 @@ const INTENTS_DIR = path.join(STATE_DIR, "intents");
 function saveIntent(generated: GenerateIntentResponse): string {
   mkdirSync(INTENTS_DIR, { recursive: true, mode: 0o700 });
   const file = path.join(INTENTS_DIR, `${generated.correlation_id}.json`);
-  // Enthält nur die öffentliche Signier-Message — keine Secrets.
+  // Contains only the public signing message — no secrets.
   writeFileSync(file, JSON.stringify(generated, null, 2), { mode: 0o600 });
   return file;
 }
 
 function loadIntent(cid: string): GenerateIntentResponse {
   const file = path.join(INTENTS_DIR, `${cid}.json`);
-  if (!existsSync(file)) throw new Error(`Intent ${cid} nicht gefunden (.state/intents/) — neu generieren.`);
+  if (!existsSync(file)) throw new Error(`Intent ${cid} not found (.state/intents/) — regenerate it.`);
   return JSON.parse(readFileSync(file, "utf8")) as GenerateIntentResponse;
 }
 
@@ -64,45 +64,45 @@ export function resolveAgentId(): string {
     if (j.agent_id) return j.agent_id;
   }
   throw new Error(
-    "Kein AGENT_ID bekannt. Erst Agent anlegen: npm run policy:create (der Mensch signiert einmal). " +
-      "Oder INTENTS_AGENT_ID in .env setzen.",
+    "No AGENT_ID known. Create the agent first: npm run policy:create (the human signs once). " +
+      "Or set INTENTS_AGENT_ID in .env.",
   );
 }
 
 function printOwnerInstructions(generated: GenerateIntentResponse, file: string): void {
-  console.log("\n────────── SCHRITT FÜR DEN MENSCHEN (Owner-Signatur) ──────────");
-  console.log(`Intent-ID (correlation_id): ${generated.correlation_id}`);
+  console.log("\n────────── STEP FOR THE HUMAN (owner signature) ──────────");
+  console.log(`Intent id (correlation_id): ${generated.correlation_id}`);
   console.log(`Standard:                   ${generated.intent.standard}`);
-  console.log(`Signierender Wallet:          ${JSON.stringify(generated.signer)}`);
-  console.log(`Ablauf:                     ${generated.expires_at ?? "serverseitig begrenzt"}`);
-  console.log(`Intent gespeichert:          ${path.relative(process.cwd(), file)}`);
-  console.log("\nZu signierende Message (intent.payload, bytegenau zurückgeben):");
+  console.log(`Signing wallet:             ${JSON.stringify(generated.signer)}`);
+  console.log(`Expires:                    ${generated.expires_at ?? "server-limited"}`);
+  console.log(`Intent stored:              ${path.relative(process.cwd(), file)}`);
+  console.log("\nMessage to sign (intent.payload, return byte-exactly):");
   console.log(redactJson(generated.intent.payload));
-  console.log("\nSo signierst du (eine der Varianten):");
+  console.log("\nHow to sign (one of these variants):");
   if (generated.intent.standard === "webauthn") {
     console.log(
-      `  A) EMPFOHLEN (O3): Popup-Seite mit Klartext-Policy-Preview im Browser des Eigentümers öffnen:`,
+      `  A) RECOMMENDED (O3): open the popup page with the plain-text policy preview in the owner's browser:`,
     );
     console.log(
-      `     http://localhost:8789/sign?cid=${generated.correlation_id}   (Server: npx tsx core/intents/owner-sign-popup-server.ts)`,
+      `     http://localhost:8789/sign?cid=${generated.correlation_id}   (server: npx tsx core/intents/owner-sign-popup-server.ts)`,
     );
-    console.log("     Touch-ID bestätigen — die Seite legt signed_data selbst ab. Dann submit (unten).");
+    console.log("     Confirm with Touch ID — the page stores signed_data itself. Then submit (below).");
   }
   if (generated.intent.standard === "nep366") {
     console.log(
-      "  A) Wallet mit NEP-366-Unterstützung: wallet.signDelegateActions({ delegateActions: [payload] })",
+      "  A) Wallet with NEP-366 support: wallet.signDelegateActions({ delegateActions: [payload] })",
     );
   }
   if (generated.intent.standard === "nep413") {
     console.log(
-      "  A) Wallet: wallet.signMessage({ message, recipient, nonce }) — nonce base64-decodiert (32 Bytes) übergeben.",
+      "  A) Wallet: wallet.signMessage({ message, recipient, nonce }) — pass the nonce base64-decoded (32 bytes).",
     );
   }
-  console.log("  B) Du bist der Eigentümer und nutzt den vorbereiteten Helfer (bewusst SELBST starten):");
+  console.log("  B) You are the owner and use the prepared helper (start it YOURSELF, deliberately):");
   console.log(
-    `     npm run owner:sign -- --cid ${generated.correlation_id} --keystore <pfad/zu/credential.json> --i-am-the-owner`,
+    `     npm run owner:sign -- --cid ${generated.correlation_id} --keystore <path/to/credential.json> --i-am-the-owner`,
   );
-  console.log("\nDanach Ergebnis-Datei einreichen:");
+  console.log("\nThen submit the result file:");
   console.log(
     `  npm run policy:submit -- --cid ${generated.correlation_id} --signed core/intents/.state/intents/${generated.correlation_id}.signed.json`,
   );
@@ -122,10 +122,10 @@ async function generateAndPrint(
 }
 
 /**
- * agent_create: legt das Treasury-Konto mit der Foreman-Policy an (Klick für den Menschen).
- * ownerType "near"    → {type:"near", account_id, public_key} — Onchain-Key-Precheck läuft.
- * ownerType "passkey" → OwnerWallet.oneOf[2] {type:"passkey", credential_id, public_key(DER-P-256),
- *                       rp_id, origin} aus .state/passkey.json (Registry: Popup-Server /register).
+ * agent_create: creates the treasury account with the Foreman policy (one click for the human).
+ * ownerType "near"    → {type:"near", account_id, public_key} — on-chain key precheck runs.
+ * ownerType "passkey" → OwnerWallet.oneOf[2] {type:"passkey", credential_id, public_key(DER P-256),
+ *                       rp_id, origin} from .state/passkey.json (registry: popup server /register).
  */
 export async function createAgent(
   ownerAccount?: string,
@@ -141,15 +141,15 @@ export async function createAgent(
     const pkFile = path.join(STATE_DIR, "passkey.json");
     if (!existsSync(pkFile)) {
       throw new Error(
-        "Kein registrierter Passkey (.state/passkey.json). Erst registrieren: " +
-          "npx tsx core/intents/owner-sign-popup-server.ts → http://localhost:8789/register (Touch-ID #1).",
+        "No registered passkey (.state/passkey.json). Register first: " +
+          "npx tsx core/intents/owner-sign-popup-server.ts → http://localhost:8789/register (Touch ID #1).",
       );
     }
     const pk = JSON.parse(readFileSync(pkFile, "utf8")) as Record<string, string>;
     for (const f of ["credential_id", "public_key", "rp_id", "origin"]) {
-      if (!pk[f]) throw new Error(`passkey.json fehlt Feld ${f} — Registrierung wiederholen.`);
+      if (!pk[f]) throw new Error(`passkey.json missing field ${f} — repeat registration.`);
     }
-    // Exakt die 5 Felder des OwnerWallet-passkey-Schemas (additionalProperties:false, openapi-Klarstellung 06.11.).
+    // Exactly the 5 fields of the OwnerWallet passkey schema (additionalProperties:false, openapi clarification 06.11.).
     ownerWallet = {
       type: "passkey",
       credential_id: pk.credential_id,
@@ -161,15 +161,15 @@ export async function createAgent(
     const owner = ownerAccount ?? cfg.ownerAccount;
     if (!owner) {
       throw new Error(
-        "OWNER_ACCOUNT fehlt. .env OWNER_ACCOUNT_MAINNET=<mainnet NEAR-Konto des Menschen> setzen " +
-          "(RULES.md: Owner ≠ Treasury ≠ Contract ≠ Swarms) und erneut: npm run policy:create",
+        "OWNER_ACCOUNT missing. Set .env OWNER_ACCOUNT_MAINNET=<the human's mainnet NEAR account> " +
+          "(RULES.md: owner ≠ treasury ≠ contract ≠ swarms) and retry: npm run policy:create",
       );
     }
     const publicKey = ownerPublicKey ?? cfg.ownerPublicKey;
     if (!publicKey) {
       throw new Error(
-        "OWNER_PUBLIC_KEY fehlt (ed25519:…). Die API verlangt den Signier-Key des Eigentümers im agent_create-Intent. " +
-          "Setzen in .env oder: npm run policy:create -- --owner-public-key ed25519:…",
+        "OWNER_PUBLIC_KEY missing (ed25519:…). The API requires the owner's signing key in the agent_create intent. " +
+          "Set it in .env or: npm run policy:create -- --owner-public-key ed25519:…",
       );
     }
     ownerWallet = { type: "near", account_id: owner, public_key: publicKey };
@@ -178,7 +178,7 @@ export async function createAgent(
   await assertQuotaHeadroom(api, true);
   if (ownerType === "near") await assertOwnerKeyOnChain(cfg, String(ownerWallet.account_id), String(ownerWallet.public_key));
   const policy = buildTreasuryPolicy(cfg);
-  console.log("Vorgeschlagene Foreman-Treasury-Policy:");
+  console.log("Proposed Foreman treasury policy:");
   console.log(redactJson(policySummary(policy)));
   await generateAndPrint(api, {
     type: "agent_create",
@@ -189,10 +189,10 @@ export async function createAgent(
 }
 
 /**
- * Onchain-Vorprüfung, damit der Mensch NICHT umsonst signiert: NEP-366-Delegate werden von
- * der API gegen den Access-Key des Owner-Kontos auf MAINNET validiert. Fehlt OWNER_PUBLIC_KEY
- * als Access-Key auf dem Konto (z.B. Meteor-Key läuft noch ein), schlägt submit fehl — wir
- * warnen vor dem Generieren und sparen den Signier-Klick.
+ * On-chain precheck so the human does NOT sign in vain: NEP-366 delegates are validated
+ * by the API against the owner account's access key on MAINNET. If OWNER_PUBLIC_KEY is
+ * not an access key on the account (e.g. a Meteor key is still being added), submit fails —
+ * we warn before generating and save the signing click.
  */
 async function assertOwnerKeyOnChain(
   cfg: ReturnType<typeof treasuryConfig>,
@@ -200,7 +200,7 @@ async function assertOwnerKeyOnChain(
   publicKey: string,
 ): Promise<void> {
   if (process.argv.includes("--skip-key-precheck")) {
-    console.warn("WARNUNG: Onchain-Key-Vorprüfung per Flag übersprungen.");
+    console.warn("WARNING: on-chain key precheck skipped via flag.");
     return;
   }
   try {
@@ -219,29 +219,29 @@ async function assertOwnerKeyOnChain(
     const doc = (await res.json()) as { result?: { keys?: Array<{ public_key: string }> }; error?: unknown };
     const keys = (doc.result?.keys ?? []).map((k) => k.public_key);
     if (keys.length === 0) {
-      console.warn("Hinweis: keine Access-Keys auf dem Owner-Konto sichtbar (RPC-Ansicht leer) — Vorprüfung unentschieden.");
+      console.warn("Note: no access keys visible on the owner account (RPC view empty) — precheck inconclusive.");
       return;
     }
     if (!keys.includes(publicKey)) {
       throw new Error(
-        `OWNER_PUBLIC_KEY ist (noch) kein Access-Key von ${owner} auf mainnet — Signatur würde bei submit als owner_signature_invalid/nonce-Fehler abgewiesen. ` +
-          "Warte bis der Wallet-Key in 'near keys' auftaucht (Meteor-Einlauf abwarten) oder --skip-key-precheck bewusst nutzen.",
+        `OWNER_PUBLIC_KEY is not (yet) an access key of ${owner} on mainnet — the signature would be rejected at submit as owner_signature_invalid/nonce error. ` +
+          "Wait until the wallet key shows up in 'near keys' (let the Meteor setup finish) or use --skip-key-precheck deliberately.",
       );
     }
-    console.log(`Precheck ok: OWNER_PUBLIC_KEY ist Access-Key von ${owner} (mainnet, ${keys.length} Keys gesamt).`);
+    console.log(`Precheck ok: OWNER_PUBLIC_KEY is an access key of ${owner} (mainnet, ${keys.length} keys total).`);
   } catch (err) {
-    if (err instanceof Error && err.message.includes("kein Access-Key")) throw err;
-    console.warn(`Vorprüfung nicht möglich (RPC-Fehler ${String((err as Error)?.name ?? "?")}): fahre fort — submit validiert ohnehin.`);
+    if (err instanceof Error && err.message.includes("not (yet) an access key")) throw err;
+    console.warn(`Precheck unavailable (RPC error ${String((err as Error)?.name ?? "?")}): continuing — submit validates anyway.`);
   }
 }
 
-/** policy_update: liest Revision, baut Policy neu, erwartet Owner-Signatur. */
+/** policy_update: reads the revision, rebuilds the policy, expects an owner signature. */
 export async function updatePolicy(): Promise<void> {
   const api = client();
   const agentId = resolveAgentId();
   const current = await api.getPolicy(agentId);
   if (!current.policy || current.revision === null) {
-    throw new Error("Agent hat noch keine APPLIED-Policy — erst policy:create durchsignieren lassen.");
+    throw new Error("Agent has no APPLIED policy yet — have policy:create signed first.");
   }
   const cfg = treasuryConfig();
   const policy = buildTreasuryPolicy(cfg);
@@ -257,12 +257,12 @@ export async function updatePolicy(): Promise<void> {
   );
 }
 
-/** submit: nimmt die VOM MENSCHEN erstellte signed_data-Datei und reicht sie ein. */
+/** submit: takes the signed_data file created BY THE HUMAN and submits it. */
 export async function submitSigned(cid: string, signedFile: string): Promise<void> {
   const api = client();
   const generated = loadIntent(cid);
   if (!existsSync(signedFile)) {
-    throw new Error(`signed_data-Datei nicht gefunden: ${signedFile}`);
+    throw new Error(`signed_data file not found: ${signedFile}`);
   }
   const signedData = JSON.parse(readFileSync(signedFile, "utf8"));
   const status = await api.submitIntent({
@@ -277,7 +277,7 @@ export async function submitSigned(cid: string, signedFile: string): Promise<voi
     current = await api.getStatus(cid, { waitMs: 30_000 });
   }
   const final = toLifecycleStatus(current.status);
-  console.log(`\nIntent ${cid}: API-Status=${current.status} → Lifecycle=${final}` + (current.failure_code ? ` (${current.failure_code})` : ""));
+  console.log(`\nIntent ${cid}: API status=${current.status} → lifecycle=${final}` + (current.failure_code ? ` (${current.failure_code})` : ""));
   if (final === "COMPLETED" && generated.type === "agent_create") {
     const agentId =
       (current as { agent_id?: string | null }).agent_id ??
@@ -285,11 +285,11 @@ export async function submitSigned(cid: string, signedFile: string): Promise<voi
       (await latestAgentId(api));
     if (agentId) {
       rememberAgentId(agentId);
-      console.log(`Agent-ID gemerkt: ${agentId} → weiter mit: npm run quote-demo`);
+      console.log(`Agent id remembered: ${agentId} → next: npm run quote-demo`);
     }
   }
   if (final === "NEEDS_REVIEW" || final === "UNCERTAIN") {
-    console.log("Nicht erneut senden — gleiches correlation_id beobachten: npm run policy-status -- --cid", cid);
+    console.log("Do not resend — observe the same correlation_id: npm run policy-status -- --cid", cid);
   }
 }
 
@@ -307,7 +307,7 @@ function client(): IntentsClient {
   return new IntentsClient(treasuryConfig());
 }
 
-// ---------- CLI (läuft NUR bei direktem Start, nie bei import durch cli/*-Entrypoints) ----------
+// ---------- CLI (runs ONLY on direct start, never when imported by cli/* entrypoints) ----------
 function isMainModule(): boolean {
   return process.argv[1] !== undefined && fileURLToPath(import.meta.url) === process.argv[1];
 }
@@ -328,12 +328,12 @@ if (isMainModule()) {
     const cid = arg("cid");
     const signed = arg("signed");
     if (!cid || !signed) {
-      console.error("Benutzung: tsx core/intents/sign-policy.ts submit --cid <id> --signed <datei.json>");
+      console.error("Usage: tsx core/intents/sign-policy.ts submit --cid <id> --signed <file.json>");
       process.exit(2);
     }
     await submitSigned(cid, signed);
   } else {
-    console.error(`Unbekanntes Kommando "${cmd}". Erlaubt: create | update | submit`);
+    console.error(`Unknown command "${cmd}". Allowed: create | update | submit`);
     process.exit(2);
   }
 }

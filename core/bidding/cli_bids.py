@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-"""cli_bids — Bid-Generator für bid_loop.sh (near-feasibility, task-3).
+"""cli_bids — bid generator for bid_loop.sh (near-feasibility, task-3).
 
-Aufruf:
+Call:
     python3 core/bidding/cli_bids.py --seed foreman-demo --out /tmp/foreman_bids.json
 
-Schreibt genau eine JSON-Datei:
+Writes exactly one JSON file:
     [{"bidder": "agent1.foreman-team.testnet", "price_yocto": "...", "eta_secs": 40}, ... x5]
 
-Garantien (T5-Wiederholbarkeits-Gate):
-  * GLEICHER seed ⇒ BYTE-IDENTISCHE Datei (keine Timestamps/RNG-Zustände in der Ausgabe).
-  * Agenten exakt aus .env SWARM_ACCOUNTS (5 Stück, Komma-getrennt).
-  * Preise gestaffelt_realistisch: deterministisches Seed-Ranking ergibt 5 verschiedene
-    Multi-Stufen (Basis 0.5 NEAR-Cent/Paket, ±Feinjitter), nie identisch.
-  * Caps: price ≤ DEMO_MAX_USD (default 3 $) und price ≤ budget — Verletzung ⇒ Exit 2.
-  * Pipeline echt: je Agent läuft ein MockSupernovaEngine-Lauf (Dekompose→Worker→Synthese)
-    über den SupernovaAdapter; Deliverable-Artefakt-Hashe werden validiert (nicht serialisiert).
+Guarantees (T5 repeatability gate):
+  * SAME seed ⇒ BYTE-IDENTICAL file (no timestamps/RNG state in the output).
+  * Agents exactly from .env SWARM_ACCOUNTS (5 entries, comma-separated).
+  * Prices realistically staggered: a deterministic seed ranking yields 5 distinct
+    multi-stairs (base 0.5 NEAR-Cent/package, ±fine jitter), never identical.
+  * Caps: price ≤ DEMO_MAX_USD (default $3) and price ≤ budget — violation ⇒ exit 2.
+  * Real pipeline: each agent runs a MockSupernovaEngine pass (decompose→worker→synthesis)
+    through the SupernovaAdapter; deliverable artifact hashes are validated (not serialized).
 
-Determinismus-Quelle: Seed geht in job_id ein → Dekomposition + Ranking + Jitter sind
-ausschließlich (seed, spec, agents)-abhängig. Engine: Mock (real liefert T3 mit Provider-Key).
+Determinism source: the seed feeds job_id → decomposition + ranking + jitter depend
+only on (seed, spec, agents). Engine: mock (the real one ships with a provider key).
 """
 from __future__ import annotations
 
@@ -44,15 +44,15 @@ from core.bidding.supernova_adapter import (  # noqa: E402
 )
 
 DEFAULT_SPEC = (
-    "Recherche NEAR TVL und DEX-Volumen. "
-    "Vergleiche NEAR Aurora und Rhea-Pools. "
-    "Erstelle Vergleichstabelle. "
-    "Fasse Risiken zusammen. "
-    "Liefere Quellen mit Datum."
-)  # exakt 5 Satzteile (keine Kommas) ⇒ 5 Pakete ⇒ eta 40 s (RULES: Pakete × 8 s)
+    "Research NEAR TVL and DEX volume. "
+    "Compare NEAR Aurora and Rhea pools. "
+    "Build a comparison table. "
+    "Summarize the risks. "
+    "Deliver sources with dates."
+)  # exactly 5 sentences (no commas) ⇒ 5 packages ⇒ eta 40 s (RULES: packages × 8 s)
 
-STAIR_SPREAD = 0.05   # 5 % Stufenabstand → 5 Agenten garantiert verschieden
-FINE_JITTER = 0.015   # ±1,5 % Realismus-Jitter (kleiner als halber Stufenabstand)
+STAIR_SPREAD = 0.05   # 5 % stair spacing → 5 agents guaranteed distinct
+FINE_JITTER = 0.015   # ±1.5 % realism jitter (smaller than half the stair spacing)
 
 
 class GenError(RuntimeError):
@@ -60,15 +60,15 @@ class GenError(RuntimeError):
 
 
 def load_swarm_accounts() -> list:
-    """5 Swarm-Konten exakt aus .env SWARM_ACCOUNTS (Reihenfolge bleibt)."""
-    from core.bidding.supernova_adapter import _env  # Adapter_ENV-Loader nutzt .env
+    """The 5 swarm accounts exactly from .env SWARM_ACCOUNTS (order preserved)."""
+    from core.bidding.supernova_adapter import _env  # adapter env loader reads .env
 
     raw = _env("SWARM_ACCOUNTS", "")
     agents = [a.strip() for a in raw.split(",") if a.strip()]
     if len(agents) != 5:
-        raise GenError(f"SWARM_ACCOUNTS muss 5 Konten enthalten, gefunden: {len(agents)} — {raw!r}")
+        raise GenError(f"SWARM_ACCOUNTS must contain 5 accounts, found: {len(agents)} — {raw!r}")
     if len(set(agents)) != 5:
-        raise GenError("SWARM_ACCOUNTS enthält Duplikate")
+        raise GenError("SWARM_ACCOUNTS contains duplicates")
     return agents
 
 
@@ -77,14 +77,14 @@ def _seed_score(seed: str, agent: str) -> float:
 
 
 def stair_factors(seed: str, agents: list) -> dict:
-    """Deterministisches Seed-Ranking → 5 gestaffelte Multiplikatoren (0.90..1.10 + Feinjitter).
+    """Deterministic seed ranking → 5 staggered multipliers (0.90..1.10 + fine jitter).
 
-    Rang aus sha256(seed|agent): gleiche Reihenfolge pro Seed, aber pro Seed unterschiedlich
-    ⇒ 'gestaffelt_realistisch' und garantiert verschieden (Stufenabstand 5 % > 2×Jitter).
+    Rank from sha256(seed|agent): same order per seed, different across seeds
+    ⇒ realistically staggered and guaranteed distinct (stair spacing 5 % > 2×jitter).
     """
     ranked = sorted(agents, key=lambda a: (_seed_score(seed, a), a))
     factors = {}
-    base = 1.0 - (len(ranked) - 1) * STAIR_SPREAD / 2.0  # Zentrierung um 1.0
+    base = 1.0 - (len(ranked) - 1) * STAIR_SPREAD / 2.0  # centered on 1.0
     for rank, agent in enumerate(ranked):
         jitter = (_seed_score(seed, f"jitter:{agent}") * 2 - 1) * FINE_JITTER
         factors[agent] = base + rank * STAIR_SPREAD + jitter
@@ -92,7 +92,7 @@ def stair_factors(seed: str, agents: list) -> dict:
 
 
 def generate_bids(seed: str, spec: str = DEFAULT_SPEC, budget_yocto: int = None):
-    """→ (bids_liste für JSON, deliverables). Deterministisch in (seed, spec, agents)."""
+    """→ (bids list for JSON, deliverables). Deterministic in (seed, spec, agents)."""
     if not seed or not seed.strip():
         raise GenError("EMPTY_SEED")
     seed = seed.strip()
@@ -102,21 +102,21 @@ def generate_bids(seed: str, spec: str = DEFAULT_SPEC, budget_yocto: int = None)
 
     from core.bidding.supernova_adapter import _env, DEFAULT_NEAR_USD, DEFAULT_DEMO_MAX_USD
     if budget_yocto is None:
-        # Budget aus DEMO_MAX_USD abgeleitet, +20 % Puffer: Cap bleibt das wirksame Gate.
+        # Budget derived from DEMO_MAX_USD, +20 % buffer: the cap stays the effective gate.
         cap_usd = float(_env("DEMO_MAX_USD", str(DEFAULT_DEMO_MAX_USD)) or DEFAULT_DEMO_MAX_USD)
         near_usd = float(_env("NEAR_USD_PRICE", str(DEFAULT_NEAR_USD)) or DEFAULT_NEAR_USD)
         budget_yocto = int(cap_usd / near_usd * YOCTO_PER_NEAR * 1.2)
 
     job = JobRequest(spec=spec, budget_yocto=budget_yocto, deadline_secs=3600,
-                     job_id=f"seed:{seed}", acceptance_criteria=["Demo-Bid-Set"])
+                     job_id=f"seed:{seed}", acceptance_criteria=["Demo bid set"])
     factors = stair_factors(seed, agents)
 
     engine = MockSupernovaEngine()
     bids = []
     deliverables = []
     for agent in agents:
-        # echter Pipeline-Schritt je Agent (Mock): Deliverable wird erzeugt + validiert,
-        # aber NICHT serialisiert — Byte-Identität der Datei braucht Zeitstempel-freie Ausgabe.
+        # real pipeline step per agent (mock): the deliverable is produced + validated,
+        # but NOT serialized — byte identity of the file needs timestamp-free output.
         bid, deliverable = make_bid(job, agent, rep_snapshot=50, engine=engine)
         if len(deliverable.artifact_hash) != 64:
             raise GenError(f"BAD_ARTIFACT_HASH for {agent}")
@@ -132,22 +132,22 @@ def generate_bids(seed: str, spec: str = DEFAULT_SPEC, budget_yocto: int = None)
 
     prices = [int(b["price_yocto"]) for b in bids]
     if len(set(prices)) != len(prices):
-        raise GenError("preise nicht gestaffelt: Duplikat gefunden")
+        raise GenError("prices not staggered: duplicate found")
     return bids, deliverables
 
 
 def main(argv: list = None) -> int:
-    parser = argparse.ArgumentParser(description="Foreman Demo-Bid-Generator (deterministisch pro Seed)")
-    parser.add_argument("--seed", required=True, help="Pflicht: Determinismus-Seed (gleicher Seed => gleiche Datei)")
-    parser.add_argument("--out", required=True, help="Pfad der JSON-Datei (eine Datei pro Lauf)")
-    parser.add_argument("--spec", default=DEFAULT_SPEC, help="Job-Spec (Standard: Demo-Recherche)")
-    parser.add_argument("--budget-yocto", type=int, default=None, help="Job-Budget in yocto (Standard: aus DEMO_MAX_USD)")
+    parser = argparse.ArgumentParser(description="Foreman demo bid generator (deterministic per seed)")
+    parser.add_argument("--seed", required=True, help="required: determinism seed (same seed => same file)")
+    parser.add_argument("--out", required=True, help="path of the JSON file (one file per run)")
+    parser.add_argument("--spec", default=DEFAULT_SPEC, help="job spec (default: demo research)")
+    parser.add_argument("--budget-yocto", type=int, default=None, help="job budget in yocto (default: derived from DEMO_MAX_USD)")
     args = parser.parse_args(argv)
 
     try:
         bids, _ = generate_bids(args.seed, args.spec, args.budget_yocto)
     except (GenError, BidCapExceeded, ValueError) as exc:
-        sys.stderr.write(f"cli_bids: FEHLER: {exc}\n")
+        sys.stderr.write(f"cli_bids: ERROR: {exc}\n")
         return 2
 
     out_path = Path(args.out)

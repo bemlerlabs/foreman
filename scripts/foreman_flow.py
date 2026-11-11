@@ -73,7 +73,7 @@ def wait_phase(phase: str, timeout: float = 240.0) -> int:
             tail = [l for l in text.splitlines() if l.startswith(("VIDEO_", "BID_", "COUNTER_", "RECIPE_", "PAYOUT_"))]
             print("\n".join(tail[-12:]))
             return 0
-        if "VIDEO_FAIL" in text or "E2E_FAIL" in text or "fehlgeschlagen" in text:
+        if "VIDEO_FAIL" in text or "E2E_FAIL" in text or "BID_LOOP_ERROR" in text:
             print(text[-1500:])
             return 1
         time.sleep(2)
@@ -127,7 +127,7 @@ def main(argv: list[str]) -> int:
                 continue
             rc = run_phase(p) or rc
             if rc:
-                print(f"FEHLER in phase {p} (exit {rc})", file=sys.stderr)
+                print(f"ERROR in phase {p} (exit {rc})", file=sys.stderr)
                 return rc
         return rc
     if phase not in PHASES:

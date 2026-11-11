@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# phase3: liest Bids aus /tmp/foreman_bids.json ([{bidder,price_yocto,eta_secs}]) und
-# ruft place_bid fuer alle Schwärme PARALLEL (Bid-Fenster nur 120s — Gesch-Zaehlt).
-# place_bid ist @payable: --depositYocto 0 wird explizit gesetzt (Lead-Hinweis).
-# Aufruf:   ./scripts/bid_loop.sh [JOB_ID]     (Default: /tmp/foreman_job_id.txt)
+# phase3: reads bids from /tmp/foreman_bids.json ([{bidder,price_yocto,eta_secs}]) and
+# calls place_bid for all swarms IN PARALLEL (bid window only 120s — speed counts).
+# place_bid is @payable: --depositYocto 0 is set explicitly (lead note).
+# Usage:   ./scripts/bid_loop.sh [JOB_ID]     (default: /tmp/foreman_job_id.txt)
 source "$(dirname "$0")/_demo_common.sh"
 
 JOB_ID="${1:-$(cat /tmp/foreman_job_id.txt)}"
 BIDS_FILE="${BIDS_FILE:-/tmp/foreman_bids.json}"
-[[ -f "$BIDS_FILE" ]] || { echo "FEHLT: $BIDS_FILE (zuerst scripts/gen_bids.py laufen lassen)" >&2; exit 1; }
+[[ -f "$BIDS_FILE" ]] || { echo "MISSING: $BIDS_FILE (run scripts/gen_bids.py first)" >&2; exit 1; }
 
 T0=$(date +%s)
 i=0
@@ -32,5 +32,5 @@ for f in /tmp/foreman_bid_*.out; do
   grep -q BID_FAIL "$f" && FAILS=$((FAILS + 1))
 done
 rm -f /tmp/foreman_bid_*.out
-[[ $FAILS -eq 0 ]] || { echo "BID_LOOP_FEHLER: $FAILS von $i Bids fehlgeschlagen" >&2; exit 1; }
+[[ $FAILS -eq 0 ]] || { echo "BID_LOOP_ERROR: $FAILS of $i bids failed" >&2; exit 1; }
 echo "BID_LOOP_OK bids=$i elapsed=${ELAPSED}s (Fenster 120s) job=$JOB_ID"

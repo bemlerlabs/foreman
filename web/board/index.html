@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FOREMAN · Biet-Board — escrow.foreman-team.testnet</title>
+<title>FOREMAN · Bid Board — escrow.foreman-team.testnet</title>
 <link rel="preconnect" href="https://rsms.me/"><link rel="stylesheet" href="https://rsms.me/inter/inter.css">
 <style>
-/* FOREMAN Biet-Board — Design-System siehe docs/DESIGN.md (phase4.3).
-   Handgeschriebenes CSS, Custom Properties, 8px-Grid, EIN Akzent-Grün + EIN Amber. */
+/* FOREMAN Bid Board — design system in docs/DESIGN.md (phase4.3).
+   Hand-written CSS, custom properties, 8px grid, ONE accent green + ONE amber. */
 :root{
   --base:#0A0C10; --s1:#0E1116; --s2:#12161D; --s3:#171C25;
   --hairline:rgba(255,255,255,.06); --hairline-strong:rgba(255,255,255,.10);
@@ -91,7 +91,7 @@ header{display:flex;align-items:center;gap:16px;margin-bottom:16px;position:rela
 .crit li{list-style:none;display:flex;gap:10px;align-items:baseline}
 .crit li::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--t3);flex:none;transform:translateY(-2px)}
 
-/* ---------- Bid-Wand ---------- */
+/* ---------- Bid wall ---------- */
 table{width:100%;border-collapse:collapse}
 th{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);
    text-align:left;padding:8px 12px;border-bottom:1px solid var(--hairline-strong)}
@@ -127,7 +127,7 @@ a{color:var(--accent);text-decoration:none}
 a:hover{text-decoration:underline}
 .mono{font-family:var(--mono);font-size:.92em;color:var(--t2)}
 
-/* ---------- Ergebnis ---------- */
+/* ---------- Result ---------- */
 .res{display:flex;align-items:flex-end;gap:40px;flex-wrap:wrap;margin-bottom:4px}
 .res .kpi .v.big{font-size:clamp(24px,2vw,36px)}
 .acctname{font-family:var(--mono);font-size:clamp(15px,1.2vw,20px);color:var(--t1);word-break:break-all}
@@ -142,12 +142,12 @@ a:hover{text-decoration:underline}
 <header>
   <div class="brand">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="M12 8v8M8 12h8" opacity=".6"/></svg>
-    <h1>FOREMAN<span>Biet-Board · escrow.foreman-team.testnet</span></h1>
+    <h1>FOREMAN<span>Bid Board · escrow.foreman-team.testnet</span></h1>
   </div>
-  <div class="live"><span class="dotwrap"><span id="dot" class="dot"></span></span><span id="liveLbl">verbinde</span></div>
-  <span id="demoTag" class="demo-tag">Demo-Modus</span>
+  <div class="live"><span class="dotwrap"><span id="dot" class="dot"></span></span><span id="liveLbl">connecting</span></div>
+  <span id="demoTag" class="demo-tag">Demo mode</span>
   <div class="net" id="netInfo">RPC —</div>
-  <button id="themeBtn" class="theme-btn" type="button" aria-label="Hell/Dunkel umschalten" title="Hell/Dunkel (auch ?theme=light)">☾ / ☀</button>
+  <button id="themeBtn" class="theme-btn" type="button" aria-label="Toggle light/dark" title="Light/dark (also ?theme=light)">☾ / ☀</button>
 </header>
 
 <div class="grid">
@@ -161,23 +161,23 @@ a:hover{text-decoration:underline}
           <svg viewBox="0 0 64 64"><circle class="ring-bg" cx="32" cy="32" r="28"/><circle id="countdownRing" class="ring-fg" cx="32" cy="32" r="28"/></svg>
           <span id="countdown" class="num">--:--</span>
         </div>
-        <div class="l" id="cdLbl" style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-top:6px;text-align:center">Bid-Fenster</div>
+        <div class="l" id="cdLbl" style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-top:6px;text-align:center">Bid window</div>
       </div>
       <div><span class="pill" id="stateBadge">—</span><div class="l" style="font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t3);margin-top:6px;text-align:center">Status</div></div>
     </div>
-    <div class="crit"><div class="lbl">Abnahmekriterien</div><div id="criteria"><li class="empty">—</li></div></div>
+    <div class="crit"><div class="lbl">Acceptance criteria</div><div id="criteria"><li class="empty">—</li></div></div>
   </section>
 
   <section class="card c-counter">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M5 7l7-4 7 4M7 21h10"/></svg>3 · Gegenofferte <span style="text-transform:none;letter-spacing:.02em;color:var(--t3)">— genau eine, begründet</span></h2>
-    <div id="counterBody" class="empty">keine Gegenofferte</div>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 3v18M5 7l7-4 7 4M7 21h10"/></svg>3 · Counter-offer <span style="text-transform:none;letter-spacing:.02em;color:var(--t3)">— exactly one, reasoned</span></h2>
+    <div id="counterBody" class="empty">no counter-offer</div>
   </section>
 
   <section class="card c-bids">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>2 · Live-Bid-Wand</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>2 · Live bid wall</h2>
     <table>
-      <thead><tr><th></th><th>Bieter</th><th>Preis</th><th>ETA</th><th>Rep</th></tr></thead>
-      <tbody id="bidsBody"><tr><td colspan="5" class="empty">warte auf Bids …</td></tr></tbody>
+      <thead><tr><th></th><th>Bidder</th><th>Price</th><th>ETA</th><th>Rep</th></tr></thead>
+      <tbody id="bidsBody"><tr><td colspan="5" class="empty">waiting for bids …</td></tr></tbody>
     </table>
   </section>
 
@@ -185,33 +185,33 @@ a:hover{text-decoration:underline}
     <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2h12v20l-3-2-3 2-3-2-3 2V2Z"/><path d="M9 7h6M9 11h6"/></svg>4 · Ephemora-Receipt</h2>
     <div class="fld"><div class="lbl">receipt_hash · Execution-Report</div><div class="hash" id="receiptHash">—</div></div>
     <div class="fld"><div class="lbl">artifact_hash</div><div class="hash" id="artifactHash">—</div></div>
-    <div class="fld"><div class="lbl">Verifizieren</div><div id="explorerLink" class="empty">kein tx hash</div></div>
+    <div class="fld"><div class="lbl">Verify</div><div id="explorerLink" class="empty">no tx hash</div></div>
   </section>
 
   <section class="card c-result">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5"/><path d="M13.5 12.5 20 19M16 4a5 5 0 0 1 4 8"/></svg>5 · Ergebnis</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5"/><path d="M13.5 12.5 20 19M16 4a5 5 0 0 1 4 8"/></svg>5 · Result</h2>
     <div class="res">
-      <div class="kpi"><div class="acctname" id="winner">—</div><div class="l">Gewinner</div></div>
+      <div class="kpi"><div class="acctname" id="winner">—</div><div class="l">Winner</div></div>
       <div class="kpi money"><div class="v big" id="payout">—</div><div class="l">Payout · NEAR-Cent</div></div>
-      <div class="kpi rep"><div class="v big" id="repMove">—</div><div class="l">Rep-Move · (old·9+score)/10</div></div>
+      <div class="kpi rep"><div class="v big" id="repMove">—</div><div class="l">Rep move · (old·9+score)/10</div></div>
     </div>
     <div class="resfields">
-      <div class="fld"><div class="lbl">Foreman-Fee 10 % → Foreman-Konto</div><div class="mono" id="feeLine">—</div></div>
-      <div class="fld"><div class="lbl">Payout-tx · nearblocks.io</div><div id="payoutTxLink" class="empty">—</div></div>
+      <div class="fld"><div class="lbl">Foreman fee 10 % → foreman account</div><div class="mono" id="feeLine">—</div></div>
+      <div class="fld"><div class="lbl">Payout tx · nearblocks.io</div><div id="payoutTxLink" class="empty">—</div></div>
     </div>
   </section>
 
   <section class="card c-ops">
-    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h4l3-7 4 14 3-7h6"/></svg>Betrieb</h2>
+    <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h4l3-7 4 14 3-7h6"/></svg>Operations</h2>
     <div class="fld"><div class="lbl">Contract</div><div class="mono" id="contractLbl">—</div></div>
-    <div class="fld"><div class="lbl">Letzter Poll</div><div class="mono num" id="lastPoll">—</div></div>
-    <div class="fld"><div class="lbl">RPC-Kette</div><div class="mono" id="rpcChain">—</div></div>
+    <div class="fld"><div class="lbl">Last poll</div><div class="mono num" id="lastPoll">—</div></div>
+    <div class="fld"><div class="lbl">RPC chain</div><div class="mono" id="rpcChain">—</div></div>
   </section>
 </div>
 
 <div class="foot">
-  <span>NEAR HACKATHON 2026 · escrow-Contract als einzige Geld-Autorität · Bid-Fenster 120 s · Counter genau einer</span>
-  <span>Preise in NEAR-Cent · $-Schätzung @ 2,50 $/NEAR · Design: docs/DESIGN.md</span>
+  <span>NEAR HACKATHON 2026 · escrow contract is the only money authority · bid window 120 s · exactly one counter-offer</span>
+  <span>Prices in NEAR-Cent · $ estimate @ 2.50 $/NEAR · Design: docs/DESIGN.md</span>
 </div>
 <script src="board.js"></script>
 </body>

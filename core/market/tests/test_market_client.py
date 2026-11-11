@@ -1,6 +1,6 @@
-"""Tests core/market/market_client — Mock-Modus-Vertrag (e2e ohne Netz/Token).
+"""Tests core/market/market_client — mock-mode contract (e2e without network/token).
 
-Runner: /Users/sanji/supernova/.venv/bin/python -m pytest core/market
+Runner: python -m pytest core/market
 """
 import sys
 from pathlib import Path
@@ -22,7 +22,7 @@ def _mock(monkeypatch=None):
     return MarketClient(token="", prefer="mock")
 
 
-# ---------------------------------------------------------------- Modus-Wahl
+# ---------------------------------------------------------------- mode selection
 def test_no_token_selects_mock(monkeypatch):
     monkeypatch.delenv("MARKET_AGENT_TOKEN", raising=False)
     c = MarketClient(prefer="auto")
@@ -37,10 +37,10 @@ def test_aat_token_selects_real(monkeypatch):
 
 def test_bad_prefer_raises():
     with pytest.raises(ValueError):
-        MarketClient(prefer="quatsch")
+        MarketClient(prefer="bogus")
 
 
-# ---------------------------------------------------------------- Discovery
+# ---------------------------------------------------------------- discovery
 def test_discovery_returns_5_real_listings():
     out = _mock().discovery()
     assert len(out) == 5
@@ -52,7 +52,7 @@ def test_discovery_returns_5_real_listings():
 
 
 def test_discovery_matches_real_capture():
-    """Mock spiegelt die real erfassten Listings vom 06.11. (MARKET_NOTES.md)."""
+    """Mock mirrors the real listings captured on 2026-11-06 (MARKET_NOTES.md)."""
     handles = [a["handle"] for a in _mock().discovery()]
     assert handles == [a["handle"] for a in MOCK_LISTINGS]
     assert "wallet-activity-lookup" in handles
@@ -63,14 +63,14 @@ def test_discovery_filter_and_limit():
     assert all(a["category"] == "research" for a in c.discovery(category="research"))
     assert len(c.discovery(limit=2)) == 2
     assert [a["handle"] for a in c.discovery(query="wallet")] == ["wallet-activity-lookup"]
-    assert c.discovery(query="gibtsnicht") == []
+    assert c.discovery(query="doesnotexist") == []
 
 
-# ---------------------------------------------------------------- Offer/Accept
+# ---------------------------------------------------------------- offer/accept
 def test_hire_draft_flow_contract():
     c = _mock()
     agent = c.discovery(query="wallet")[0]
-    draft = c.create_hire_draft(agent["agent_id"], "Analysiere Wallet-Aktivität für Steuerreport")
+    draft = c.create_hire_draft(agent["agent_id"], "Analyze wallet activity for a tax report")
     assert draft["state"] == "draft" and draft["mode"] == "mock"
     assert draft["agent_id"] == agent["agent_id"]
 
@@ -82,7 +82,7 @@ def test_hire_draft_empty_brief_raises():
 
 def test_bid_flow_contract_and_amount_validation():
     c = _mock()
-    bid = c.place_bid("job-1", "0.25", "Vom Foreman-Swarm geliefert in < SLA")
+    bid = c.place_bid("job-1", "0.25", "Delivered by the Foreman swarm within < SLA")
     assert bid["state"] == "pending" and bid["amount"] == "0.25"
     for bad in ("0", "-1", "abc", None):
         with pytest.raises(ValueError):
@@ -92,14 +92,14 @@ def test_bid_flow_contract_and_amount_validation():
 
 
 def test_accept_delivery_contract():
-    r = _mock().accept_delivery("asg-1", approve=True, comment="gut")
+    r = _mock().accept_delivery("asg-1", approve=True, comment="good")
     assert r["state"] == "reviewed" and r["approve"] is True
 
 
-# ---------------------------------------------------------------- Real-Modus-Gates
+# ---------------------------------------------------------------- real-mode gates
 def test_real_401_maps_to_auth_error(monkeypatch):
     monkeypatch.setenv("MARKET_AGENT_TOKEN", "aat_TESTREDACTED")
-    c = MarketClient(prefer="real", base_url="http://127.0.0.1:9")  # nichts lauscht → Network-Fehler
+    c = MarketClient(prefer="real", base_url="http://127.0.0.1:9")  # nothing listening → network error
     with pytest.raises(MarketError):
         c.discovery()
 
@@ -107,4 +107,4 @@ def test_real_401_maps_to_auth_error(monkeypatch):
 def test_real_without_token_never_silently_mocks_in_forced_mode():
     c = MarketClient(token="", prefer="real", base_url="http://127.0.0.1:9")
     with pytest.raises(MarketError):
-        c.discovery()  # ehrlicher Fehler statt stiller Mock
+        c.discovery()  # honest error instead of a silent mock

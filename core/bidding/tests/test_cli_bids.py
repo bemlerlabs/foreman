@@ -1,6 +1,6 @@
-"""Tests core/bidding/cli_bids — T5-Wiederholbarkeits-Gate + Ausgabeformat für bid_loop.sh.
+"""Tests core/bidding/cli_bids — T5 reproducibility gate + output format for bid_loop.sh.
 
-Runner: /Users/sanji/supernova/.venv/bin/python -m pytest core/bidding
+Runner: python -m pytest core/bidding
 """
 import json
 import subprocess
@@ -24,12 +24,12 @@ def _run_cli(seed: str, out: Path, extra=None):
     return r
 
 
-# ---------------------------------------------------------------- T5-Gate
+# ---------------------------------------------------------------- T5 gate
 def test_same_seed_byte_identical(tmp_path):
     a, b = tmp_path / "a.json", tmp_path / "b.json"
     assert _run_cli("foreman-demo", a).returncode == 0
     assert _run_cli("foreman-demo", b).returncode == 0
-    assert a.read_bytes() == b.read_bytes(), "T5-Gate: gleicher Seed muss byte-identische Datei schreiben"
+    assert a.read_bytes() == b.read_bytes(), "T5 gate: the same seed must write a byte-identical file"
 
 
 def test_different_seed_different_prices(tmp_path):
@@ -38,7 +38,7 @@ def test_different_seed_different_prices(tmp_path):
     _run_cli("seed-beta", b)
     pa = [int(x["price_yocto"]) for x in json.loads(a.read_text())]
     pb = [int(x["price_yocto"]) for x in json.loads(b.read_text())]
-    assert pa != pb, "unterschiedliche Seeds müssen verschiedene Preise erzeugen"
+    assert pa != pb, "different seeds must produce different prices"
 
 
 def test_seed_required():
@@ -47,7 +47,7 @@ def test_seed_required():
     assert r.returncode != 0 and "--seed" in (r.stderr + r.stdout)
 
 
-# ---------------------------------------------------------------- Format für bid_loop.sh
+# ---------------------------------------------------------------- format for bid_loop.sh
 def test_output_format_matches_bid_loop_contract(tmp_path):
     out = tmp_path / "bids.json"
     assert _run_cli("foreman-demo", out).returncode == 0
@@ -56,17 +56,17 @@ def test_output_format_matches_bid_loop_contract(tmp_path):
     agents = [a.strip() for a in (_env("SWARM_ACCOUNTS") or "").split(",") if a.strip()]
     for i, b in enumerate(bids):
         assert set(b.keys()) == {"bidder", "price_yocto", "eta_secs"}
-        assert b["bidder"] == agents[i], "Agenten exakt und in Reihenfolge .env SWARM_ACCOUNTS"
+        assert b["bidder"] == agents[i], "agents exactly and in order of .env SWARM_ACCOUNTS"
         assert isinstance(b["price_yocto"], str) and int(b["price_yocto"]) > 0
-        assert isinstance(b["eta_secs"], int) and b["eta_secs"] == 40  # 5 Pakete × 8 s
+        assert isinstance(b["eta_secs"], int) and b["eta_secs"] == 40  # 5 packages × 8 s
 
 
-def test_prices_staffelt_nicht_identisch(tmp_path):
+def test_prices_are_staggered_not_identical(tmp_path):
     out = tmp_path / "bids.json"
     _run_cli("foreman-demo", out)
     prices = [int(b["price_yocto"]) for b in json.loads(out.read_text())]
-    assert len(set(prices)) == 5, "Preise gestaffelt, nie identisch"
-    assert min(prices) * 1.05 < max(prices), "Spürbare Staffelung erwartet"
+    assert len(set(prices)) == 5, "prices staggered, never identical"
+    assert min(prices) * 1.05 < max(prices), "noticeable staggering expected"
 
 
 def test_caps_hold(tmp_path):
@@ -74,11 +74,11 @@ def test_caps_hold(tmp_path):
     _run_cli("foreman-demo", out)
     cap = float(_env("DEMO_MAX_USD", "3") or 3)
     for b in json.loads(out.read_text()):
-        assert usd_value(int(b["price_yocto"])) <= cap, "DEMO_MAX_USD-Hard-Cap"
-        assert int(b["price_yocto"]) <= int(cap / 2.5 * 10**24 * 1.2), "price ≤ Standard-Budget"
+        assert usd_value(int(b["price_yocto"])) <= cap, "DEMO_MAX_USD hard cap"
+        assert int(b["price_yocto"]) <= int(cap / 2.5 * 10**24 * 1.2), "price ≤ default budget"
 
 
-# ---------------------------------------------------------------- Unit-Ebene
+# ---------------------------------------------------------------- unit level
 def test_stair_factors_unique_and_seeded():
     agents = [f"agent{i}.foreman-team.testnet" for i in range(1, 6)]
     f1 = stair_factors("s1", agents)
@@ -95,6 +95,6 @@ def test_generate_bids_empty_seed_raises():
 
 
 def test_one_file_per_run(tmp_path):
-    out = tmp_path / "runs" / "single.json"  # Verzeichnis existiert noch nicht
+    out = tmp_path / "runs" / "single.json"  # directory does not exist yet
     assert _run_cli("foreman-demo", out).returncode == 0
     assert out.is_file() and len(list(out.parent.glob("*.json"))) == 1

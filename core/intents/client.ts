@@ -1,18 +1,18 @@
 /**
- * Node-22-kompatibler Raw-fetch-REST-Wrapper für die NEAR Intents Agent API.
+ * Node-22-compatible raw-fetch REST wrapper for the NEAR Intents Agent API.
  *
- * Warum own-fetch statt SDK zur Laufzeit: Das SDK deklariert `engines: node>=24`, wir bauen auf
- * Node 22. Die API ist reines JSON über HTTPS (GET {base}/llms.txt, /openapi.json) — der
- * Raw-HTTP-Pfad aus github.com/NEAR-Intents-Agent-API/examples (Kapitel 09) ist die
- * reproduzierbarste Implementierung. Das SDK bleibt als Dev-/Helper-Dependency
- * (createGrantCredential/createIdempotencyKey), alle HTTP-Aufrufe laufen hier.
+ * Why own fetch instead of the SDK at runtime: the SDK declares `engines: node>=24`, we build on
+ * Node 22. The API is pure JSON over HTTPS (GET {base}/llms.txt, /openapi.json) — the
+ * raw HTTP path from github.com/NEAR-Intents-Agent-API/examples (chapter 09) is the most
+ * reproducible implementation. The SDK stays as a dev/helper dependency
+ * (createGrantCredential/createIdempotencyKey); all HTTP calls run here.
  *
- * Header-Konventionen (09-raw-http/README.md):
- * - `X-API-Key` auf jeder authentifizierten Anfrage. Der Key verlässt diese Datei nie.
- * - `Idempotency-Key` auf Writes, die Arbeit erzeugen (8–128 Zeichen A-Za-z0-9._:-).
- * - `X-Grant-Token` auf delegierten Aktionen (swap/transfer/withdraw live).
- * - Errors sind JSON:API: errors[0].{status,code,layer,title,detail,meta.retryable}.
- *   Branch NUR auf code, nie auf title/detail.
+ * Header conventions (09-raw-http/README.md):
+ * - `X-API-Key` on every authenticated request. The key never leaves this file.
+ * - `Idempotency-Key` on writes that create work (8–128 chars A-Za-z0-9._:-).
+ * - `X-Grant-Token` on delegated actions (swap/transfer/withdraw live).
+ * - Errors are JSON:API: errors[0].{status,code,layer,title,detail,meta.retryable}.
+ *   Branch ONLY on code, never on title/detail.
  */
 import { redact, type TreasuryConfig } from "./env.js";
 
@@ -34,7 +34,7 @@ export class ApiError extends Error {
     readonly retryable: boolean,
     readonly availableAt: string | undefined,
     readonly requestId: string | undefined,
-    /** JSON:API-Dokument, secrets-redacted. */
+    /** JSON:API document, secrets-redacted. */
     readonly document: unknown,
   ) {
     super(`intents_api_error http=${httpStatus} code=${code}${layer ? ` layer=${layer}` : ""}`);
@@ -80,12 +80,12 @@ type RequestSpec = {
   method?: "GET" | "POST" | "DELETE";
   path: string;
   body?: unknown;
-  /** Idempotency-Key für Writes, die Arbeit erzeugen. */
+  /** Idempotency key for writes that create work. */
   idempotencyKey?: string;
-  /** ngt_… Grant-Token für delegierte Aktionen. Wird nie geloggt. */
+  /** ngt_… grant token for delegated actions. Never logged. */
   grantToken?: string;
   timeoutMs?: number;
-  /** Öffentliche Reads (/v1/tokens, /v1/network) gehen ohne API-Key. */
+  /** Public reads (/v1/tokens, /v1/network) go without an API key. */
   allowMissingKey?: boolean;
 };
 
@@ -119,8 +119,8 @@ export class IntentsClient {
         signal: AbortSignal.timeout(spec.timeoutMs ?? 65_000),
       });
     } catch (e) {
-      // Netzwerkfehler/Timeout: Antwort könnte trotzdem eingetroffen sein → niemals
-      // neuen Idempotency-Key erzeugen; Aufrufer muss mit gleichem Key reconcilieren.
+      // Network error/timeout: the response may still have arrived → never generate a
+      // new idempotency key; the caller must reconcile with the same key.
       throw new ApiError(0, redact(String((e as Error)?.name ?? "network_error"), secrets), undefined, true, undefined, undefined, {
         note: "transport failure — outcome unknown; retry only with the SAME Idempotency-Key or observe status",
       });
@@ -183,13 +183,13 @@ export class IntentsClient {
     });
   }
   getStatus(correlationId: string, opts: { waitMs?: number; refresh?: boolean } = {}) {
-    const wait = Math.min(opts.waitMs ?? 30_000, 30_000); // wait_ms ist serverseitig bei 30s gekappt
+    const wait = Math.min(opts.waitMs ?? 30_000, 30_000); // wait_ms is capped server-side at 30s
     const q = new URLSearchParams({ correlation_id: correlationId, wait_ms: String(wait) });
     if (opts.refresh) q.set("refresh", "true");
     return this.request<StatusResponse>({ path: `/v1/status?${q}`, timeoutMs: wait + 15_000 });
   }
 
-  // ---------- Owner-Intents (Mensch signiert — NIE automatisch) ----------
+  // ---------- owner intents (human signs — NEVER automatically) ----------
   generateIntent(body: Record<string, unknown>, idempotencyKey?: string) {
     return this.request<GenerateIntentResponse>({
       method: "POST",
@@ -207,7 +207,7 @@ export class IntentsClient {
   }
 
   // ---------- Executions ----------
-  /** dry:true braucht weder Grant noch Idempotency-Key; live beides. */
+  /** dry:true needs neither grant nor idempotency key; live needs both. */
   swap(agentId: string, body: Record<string, unknown>, opts: { idempotencyKey?: string; grantToken?: string } = {}) {
     return this.request<QuoteResponse | StatusResponse>({
       method: "POST",
@@ -230,9 +230,9 @@ export type QuoteResponse = {
   owner_approval?: boolean;
 };
 
-/** Idempotency-Keys: 8–128 Zeichen aus A-Za-z0-9._:- (API-Validierung). */
+/** Idempotency keys: 8–128 chars from A-Za-z0-9._:- (API validation). */
 export function assertIdempotencyKey(key: string): void {
   if (!/^[A-Za-z0-9._:-]{8,128}$/.test(key)) {
-    throw new Error("Idempotency-Key muss 8–128 Zeichen aus [A-Za-z0-9._:-] sein");
+    throw new Error("Idempotency-Key must be 8–128 chars from [A-Za-z0-9._:-]");
   }
 }

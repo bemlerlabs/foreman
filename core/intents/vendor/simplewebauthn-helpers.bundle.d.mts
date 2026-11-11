@@ -1,5 +1,5 @@
-// Deklarationen für den vendored @simplewebauthn/server@13 helpers-Bundle (esm.sh-Pin 13.3.3).
-// Nur die vom Popup-Server genutzten API-Flächen; Typen bewusst lose (any) — Laufzeitverhalten ist E2E getestet.
+// Declarations for the vendored @simplewebauthn/server@13 helpers bundle (esm.sh pin 13.3.3).
+// Only the API surfaces used by the popup server; types deliberately loose (any) — runtime behavior is E2E tested.
 export const isoCBOR: {
   decodeFirst(bytes: Uint8Array): unknown;
   encode(value: unknown): Uint8Array;

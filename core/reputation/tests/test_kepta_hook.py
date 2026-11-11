@@ -1,6 +1,6 @@
-"""Tests core/reputation/kepta_hook — Snapshot-Hash + Rep-Formel-Parity mit Contract.
+"""Tests core/reputation/kepta_hook — snapshot hash + rep formula parity with the contract.
 
-Runner: /Users/sanji/supernova/.venv/bin/python -m pytest core/reputation
+Runner: python -m pytest core/reputation
 """
 import hashlib
 import sqlite3
@@ -30,7 +30,7 @@ def _sqlite_db(tmp_path: Path, name: str = "kepta.db") -> Path:
     return p
 
 
-# ---------------------------------------------------------------- Snapshot-Hash
+# ---------------------------------------------------------------- snapshot hash
 def test_snapshot_hash_matches_file_sha256(tmp_path):
     p = _sqlite_db(tmp_path)
     expected = hashlib.sha256(p.read_bytes()).hexdigest()
@@ -76,9 +76,9 @@ def test_bid_rep_snapshot_with_db(tmp_path):
     assert h == hashlib.sha256(p.read_bytes()).hexdigest()
 
 
-# ---------------------------------------------------------------- Contract-Parität
+# ---------------------------------------------------------------- contract parity
 def _contract_step(old: int, score: int) -> int:
-    """Referenz: contracts/foreman/src/lib.rs update_rep — (old*9 + score.min(100)) / 10, u32."""
+    """Reference: contracts/foreman/src/lib.rs update_rep — (old*9 + score.min(100)) / 10, u32."""
     return (old * 9 + min(int(score), 100)) // 10
 
 
@@ -88,7 +88,7 @@ def test_rep_starts_at_50():
 
 
 def test_rep_formula_matches_contract_reference():
-    """Parity gegen die Contract-Formel über eine feste Wertefolge (Determinismus beider Seiten)."""
+    """Parity against the contract formula over a fixed value sequence (determinism on both sides)."""
     rep = OfflineReputation()
     ref = REP_START
     for score in (100, 95, 60, 0, 100, 33, 100, 100):
@@ -98,12 +98,12 @@ def test_rep_formula_matches_contract_reference():
 
 
 def test_rep_known_values():
-    """Von Hand gegen Contract gerechnete Ankerwerte."""
+    """Anchor values hand-computed against the contract."""
     rep = OfflineReputation()
     assert rep.update("a", 100) == 55           # (50*9+100)//10 = 55
     assert rep.update("a", 0) == 49             # (55*9+0)//10 = 49
     assert rep.apply_refund_expired("a") == 44  # (49*9+0)//10 = 44
-    assert rep.update("b", 250) == 55           # Klemmung auf 100 wie Contract (.min(100))
+    assert rep.update("b", 250) == 55           # clamped to 100 like the contract (.min(100))
 
 
 def test_rep_clamps_negative():

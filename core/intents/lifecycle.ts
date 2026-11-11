@@ -1,17 +1,17 @@
 /**
- * Quote-/Execution-Lifecycle: Idempotenz, Statusmaschine, bounded Retries, Quota-Respekt.
+ * Quote/execution lifecycle: idempotency, state machine, bounded retries, quota respect.
  *
- * Referenzen: examples-Repo 05-money-moves (Idempotenz: „auf Transportfehler mit demSELBEN Key
- * erneut senden — nie mit neuem"), 08-errors-and-recovery (Klassifikation poll/settled/
- * waiting-external/reconcile/review), llms.txt (UNCERTAIN nie neu senden; NEEDS_REVIEW nicht
- * pollend aussitzen; Quota 100 Agent-Admissionen/24 h, 1.000 Custody-Ops/Wallet/24 h).
+ * References: examples repo 05-money-moves (idempotency: "on a transport error resend with
+ * the SAME key — never a new one"), 08-errors-and-recovery (classification poll/settled/
+ * waiting-external/reconcile/review), llms.txt (never resend on UNCERTAIN; never poll
+ * through NEEDS_REVIEW; quota 100 agent admissions/24 h, 1,000 custody ops/wallet/24 h).
  *
- * Interne Zustände (Mission): PENDING | UNCERTAIN | NEEDS_REVIEW | COMPLETED (+ FAILED terminal).
+ * Internal states (mission): PENDING | UNCERTAIN | NEEDS_REVIEW | COMPLETED (+ FAILED terminal).
  * - API QUEUED/PROCESSING/PENDING_SIGNATURE/PENDING_APPROVAL/PENDING_DEPOSIT → PENDING
  * - API SUCCESS/REFUNDED → COMPLETED
- * - API FAILED → FAILED (details.never_executed/never_submitted ⇒ neuer Versuch mit NEUEM Key)
- * - API UNCERTAIN → UNCERTAIN (nur gleiches correlation_id beobachten, NIE neuer Key)
- * - API NEEDS_REVIEW → NEEDS_REVIEW (Polling stoppen, Reason prüfen, nie automatisch retryn)
+ * - API FAILED → FAILED (details.never_executed/never_submitted ⇒ new attempt with a NEW key)
+ * - API UNCERTAIN → UNCERTAIN (only observe the same correlation_id, NEVER a new key)
+ * - API NEEDS_REVIEW → NEEDS_REVIEW (stop polling, check the reason, never auto-retry)
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { randomBytes } from "node:crypto";
@@ -35,23 +35,23 @@ const STATUS_MAP: Record<string, LifecycleState> = {
 };
 
 export function toLifecycleStatus(apiStatus: string): LifecycleState {
-  return STATUS_MAP[apiStatus] ?? "NEEDS_REVIEW"; // unbekannter Status → konservativ prüfen
+  return STATUS_MAP[apiStatus] ?? "NEEDS_REVIEW"; // unknown status → conservatively review
 }
 
 export function isSettled(state: LifecycleState): boolean {
   return state === "COMPLETED" || state === "FAILED" || state === "NEEDS_REVIEW";
 }
 
-/** Deterministischer, für diese Operation stabiler Idempotency-Key. */
+/** Idempotency key: stable for this operation. */
 export function newIdempotencyKey(purpose: string): string {
   const clean = purpose.replace(/[^A-Za-z0-9._:-]/g, "-").slice(0, 64);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  return `foreman-${clean}-${stamp}-${randomBytes(6).toString("hex")}`; // ≤128 Zeichen, Alphabet ok
+  return `foreman-${clean}-${stamp}-${randomBytes(6).toString("hex")}`; // ≤128 chars, alphabet ok
 }
 
 export type OperationRecord = {
-  key: string; // unsere Operations-Id (z.B. quote-demo-…)
-  idempotencyKey: string; // der gegenüber der API verwendete Key — pro Operation stabil
+  key: string; // our operation id (e.g. quote-demo-…)
+  idempotencyKey: string; // the key used against the API — stable per operation
   correlationId?: string;
   purpose: string;
   state: LifecycleState | "DISPATCHING";
@@ -59,7 +59,7 @@ export type OperationRecord = {
   failureCode?: string;
   createdAt: string;
   updatedAt: string;
-  /** Redacted: keine Secrets, nur IDs/Status. */
+  /** Redacted: no secrets, only ids/status. */
   details?: Record<string, unknown>;
 };
 
@@ -76,13 +76,13 @@ function loadOps(): Record<string, OperationRecord> {
 
 function saveOps(ops: Record<string, OperationRecord>): void {
   mkdirSync(STATE_DIR, { recursive: true, mode: 0o700 });
-  // Rote Liste für die Evidenz: dieser Store enthält nur IDs/Status — keine Keys, keine Tokens.
+  // Evidence red line: this store holds only ids/status — no keys, no tokens.
   writeFileSync(OPS_FILE, JSON.stringify(ops, null, 2), { mode: 0o600 });
 }
 
 /**
- * Persist-before-dispatch: liefert den bestehenden Key für `key` zurück oder legt genau einen
- * an. Ein Retry derselben logischen Operation MUSS denselben Idempotency-Key verwenden.
+ * Persist-before-dispatch: returns the existing key for `key` or creates exactly one.
+ * A retry of the same logical operation MUST use the same idempotency key.
  */
 export function operationFor(key: string, purpose: string): OperationRecord {
   const ops = loadOps();
@@ -104,7 +104,7 @@ export function operationFor(key: string, purpose: string): OperationRecord {
 export function updateOperation(key: string, patch: Partial<OperationRecord>): OperationRecord {
   const ops = loadOps();
   const record = ops[key];
-  if (!record) throw new Error(`Operation ${key} nicht gefunden`);
+  if (!record) throw new Error(`Operation ${key} not found`);
   Object.assign(record, patch, { updatedAt: new Date().toISOString() });
   saveOps(ops);
   return record;
@@ -115,23 +115,23 @@ export function listOperations(): OperationRecord[] {
 }
 
 /**
- * Quota-Guard VOR Dispatch (Mission: 100 Admissions/24 h, 1.000 Custody-Ops/24 h).
- * Liest GET /v1/quotas; bei erschöpfter Agent-Admission bricht er ab, statt 429 zu riskieren.
- * Custody-Ops (dry-runs & signings zählen mit!) werden über 429-Behandlung abgesichert.
+ * Quota guard BEFORE dispatch (mission: 100 admissions/24 h, 1,000 custody ops/24 h).
+ * Reads GET /v1/quotas; aborts when agent admissions are exhausted instead of risking 429.
+ * Custody ops (dry-runs & signings count too!) are covered by 429 handling.
  */
 export async function assertQuotaHeadroom(client: IntentsClient, needsAgentSlot: boolean): Promise<void> {
   const q = await client.quotas().catch(() => null);
-  if (!q?.limits || !q.usage) return; // API gibt nichts frei → 429-Pfad genügt
+  if (!q?.limits || !q.usage) return; // API discloses nothing → the 429 path suffices
   const agentsCap = q.limits.daily_agents;
   const agentsUsed = q.usage.agents_last_24_hours;
   if (needsAgentSlot && agentsCap !== undefined && agentsUsed !== undefined && agentsUsed >= agentsCap) {
     throw new Error(
-      `Agent-Admissions erschöpft (${agentsUsed}/${agentsCap} in 24 h). Heute keine Agent-Erstellung mehr — Lead informieren.`,
+      `Agent admissions exhausted (${agentsUsed}/${agentsCap} in 24 h). No more agent creation today — inform the lead.`,
     );
   }
 }
 
-/** Bounded Retry: sendet NUR mit demselben Key/body und nur bei retryable-Fehlern. */
+/** Bounded retry: sends ONLY with the same key/body and only on retryable errors. */
 export async function retryable<T>(
   fn: () => Promise<T>,
   opts: { attempts?: number; baseDelayMs?: number; onRetry?: (attempt: number, err: unknown) => void } = {},
@@ -146,7 +146,7 @@ export async function retryable<T>(
       lastErr = err;
       const retryableErr =
         err instanceof ApiError && (err.retryable || err.httpStatus === 429 || err.httpStatus >= 500 || err.httpStatus === 0);
-      if (!retryableErr || i === attempts - 1) break; // nicht retrybar → sofort raus (gleicher Key bleibt gespeichert)
+      if (!retryableErr || i === attempts - 1) break; // not retryable → exit now (same key stays persisted)
       opts.onRetry?.(i + 1, err);
       await sleep(base * 2 ** i);
     }
@@ -165,13 +165,13 @@ export type TrackResult = {
   failureCode?: string | null;
   polls: number;
   status: StatusResponse;
-  /** true wenn Polling das Zeitlimit erreichte ohne Terminalstatus. */
+  /** true when polling hit the time limit without a terminal status. */
   capped: boolean;
 };
 
 /**
- * Bounded Polling bis Settled-Status. UNCERTAIN/NEEDS_REVIEW stoppen sofort (Regel: nicht
- * aussitzen; reconcile/review ist Menschen-/Backoffice-Aufgabe).
+ * Bounded polling until a settled status. UNCERTAIN/NEEDS_REVIEW stop immediately (rule:
+ * never poll through them; reconcile/review is a human/backoffice task).
  */
 export async function trackOperation(
   client: IntentsClient,
@@ -179,7 +179,7 @@ export async function trackOperation(
   operationKey: string,
   opts: { maxPolls?: number; waitMs?: number } = {},
 ): Promise<TrackResult> {
-  const maxPolls = opts.maxPolls ?? 12; // 12 × ≤30 s Long-Poll ≈ 6 Minuten — Timelock-Demo passt rein
+  const maxPolls = opts.maxPolls ?? 12; // 12 × ≤30 s long-poll ≈ 6 minutes — the timelock demo fits
   let polls = 0;
   let status: StatusResponse = { correlation_id: correlationId, type: "unknown", status: "QUEUED" };
   while (polls < maxPolls) {

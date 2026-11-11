@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# phase7: Video-Runden-Runner für die Hackathon-Aufnahmen (09.11.).
-# Bewusst PHASEN-WEISE statt e2e_demo.sh: der Lead braucht Meldungs-/Aufnahme-Fenster
-# zwischen den Schritten, und S6 verlangt die accept-ohne-Receipt-Ablehnung VOR dem
-# echten Receipt-Pfad (S7/S8).
+# phase7: phase runner for the hackathon demo recording.
+# Deliberately PHASED instead of e2e_demo.sh: the lead needs reporting/recording
+# windows between steps, and S6 requires the accept-without-receipt rejection
+# BEFORE the real receipt path (S7/S8).
 #
-# aufruf: scripts/video_run.sh <post|bids|middle|acceptdemo|finish>
-#   post       — biets+artifact erzeugen, post_job, Job-ID ausgeben (danach: job-ID melden!)
-#   bids       — 25-30s Handbremse (Countdown >60s im Frame), dann 5 Bids parallel
+# call: scripts/video_run.sh <post|bids|middle|acceptdemo|finish>
+#   post       — generate bids+artifact, post_job, print the job id (then: report the job id!)
+#   bids       — 25-30s hold (countdown >60s in frame), then 5 bids in parallel
 #   middle     — counter_offer (boss) + award (boss)
-#   acceptdemo — S6: accept VOR receipt -> Erwartung NOT_DELIVERED (rc!=0, im Terminal sichtbar)
+#   acceptdemo — S6: accept BEFORE receipt -> expected NOT_DELIVERED (rc!=0, visible in terminal)
 #   finish     — attach_receipt+submit_work (winner), payout proof, accept, sidecar, VIDEO_OK
 #   dashboard  — start the live board server and print the link
 #   recipe     — write recipe.json/md for the settled job and register it as an ephe skill
@@ -18,7 +18,7 @@ source "$HERE/_demo_common.sh"
 
 export E2E_SEED="${E2E_SEED:-video-final-09nov}"
 export LOG="${LOG:-/tmp/foreman_e2e_video_09nov.log}"
-BREMSE="${BREMSE:-27}"   # Handbremse nach post: Bids eintreffend bei Countdown ~90s (120s-Fenster, 4s Skew-Puffer)
+BREMSE="${BREMSE:-27}"   # hold after post: bids land with countdown ~90s (120s window, 4s skew buffer)
 JOB_FILE=/tmp/foreman_video_job.txt
 PHASE="${1:-}"
 
@@ -41,7 +41,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     ;;
   bids|bids+middle)
     JOB_ID=$(cat "$JOB_FILE")
-    say BRAKE "Handbremse ${BREMSE}s laufen lassen (Countdown im Frame prüfen), dann 5 Bids parallel (429-gehärtet)"
+    say BRAKE "holding ${BREMSE}s so bids land with the countdown in frame, then 5 bids in parallel (429-hardened)"
     sleep "$BREMSE"
     BIDS_FILE=/tmp/foreman_bids.json "$HERE/video_bid_loop.sh" "$JOB_ID"
     if [[ "$PHASE" == "bids+middle" ]]; then
@@ -62,7 +62,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     ;;
   acceptdemo)
     JOB_ID=$(cat "$JOB_FILE")
-    say S6 "accept OHNE receipt/submit — erwartet: Contract-Panic NOT_DELIVERED (Terminal-Shot)"
+    say S6 "accept WITHOUT receipt/submit — expected: contract panic NOT_DELIVERED (terminal shot)"
     set +e
     TX=$(near_call "$FOREMAN" "$CONTRACT" accept "{\"job_id\":$JOB_ID,\"delivery_score\":90}")
     RC=$?
@@ -70,7 +70,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     if [[ $RC -ne 0 ]] && grep -q "NOT_DELIVERED" "${LAST_CALL_FILE:-/tmp/foreman_last_call_out}"; then
       say S6_OK "accept without a deliverable rejected: NOT_DELIVERED (rc=$RC) — board stays Awarded"
     else
-      echo "VIDEO_FAIL S6: accept wurde NICHT wie erwartet abgewiesen (rc=$RC) — LAUF HALTEN, lead informieren" >&2
+      echo "VIDEO_FAIL S6: accept was NOT rejected as expected (rc=$RC) — HOLD the run, inform the lead" >&2
       exit 3
     fi
     ;;
@@ -105,7 +105,7 @@ PY
     STATE=$(sed -nE "s/^[[:space:]]*state: '([A-Za-z]+)',?\$/\1/p" <<<"$JOB_JSON" | head -1)
     REP_EXPECT=$(python3 -c "print(($REP_BEFORE * 9 + 90) // 10)")
     [[ "$STATE" == "Accepted" && "$REP" == "$REP_EXPECT" ]] || {
-      echo "VIDEO_FAIL verify: state=$STATE rep=$REP (erwartet Accepted/$REP_EXPECT bei $REP_BEFORE) — $LOG" >&2; exit 1; }
+      echo "VIDEO_FAIL verify: state=$STATE rep=$REP (expected Accepted/$REP_EXPECT from $REP_BEFORE) — $LOG" >&2; exit 1; }
     COUNTER_REASON_RAW=$(near_view "$CONTRACT" get_counter_reason "{\"job_id\":$JOB_ID}" | tr -d '\n')
     SIDECAR="$REPO_ROOT/web/board/sidecar/job${JOB_ID}.json"
     mkdir -p "$(dirname "$SIDECAR")"
@@ -117,7 +117,7 @@ reason = "" if raw == "null" else raw.strip().strip("'\"")
 doc = {
     "job_id": int(os.environ["SC_JOB"]),
     "payout_tx": os.environ["SC_ACCEPT_TX"],
-    "payout_tx_label": "accept-tx mit payout-transfer (90/10, RULES.md) — demo run",
+    "payout_tx_label": "accept tx with payout transfer (90/10, RULES.md) — demo run",
     "accept_tx": os.environ["SC_ACCEPT_TX"],
     "counter_reason": reason,
     "winner": os.environ["SC_WINNER"],
@@ -126,7 +126,7 @@ doc = {
 open(sys.argv[1], "w").write(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
 print("SIDECAR_OK", sys.argv[1])
 PY
-    say OK "job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (before $REP_BEFORE) sidecar=$SIDECAR log=$LOG"
+    say OK "job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (before $REP_BEFORE) sidecar=web/board/sidecar/job${JOB_ID}.json log=$LOG"
     ;;
   dashboard)
     if ! lsof -nP -iTCP:8777 -sTCP:LISTEN >/dev/null 2>&1; then

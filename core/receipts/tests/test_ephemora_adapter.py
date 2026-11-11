@@ -1,17 +1,18 @@
-"""Tests core/receipts/ephemora_adapter — Ephemora-Receipt-Kette (phase5).
+"""Tests core/receipts/ephemora_adapter — Ephemora receipt chain (phase5).
 
-Runner: /Users/sanji/near-hackathon/.venv-receipts/bin/python -m pytest core/receipts
-(Apache-Paket ephemora_cell + wasmtime + cryptography nötig; sonst Skip.)
+Runner: python -m pytest core/receipts
+(Apache package ephemora_cell + wasmtime + cryptography required; otherwise skip.)
 """
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-ec = pytest.importorskip("ephemora_cell", reason="Apache-Paket ephemora_cell + wasmtime erforderlich")
+ec = pytest.importorskip("ephemora_cell", reason="Apache package ephemora_cell + wasmtime required")
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
@@ -22,13 +23,20 @@ from core.receipts.ephemora_adapter import (  # noqa: E402
     receipt_hash, run_and_attest, verify_or_raise, verify_receipt,
 )
 
-FIXTURES = Path("/Users/sanji/ephemora-cell/tests/fixtures")
+def _fixtures_dir() -> Path:
+    env = os.environ.get("EPHEMORA_FIXTURES")
+    if env:
+        return Path(env)
+    return Path(ec.__file__).resolve().parent.parent / "tests" / "fixtures"
+
+
+FIXTURES = _fixtures_dir()
 GO_WORKER_SRC = REPO_ROOT / "core/receipts/worker/latency_stats.go"
 
 
 @pytest.fixture(scope="session")
 def worker_wasm(tmp_path_factory) -> Path:
-    """Demo-Worker: Go-Quelle via package-eigenem builder; Fallback: Apache-Fixture."""
+    """Demo worker: Go source via the package's own builder; fallback: Apache fixture."""
     out = tmp_path_factory.mktemp("wasm") / "latency_stats.wasm"
     if GO_WORKER_SRC.is_file():
         try:
@@ -42,7 +50,7 @@ def worker_wasm(tmp_path_factory) -> Path:
     fx = FIXTURES / "wat_run.wasm"
     if fx.is_file():
         return fx
-    pytest.skip("kein Worker-WASM (Go-Build fehlgeschlagen, Fixture fehlt)")
+    pytest.skip("no worker WASM (Go build failed, fixture missing)")
 
 
 @pytest.fixture(scope="session")
@@ -85,7 +93,7 @@ def test_tampered_hash_field_fails(worker_wasm):
     assert verify_receipt(r) is False
 
 
-# ---------------------------------------------------------------- Fail-closed-Ränder
+# ---------------------------------------------------------------- fail-closed edges
 def test_missing_signature_failclosed(worker_wasm):
     r = run_and_attest(str(worker_wasm), _inputs())
     del r["cell_signature"]
@@ -100,7 +108,7 @@ def test_nonhex_signature_failclosed(worker_wasm):
 
 def test_wrong_pubkey_failclosed(worker_wasm):
     r = run_and_attest(str(worker_wasm), _inputs())
-    other = load_or_create_cell_key()  # gleicher Key ok — falsch heißt: anderer PEM-Text erzwingen
+    other = load_or_create_cell_key()  # same key ok — "wrong" means: force a different PEM text
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import ec
     foreign = ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(
@@ -110,9 +118,9 @@ def test_wrong_pubkey_failclosed(worker_wasm):
     assert verify_receipt(r, foreign) is False
 
 
-# ---------------------------------------------------------------- CI-Replay
+# ---------------------------------------------------------------- CI replay
 def test_offchain_replay_roundtrip(tmp_path, worker_wasm):
-    """CI-Beweismuster: receipt.json schreiben -> neu laden -> verify + identischer receipt_hash."""
+    """CI evidence pattern: write receipt.json -> reload -> verify + identical receipt_hash."""
     r = run_and_attest(str(worker_wasm), _inputs())
     p = tmp_path / "receipt.json"
     p.write_text(json.dumps(r, sort_keys=True), encoding="utf-8")
@@ -127,19 +135,19 @@ def test_receipt_hash_is_stable_string(worker_wasm):
     assert h1 == h2 and len(h1) == 64
 
 
-# ---------------------------------------------------------------- Egress
+# ---------------------------------------------------------------- egress
 def test_egress_log_hash_semantics():
     empty = egress_log_hash([])
     assert empty == hashlib.sha256(b"[]").hexdigest()
     with_entry = egress_log_hash([{"host": "api.example.com", "allowed": True}])
     assert with_entry != empty and len(with_entry) == 64
-    # Determinismus über Dict-Reihenfolge
+    # determinism across dict ordering
     a = egress_log_hash([{"b": 1, "a": 2}])
     b = egress_log_hash([{"a": 2, "b": 1}])
     assert a == b
 
 
-# ---------------------------------------------------------------- Caps
+# ---------------------------------------------------------------- caps
 def test_caps_config():
     cfg = Caps().to_config()
     assert cfg.max_fuel == 50_000_000 and cfg.max_memory_mb == 128 and cfg.timeout_seconds == 20

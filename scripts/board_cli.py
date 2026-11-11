@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""scripts/board_cli.py — Board-Status des Biet-Boards als JSON (phase6, ephe-Plugin-Zutat).
+"""scripts/board_cli.py — board status of the bid board as JSON (phase6, ephe plugin ingredient).
 
-Read-only gegen escrow.foreman-team.testnet (JSON-RPC call_function, fastnear → near.org),
-plus optionale Sidecar-Datei web/board/sidecar/job<N>.json (payout_tx, counter_reason).
-Preise in NEAR-Cent (Contract-yocto ÷ 10^21, Team-Konvention). Python-3.9-kompatibel, stdlib only.
+Read-only against escrow.foreman-team.testnet (JSON-RPC call_function, fastnear → near.org),
+plus the optional sidecar file web/board/sidecar/job<N>.json (payout_tx, counter_reason).
+Prices in NEAR-Cent (contract yocto ÷ 10^21, team convention). Python 3.9 compatible, stdlib only.
 
   python3 scripts/board_cli.py --job 6 [--json] [--pretty] [--board-url URL]
-Exit: 0 OK · 2 Contract/Job nicht lesbar.
+Exit: 0 OK · 2 contract/job not readable.
 """
 import argparse
 import base64
@@ -42,7 +42,7 @@ def view(method, args):
             return json.loads(raw.decode())
         except Exception:
             continue
-    raise RuntimeError("kein RPC lesbar")
+    raise RuntimeError("no RPC reachable")
 
 
 def sort_bids(bids):
@@ -60,7 +60,7 @@ def main(argv=None):
     try:
         job = view("get_job", {"job_id": args.job})
     except Exception as exc:
-        print(f"board_cli: FEHLER: {exc}", file=sys.stderr)
+        print(f"board_cli: ERROR: {exc}", file=sys.stderr)
         return 2
     sidecar = {}
     sc = REPO_ROOT / "web/board/sidecar" / f"job{args.job}.json"
@@ -92,7 +92,7 @@ def main(argv=None):
         "counter_offer": (None if not co else {
             "bidder": co["bidder"], "price_near_cent": cents(co["price"]), "eta_secs": co["eta_secs"],
             "reason": co.get("reason") or sidecar.get("counter_reason")
-                      or "Begründung off-chain (Foreman-Log); on-chain erzwungen: genau ein Counter"}),
+                      or "Reasoning off-chain (foreman log); enforced on-chain: exactly one counter"}),
         "receipt": {"receipt_hash": job.get("receipt_hash"), "artifact_hash": job.get("artifact_hash"),
                     "payout_tx": sidecar.get("payout_tx"),
                     "explorer": (EXPLORER + sidecar["payout_tx"]) if sidecar.get("payout_tx") else None},

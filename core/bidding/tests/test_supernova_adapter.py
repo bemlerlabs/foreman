@@ -1,7 +1,6 @@
-"""Tests core/bidding/supernova_adapter — Bid-Range, Cap-Gates, Eta, Determinismus.
+"""Tests core/bidding/supernova_adapter — bid range, cap gates, eta, determinism.
 
-Runner: /Users/sanji/supernova/.venv/bin/python -m pytest core/bidding (pytest aus Supernova-venv,
-reine Test-Laufzeit-Nutzung, keine Änderung an Supernova).
+Runner: python -m pytest core/bidding
 """
 import sys
 from pathlib import Path
@@ -32,16 +31,16 @@ NEAR_CENT = YOCTO_PER_NEAR // 100
 
 def _job(budget_yocto=50 * NEAR_CENT, deadline=3600):
     return JobRequest(
-        spec="Recherche NEAR TVL. Vergleiche 3 Chains. Erstelle Tabelle. Fasse Risiken zusammen. "
-        "Prüfe Staking-Yields. Liefere Quellen mit Datum.",
+        spec="Research NEAR TVL. Compare 3 chains. Build a table. Summarize the risks. "
+        "Check staking yields. Deliver sources with dates.",
         budget_yocto=budget_yocto,
         deadline_secs=deadline,
         job_id="job-42",
-        acceptance_criteria=["Tabelle mit 3 Chains", "Quellen mit Datum"],
+        acceptance_criteria=["table with 3 chains", "sources with dates"],
     )
 
 
-# ---------------------------------------------------------------- Dekomposition
+# ---------------------------------------------------------------- decomposition
 def test_decompose_within_bounds():
     pkgs = decompose_spec(_job().spec)
     assert PACKAGES_MIN <= len(pkgs) <= PACKAGES_MAX
@@ -56,7 +55,7 @@ def test_decompose_empty_raises():
         decompose_spec("   ")
 
 
-# ---------------------------------------------------------------- Bid-Range
+# ---------------------------------------------------------------- bid range
 def test_bid_range_and_eta():
     job = _job()
     for i in range(10):
@@ -64,7 +63,7 @@ def test_bid_range_and_eta():
         n = len(deliv.packages)
         lo = int(BASE_PACKAGE_PRICE_YOCTO * n * 0.90)
         hi = int(BASE_PACKAGE_PRICE_YOCTO * n * 1.10) + 1
-        assert lo <= bid.price_in_yocto <= hi, "Preis außerhalb Basis×Pakete×±10%-Jitter"
+        assert lo <= bid.price_in_yocto <= hi, "price outside base×packages×±10% jitter"
         assert bid.eta_secs == n * ETA_PER_PACKAGE_SECS
         assert 0 <= bid.rep_snapshot <= 100
         assert bid.price_in_yocto <= job.budget_yocto
@@ -75,11 +74,11 @@ def test_bid_range_and_eta():
 def test_jitter_varies_per_agent():
     job = _job()
     prices = {make_bid(job, f"agent{i}", engine=MockSupernovaEngine())[0].price_in_yocto for i in range(5)}
-    assert len(prices) > 1, "Jitter je Agent erwartet"
+    assert len(prices) > 1, "per-agent jitter expected"
 
 
 def test_deterministic_replay_for_demo():
-    """T5-Gate: zweiter identischer Lauf ⇒ identische Preise + Artefakt-Hash."""
+    """T5 gate: a second identical run ⇒ identical prices + artifact hash."""
     job = _job()
     b1, d1 = make_bid(job, "agent3.testnet", engine=MockSupernovaEngine())
     b2, d2 = make_bid(job, "agent3.testnet", engine=MockSupernovaEngine())
@@ -87,28 +86,28 @@ def test_deterministic_replay_for_demo():
     assert d1.artifact_hash == d2.artifact_hash
 
 
-# ---------------------------------------------------------------- Cap-Gates
+# ---------------------------------------------------------------- cap gates
 def test_cap_violation_raises(monkeypatch):
-    monkeypatch.setenv("DEMO_MAX_USD", "0.0000001")  # Cap unter jedem Bid
+    monkeypatch.setenv("DEMO_MAX_USD", "0.0000001")  # cap below every bid
     job = _job()
     with pytest.raises(BidCapExceeded):
         make_bid(job, "agent1.testnet", engine=MockSupernovaEngine())
 
 
 def test_over_budget_raises():
-    job = _job(budget_yocto=1)  # 1 yocto Budget ⇒ jeder Bid darüber
+    job = _job(budget_yocto=1)  # 1 yocto budget ⇒ every bid above it
     with pytest.raises(BidCapExceeded):
         make_bid(job, "agent1.testnet", engine=MockSupernovaEngine())
 
 
 def test_default_cap_allows_demo_bids():
-    """Demo-Bereich: 2–6 Pakete × 0.5 NEAR-Cent × 1.1 ⇒ < 3 $ bei Demo-NEAR-Preis."""
+    """Demo range: 2–6 packages × 0.5 NEAR-cent × 1.1 ⇒ < $3 at the demo NEAR price."""
     job = _job()
     bid, _ = make_bid(job, "agent1.testnet", engine=MockSupernovaEngine())
     assert usd_value(bid.price_in_yocto) < 3.0
 
 
-# ---------------------------------------------------------------- Engine-Wahl
+# ---------------------------------------------------------------- engine selection
 def test_real_engine_unavailable_without_key(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("NEAR_AI_API_KEY", raising=False)

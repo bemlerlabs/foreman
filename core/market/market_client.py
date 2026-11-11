@@ -1,13 +1,13 @@
-"""core.market — Drittanbieter-Agenten über NEAR Agent Market (market.near.ai).
+"""core.market — third-party agents via NEAR Agent Market (market.near.ai).
 
-Wrapper für Discovery (Listings) + Offer/Accept-Flow (hire-draft → bid).
-Zwei Modi mit IDENTISCHEM Vertrag:
-  * real  — HTTP gegen MARKET_BASE_URL (Default https://market.near.ai),
-            Auth via .env MARKET_AGENT_TOKEN (`aat_…`), stdlib urllib, kein Dependency.
-  * mock  — Fallback ohne Token/Netz; Listings = die 5 real erfassten Marktplatz-Treffer
-            vom 06.11.2026 (docs/MARKET_NOTES.md), deterministisch ⇒ e2e-Demo blockiert nie.
+Wrapper for discovery (listings) + offer/accept flow (hire-draft → bid).
+Two modes with an IDENTICAL contract:
+  * real  — HTTP against MARKET_BASE_URL (default https://market.near.ai),
+            auth via .env MARKET_AGENT_TOKEN (`aat_…`), stdlib urllib, no dependency.
+  * mock  — fallback without token/network; listings = the 5 real marketplace captures
+            from 2026-11-06 (docs/MARKET_NOTES.md), deterministic ⇒ e2e demo never blocks.
 
-Registrierung bewusst NICHT implementiert (USER-Entscheidung, MARKET_NOTES.md §3).
+Registration deliberately NOT implemented (owner decision, MARKET_NOTES.md §3).
 """
 from __future__ import annotations
 
@@ -49,12 +49,12 @@ class MarketError(RuntimeError):
 
 
 class MarketAuthError(MarketError):
-    """401/403 — Token fehlt oder abgelaufen."""
+    """401/403 — token missing or expired."""
 
 
-# ---------------------------------------------------------------- Mock-Daten
-# Die 5 real erfassten Live-Listings (GET /v1/agents, 06.11.2026, docs/MARKET_NOTES.md).
-# Preis = pricing-plans price_amount (USD per_call), Asset = payable_with.
+# ---------------------------------------------------------------- mock data
+# The 5 real live listings captured (GET /v1/agents, 2026-11-06, docs/MARKET_NOTES.md).
+# price = pricing-plans price_amount (USD per_call), asset = payable_with.
 MOCK_LISTINGS = [
     {"handle": "web-research", "name": "Web Research", "category": "research",
      "price_usd": "0.50", "asset": "USDC", "delivered_jobs": 47, "success_rate": 70,
@@ -74,13 +74,13 @@ MOCK_LISTINGS = [
 ]
 
 
-# ---------------------------------------------------------------- Client
+# ---------------------------------------------------------------- client
 class MarketClient:
-    """Entdeckt Marktplatz-Agenten und fährt den Offer/Accept-Flow.
+    """Discovers marketplace agents and runs the offer/accept flow.
 
-    Modus-Wahl: prefer='auto' ⇒ real bei gesetztem MARKET_AGENT_TOKEN, sonst mock.
-    'real'/'mock' erzwingt. Netzfehler im real-Modus werfen MarketError (kein stiller
-    Fallback — Demo soll ehrlich scheitern statt falsche Daten zu zeigen, außer 'auto').
+    Mode selection: prefer='auto' ⇒ real when MARKET_AGENT_TOKEN is set, else mock.
+    'real'/'mock' forces. Network errors in real mode raise MarketError (no silent
+    fallback — the demo should fail honestly rather than show fake data, except 'auto').
     """
 
     def __init__(self, base_url: Optional[str] = None, token: Optional[str] = None,
@@ -95,7 +95,7 @@ class MarketClient:
             raise ValueError(f"PREFER_INVALID: {prefer}")
         self.mode = prefer
 
-    # ---- HTTP-Kern (nur real-Modus) ----
+    # ---- HTTP core (real mode only) ----
     def _request(self, method: str, path: str, body: Optional[dict] = None) -> dict:
         import urllib.error
         import urllib.request
@@ -117,12 +117,12 @@ class MarketClient:
                 raise MarketAuthError(f"{method} {path} → {exc.code}: {payload}") from exc
             raise MarketError(f"{method} {path} → {exc.code}: {payload}") from exc
         except OSError as exc:
-            raise MarketError(f"{method} {path} → Netzwerk: {exc}") from exc
+            raise MarketError(f"{method} {path} → network: {exc}") from exc
 
-    # ---- Discovery ----
+    # ---- discovery ----
     def discovery(self, query: str = "", category: Optional[str] = None,
                   limit: int = 5) -> list:
-        """Listings als einheitliche Dicts: handle,name,category,price_usd,asset,delivered_jobs,success_rate,agent_id."""
+        """Listings as uniform dicts: handle,name,category,price_usd,asset,delivered_jobs,success_rate,agent_id."""
         if self.mode == "mock":
             out = [dict(a) for a in MOCK_LISTINGS]
             if query:
@@ -157,9 +157,9 @@ class MarketClient:
             "agent_id": a.get("agent_id"),
         }
 
-    # ---- Offer/Accept-Flow ----
+    # ---- offer/accept flow ----
     def create_hire_draft(self, agent_id: str, brief: str, acceptance_window_days: int = 3) -> dict:
-        """Offer-Seite des Buyers: Hire-Draft beim Ziel-Agenten anlegen (MARKET_NOTES.md §4)."""
+        """Buyer's offer side: create a hire draft with the target agent (MARKET_NOTES.md §4)."""
         if not brief or not brief.strip():
             raise ValueError("EMPTY_BRIEF")
         if self.mode == "mock":
@@ -170,7 +170,7 @@ class MarketClient:
                              {"brief": brief, "acceptanceWindowDays": acceptance_window_days})
 
     def place_bid(self, job_id: str, amount_usd: str, proposal: str) -> dict:
-        """Worker-Seite (aat_-Token): Bid auf Job. amount ist USD-String ('25.00')."""
+        """Worker side (aat_ token): bid on a job. amount is a USD string ('25.00')."""
         if not job_id or not job_id.strip():
             raise ValueError("EMPTY_JOB")
         if not proposal or not proposal.strip():
@@ -183,7 +183,7 @@ class MarketClient:
                              {"amount": amount_usd, "proposal": proposal})
 
     def accept_delivery(self, assignment_id: str, approve: bool = True, comment: str = "") -> dict:
-        """Buyer-Review nach Delivery (Zahl freischalten / ablehnen)."""
+        """Buyer review after delivery (release payment / reject)."""
         if self.mode == "mock":
             return {"assignment_id": assignment_id, "approve": approve, "state": "reviewed", "mode": "mock"}
         return self._request("POST", f"/v1/assignments/{assignment_id.strip()}/review",
@@ -194,7 +194,7 @@ def _assert_usd_amount(amount_usd: str) -> None:
     try:
         v = float(str(amount_usd))
     except (TypeError, ValueError):
-        raise ValueError(f"BAD_AMOUNT: {amount_usd!r} (USD-String erwartet, z. B. '25.00')")
+        raise ValueError(f"BAD_AMOUNT: {amount_usd!r} (expected a USD string, e.g. '25.00')")
     if v <= 0:
         raise ValueError(f"NONPOSITIVE_AMOUNT: {amount_usd}")
 

@@ -1,8 +1,8 @@
 {
   "name": "foreman",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "description": "Foreman — eine Aufgabe rein, gelieferte Arbeit raus, abgerechnet in echtem Geld. NEAR HACKATHON 2026. core/intents: Intents Agent API Treasury-Loop (dry:true zuerst).",
+  "description": "Foreman — one task in, delivered work out, settled in real money. NEAR HACKATHON 2026. core/intents: Intents Agent API treasury loop (dry:true first).",
   "type": "module",
   "engines": {
     "node": ">=22"

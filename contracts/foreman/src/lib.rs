@@ -1,6 +1,6 @@
-/// Foreman Escrow-Contract — v0.2 gemäß docs/SEQUENCE.md + RULES.md (near-sdk 5.x)
+/// Foreman escrow contract — v0.2 per docs/SEQUENCE.md + RULES.md (near-sdk 5.x)
 /// API: new · post_job · place_bid · counter_offer · award · attach_receipt · submit_work · accept · refund_expired · get_*
-/// Phase-1 gehärtet (06.11.): max_bids-Limit, opened_at-Per-Job-Fenster durch Tests belegt, RULES-Flags in docs/EVIDENCE_LOG.md.
+/// Phase-1 hardened (06.11.): max_bids limit, per-job opened_at window proven by tests, RULES flags in docs/EVIDENCE_LOG.md.
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
 use near_sdk::store::LookupMap;
@@ -11,14 +11,14 @@ pub type JobId = u64;
 pub const BID_WINDOW_SECONDS: u64 = 120;
 pub const FOREMAN_FEE_NUM: u128 = 10; // 10 % (RULES.md)
 pub const DENOM: u128 = 100;
-/// Gas-Disziplin (Phase 1): hartes Bid-Limit je Job — keine unbounded Vec-Loops.
+/// Gas discipline (phase 1): hard bid limit per job — no unbounded Vec loops.
 pub const MAX_BIDS: usize = 20;
 
 #[derive(
     BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, NearSchema,
 )]
 #[borsh(crate = "near_sdk::borsh")]
-#[abi(json)] // NEP-330 ABI (phase1.2): JsonSchema-Impl bei __abi-generate
+#[abi(json)] // NEP-330 ABI (phase1.2): JsonSchema impl at __abi-generate
 pub enum JobState {
     Open,
     Bidding,
@@ -48,14 +48,14 @@ pub struct Job {
     pub spec: String,
     pub acceptance_criteria: Vec<String>,
     pub budget: NearToken,
-    pub opened_at: u64, // nanos, für BID_WINDOW
+    pub opened_at: u64, // nanos, for BID_WINDOW
     pub deadline_nanos: u64,
     pub created_by: AccountId,
     pub state: JobState,
     pub bids: Vec<Bid>,
-    pub counter_offer: Option<Bid>, // GENAU 1 erlaubt (07-Prompt-Regel)
+    pub counter_offer: Option<Bid>, // EXACTLY 1 allowed (07-prompt rule)
     pub winner: Option<AccountId>,
-    pub receipt_hash: Option<String>, // sha256 des signierten Ephemora-Execution-Reports
+    pub receipt_hash: Option<String>, // sha256 of the signed Ephemora execution report
     pub artifact_hash: Option<String>,
 }
 
@@ -67,10 +67,10 @@ pub struct Contract {
     foreman: AccountId,
     jobs: LookupMap<JobId, Job>,
     next_id: JobId,
-    reputation: LookupMap<AccountId, u32>, // 0..=100, Start 50
-                                           // counter_reasons (phase4.2) ist bewusst KEIN Struct-Feld: ein transienter
-                                           // LookupMap-Handle auf Präfix b"k" (siehe counter_reasons()) speichert direkt in
-                                           // storage — Contract-/Job-Borsh-Layout bleibt Bit für Bit stabil für Altstate (Jobs 1-6).
+    reputation: LookupMap<AccountId, u32>, // 0..=100, start 50
+                                           // counter_reasons (phase4.2) is deliberately NOT a struct field: a transient
+                                           // LookupMap handle on prefix b"k" (see counter_reasons()) writes straight to
+                                           // storage — contract/job Borsh layout stays bit-for-bit stable for old state (jobs 1-6).
 }
 
 #[near]
@@ -88,7 +88,7 @@ impl Contract {
         }
     }
 
-    /// Owner postet Aufgabe; Escrow = angehängtes Deposit (> 0).
+    /// Owner posts a job; escrow = attached deposit (> 0).
     #[payable]
     pub fn post_job(
         &mut self,
@@ -129,7 +129,7 @@ impl Contract {
         id
     }
 
-    /// Schwarm bietet; nur im Bietfenster, price <= budget, Bieter = Aufrufer (RULES.md).
+    /// Swarm bids; only inside the bid window, price <= budget, bidder = caller (RULES.md).
     #[payable]
     pub fn place_bid(&mut self, job_id: JobId, price: NearToken, eta_secs: u64) {
         let mut job = self.get_job(job_id);
@@ -158,7 +158,7 @@ impl Contract {
         self.jobs.insert(job_id, job);
     }
 
-    /// Foreman platziert GENAU EINE begründete Gegenofferte.
+    /// Foreman places EXACTLY ONE reasoned counter-offer.
     pub fn counter_offer(
         &mut self,
         job_id: JobId,
@@ -179,13 +179,13 @@ impl Contract {
             placed_at: env::block_timestamp(),
         });
         self.jobs.insert(job_id, job);
-        // Grund persistent machen (Board-Panel 4): transienter LookupMap-Handle auf b"k",
-        // store-Typen schreiben sofort in storage — kein Contract-Feld, kein Borsh-Bruch.
+        // Persist the reason (board panel 4): transient LookupMap handle on b"k",
+        // store types write to storage immediately — no contract field, no Borsh break.
         let mut reasons = Self::counter_reasons();
         reasons.insert(job_id, reason);
     }
 
-    /// Zuschlag mit Score-Validierung: günstigster Preis, dann Rep, dann Reihenfolge.
+    /// Award with score validation: lowest price, then reputation, then order.
     pub fn award(&mut self, job_id: JobId) {
         self.assert_foreman();
         let mut job = self.get_job(job_id);
@@ -203,7 +203,7 @@ impl Contract {
         self.jobs.insert(job_id, job);
     }
 
-    /// Gewinner verankert Hash des signierten Ephemora-Execution-Reports (Pflicht vor submit_work).
+    /// Winner anchors the hash of the signed Ephemora execution report (required before submit_work).
     pub fn attach_receipt(&mut self, job_id: JobId, receipt_hash: String) {
         let mut job = self.get_job(job_id);
         // security: identity check precedes state check
@@ -226,8 +226,8 @@ impl Contract {
         self.jobs.insert(job_id, job);
     }
 
-    /// Abnahme → Payout: 90 % Gewinner, 10 % Foreman-Fee; Reputation-Update (RULES.md).
-    /// RULES-Konform (Lead-Entscheid 05.11.): Owner ODER Foreman dürfen abnehmen.
+    /// Acceptance → payout: 90 % winner, 10 % foreman fee; reputation update (RULES.md).
+    /// RULES-compliant (lead decision 05.11.): owner OR foreman may accept.
     pub fn accept(&mut self, job_id: JobId, delivery_score: u32) {
         let caller = env::predecessor_account_id();
         require!(
@@ -254,7 +254,7 @@ impl Contract {
         ));
     }
 
-    /// Frist abgelaufen ohne Deliverable → Refund an Owner (permissionless Auslöser).
+    /// Deadline passed without a deliverable → refund to owner (permissionless trigger).
     pub fn refund_expired(&mut self, job_id: JobId) {
         let mut job = self.get_job(job_id);
         require!(
@@ -285,14 +285,14 @@ impl Contract {
     pub fn get_rep(&self, agent: AccountId) -> u32 {
         self.reputation.get(&agent).copied().unwrap_or(50)
     }
-    /// Begründung der Gegenofferte, falls vorhanden (phase4.2, RULES "begündete Gegenofferte").
+    /// Reason of the counter-offer, if present (phase4.2, RULES "reasoned counter-offer").
     pub fn get_counter_reason(&self, job_id: JobId) -> Option<String> {
         Self::counter_reasons().get(&job_id).cloned()
     }
 
     // ---- internal helpers ----
-    /// Persistente counter-Begründungen: LookupMap-Präfix b"k" (job_id -> reason).
-    /// Transienter Handle — schreibt/geliest direkt gegen storage, Contract-Layout stabil.
+    /// Persistent counter reasons: LookupMap prefix b"k" (job_id -> reason).
+    /// Transient handle — reads/writes straight against storage, contract layout stable.
     fn counter_reasons() -> LookupMap<JobId, String> {
         LookupMap::new(b"k".to_vec())
     }
@@ -310,7 +310,7 @@ impl Contract {
     }
     fn update_rep(&mut self, agent: AccountId, score: u32) {
         let old = self.get_rep(agent.clone());
-        let new = (old * 9 + score) / 10; // gleitend (RULES.md)
+        let new = (old * 9 + score) / 10; // moving average (RULES.md)
         self.reputation.insert(agent, new);
     }
 }

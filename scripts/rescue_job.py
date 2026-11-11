@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-"""Rettet einen Job: Counter-Offer (10% unter Bestbid) + Award, lokal signiert (near_send.cjs),
-damit RPC-429 die Runde nicht killt. Aufruf: rescue_job.py <job_id>"""
+"""Rescues a job: counter-offer (10% under the best bid) + award, signed locally (near_send.cjs),
+so an RPC 429 does not kill the round. Call: rescue_job.py <job_id>"""
 import json, subprocess, sys
 
 JOB = int(sys.argv[1])
@@ -13,8 +13,8 @@ best = min(d["bids"], key=lambda b: float(b["price_near_cent"]))
 # 1 NEAR-Cent = 1e19 yocto (¢ = milli-NEAR)
 price = int(round(float(best["price_near_cent"]) * 0.9 * 10**19))
 eta = int(best["eta_secs"])
-reason = ("Gegenangebot (Foreman boss): alle acceptance_criteria erfuellt — #1 summary <=300 words, "
-          "#2 CSV data table, #3 cited sources — Festpreis 10 % unter Bestbid, ETA " + str(eta) + "s.")
+reason = ("Counter-offer (Foreman boss): all acceptance criteria satisfied — #1 summary <=300 words, "
+          "#2 CSV data table, #3 cited sources — fixed price 10 % under the best bid, ETA " + str(eta) + "s.")
 print(f"best={best['bidder']} {best['price_near_cent']}c -> counter={price} yocto eta={eta}s")
 
 def call(who, method, args):

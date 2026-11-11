@@ -1,18 +1,17 @@
 /**
- * owner-sign-helper.ts — Signier-WERKZEUG für den MENSCHEN, kein Auto-Signing im Produkt.
+ * owner-sign-helper.ts — signing TOOL for the HUMAN, no auto-signing in the product.
  *
- * Dieses Skript wird vom Treasury-Code NIEMALS importiert oder aufgerufen. Der Eigentümer
- * startet es bewusst selbst und bestätigt mit --i-am-the-owner, dass er der Owner des
- * OWNER_ACCOUNT ist. Es signiert die gespeicherte Signier-Message eines Intents exakt
- * bytegenau (NEP-413 oder NEP-366) und schreibt <cid>.signed.json zur Übergabe an
- * `npm run policy:submit`.
+ * This script is NEVER imported or called by treasury code. The owner starts it
+ * deliberately and confirms with --i-am-the-owner that they own OWNER_ACCOUNT. It signs
+ * the stored signing message of an intent byte-exactly (NEP-413 or NEP-366) and writes
+ * <cid>.signed.json for hand-off to `npm run policy:submit`.
  *
- * Der Private Key kommt NIE ins Repo: er liegt im Keystore-File des Eigentümers
- * (near-cli-Format {"public_key","private_key"} oder "ed25519:…") und wird nur für den
- * Signiervorgang in den Prozess geladen.
+ * The private key NEVER enters the repo: it lives in the owner's keystore file
+ * (near-cli format {"public_key","private_key"} or "ed25519:…") and is loaded into the
+ * process only for the signing step.
  *
- * Run (vom Eigentümer):
- *   npm run owner:sign -- --cid <correlation_id> --keystore <datei> --i-am-the-owner
+ * Run (by the owner):
+ *   npm run owner:sign -- --cid <correlation_id> --keystore <file> --i-am-the-owner
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { createHash } from "node:crypto";
@@ -31,8 +30,8 @@ const flag = (n: string) => argv.includes(`--${n}`);
 
 if (!flag("i-am-the-owner")) {
   console.error(
-    "Abbruch: Dieses Werkzeug signiert Owner-Intents. Es ist ausschließlich für die Person bestimmt,\n" +
-      "die OWNER_ACCOUNT besitzt. Bestätige mit --i-am-the-owner, dass DU der Eigentümer bist.",
+    "Aborting: this tool signs owner intents. It is intended exclusively for the person who\n" +
+      "owns OWNER_ACCOUNT. Confirm with --i-am-the-owner that YOU are the owner.",
   );
   process.exit(2);
 }
@@ -40,7 +39,7 @@ if (!flag("i-am-the-owner")) {
 const cidArg = arg("cid");
 const keystoreArg = arg("keystore");
 if (!cidArg || !keystoreArg) {
-  console.error("Benutzung: npm run owner:sign -- --cid <id> --keystore <credential.json> --i-am-the-owner");
+  console.error("Usage: npm run owner:sign -- --cid <id> --keystore <credential.json> --i-am-the-owner");
   process.exit(2);
 }
 const cid: string = cidArg;
@@ -51,18 +50,18 @@ let generated: GenerateIntentResponse;
 try {
   generated = JSON.parse(readFileSync(intentFile, "utf8"));
 } catch {
-  console.error(`Intent ${cid} nicht gefunden unter core/intents/.state/intents/`);
+  console.error(`Intent ${cid} not found under core/intents/.state/intents/`);
   process.exit(1);
 }
 
 function loadKeyPair(ksPath: string): KeyPairEd25519 {
   const raw = JSON.parse(readFileSync(ksPath, "utf8")) as { private_key?: string } | string;
   const secret = typeof raw === "string" ? raw : raw.private_key;
-  if (!secret || !secret.startsWith("ed25519:")) throw new Error("Keystore enthält keinen ed25519-Secret-Key");
+  if (!secret || !secret.startsWith("ed25519:")) throw new Error("Keystore contains no ed25519 secret key");
   return KeyPair.fromString(secret as never) as KeyPairEd25519;
 }
 
-/** NEP-413 borsh: u32-LE-Len + bytes für message, recipient, nonce — dann sha256, dann ed25519. */
+/** NEP-413 borsh: u32-LE length + bytes for message, recipient, nonce — then sha256, then ed25519. */
 function borshNep413(message: string, recipient: string, nonce: Uint8Array): Uint8Array {
   const enc = new TextEncoder();
   const parts: Uint8Array[] = [];
@@ -89,7 +88,7 @@ async function main() {
   const keyPair = loadKeyPair(keystorePath);
   const publicKey = keyPair.getPublicKey().toString();
   if (signer.public_key && publicKey !== signer.public_key) {
-    throw new Error("owner_account_mismatch: Keystore-Key passt nicht zum erwarteten Signer dieses Intents");
+    throw new Error("owner_account_mismatch: keystore key does not match the expected signer of this intent");
   }
 
   if (intent.standard === "nep413") {
@@ -145,19 +144,19 @@ async function main() {
     return;
   }
 
-  throw new Error(`Standard ${intent.standard} wird vom Helfer nicht unterstützt — nutze dein Wallet.`);
+  throw new Error(`Standard ${intent.standard} is not supported by this helper — use your wallet.`);
 }
 
 function writeOut(signed: unknown): void {
   const outFile = path.join(STATE_DIR, "intents", `${cid}.signed.json`);
   writeFileSync(outFile, JSON.stringify(signed, null, 2), { mode: 0o600 });
-  console.log(`Signatur geschrieben: core/intents/.state/intents/${cid}.signed.json`);
-  console.log(`Weiter: npm run policy:submit -- --cid ${cid} --signed core/intents/.state/intents/${cid}.signed.json`);
+  console.log(`Signature written: core/intents/.state/intents/${cid}.signed.json`);
+  console.log(`Next: npm run policy:submit -- --cid ${cid} --signed core/intents/.state/intents/${cid}.signed.json`);
 }
 
 try {
   await main();
 } catch (err) {
-  console.error(`Signieren fehlgeschlagen: ${redact(err instanceof Error ? err.message : String(err))}`);
+  console.error(`Signing failed: ${redact(err instanceof Error ? err.message : String(err))}`);
   process.exit(1);
 }

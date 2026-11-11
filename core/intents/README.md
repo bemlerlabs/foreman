@@ -1,91 +1,91 @@
-# core/intents — Intents Agent API Treasury-Loop (Foreman)
+# core/intents — Intents Agent API treasury loop (Foreman)
 
-Das Treasury ist **ein** Konto über die [NEAR Intents Agent API](https://api.agentsonintents.com)
-(`X-API-Key: naa_…` aus `.env`, Backend-only). Der Agent hat Geld, aber **keine Keys**: Jede Regel
-(Budget, Destinations-Whitelist, Timelock) sitzt in einer **vom Menschen signierten Policy**
-(NEP-366 gaslos / NEP-413 off-chain — 0 Gas für den Owner). Der Foreman-Code signiert **nie**.
+The treasury is **one** account via the [NEAR Intents Agent API](https://api.agentsonintents.com)
+(`X-API-Key: naa_…` from `.env`, backend-only). The agent holds money but **no keys**: every rule
+(budget, destinations whitelist, timelock) lives in a **policy signed by the human**
+(NEP-366 gasless / NEP-413 off-chain — 0 gas for the owner). Foreman code **never** signs.
 
-> Codex-Screener-Kurzfassung: `dry:true` ist hart im Code erzwungen, solange `AGENT_EXECUTE != "true"`
-> (Default false, `treasury.ts`). Assets sind fest auf NEAR/USDC whitelistet (`env.ts::ALLOWED_ASSETS`),
-> der USD-Cap ist hart bei 3 $ (`HARD_MAX_DEMO_USD`, RULES.md Demo-Disziplin). Secrets werden in jedem
-> Ausgabe-Pfad über `redact()` maskiert (`naa_…`, `ngt_…`, JWTs, `ed25519:…`).
+> Screener summary: `dry:true` is hard-enforced in code while `AGENT_EXECUTE != "true"`
+> (default false, `treasury.ts`). Assets are fixed to the NEAR/USDC whitelist (`env.ts::ALLOWED_ASSETS`),
+> the USD cap is hard at 3 $ (`HARD_MAX_DEMO_USD`, RULES.md demo discipline). Secrets are masked in every
+> output path via `redact()` (`naa_…`, `ngt_…`, JWTs, `ed25519:…`).
 
 ## do X → see Y
 
 | # | do X | see Y |
 |---|------|-------|
-| 1 | `npm run quote-demo` | `Status: DRY (dry:true — keine Ausführung)` + Quote mit `amount_out`, `fee`, `warnings`, `spend.amount_usd`. Ohne Agent: klarer Hinweis auf Schritt 3. |
-| 2 | `npm run execute-demo` (ohne Flag) | `GATE: AGENT_EXECUTE != 'true' → keine Ausführung` — Abbruch **vor** jedem API-Dispatch. Default false, hart in `treasury.executeDemo()`. |
-| 3a | **T2-Pfad (Passkey/O3):** `npm run popup` → `http://localhost:8789/register` | Touch-ID-Dialog; danach `✅ Passkey registriert` — `.state/passkey.json` (public-only, 0600) mit `credential_id` + DER-P-256-Key (API-Muster `MFkwEwYHKo…`). |
-| 3b | `npm run policy:create -- --owner-type passkey` | Generierter `agent_create`-Intent (standard=webauthn): `correlation_id` (`intent_…`), `preview.policy` (Budget 3 $/Tag, Destinations `only`+Whitelist, Timelock 60 s, assets nur NEAR/USDC) + Signier-Hinweis auf Popup-Seite. Kein Auto-Sign, **genau ein** generate-Lauf pro Demo-Runde (Admission!). |
-| 3c | Mensch: `http://localhost:8789/sign?cid=…` → Policy lesen → Touch-ID → `npm run policy:submit -- --cid …` | Klartext-Policy-Preview (Vertrauens-Moment), `signed_data` byte-exact aus Original-Intent → `Lifecycle=…`, bei Erfolg `Agent-ID gemerkt: …` → weiter mit 1. |
-| 4 | (Legacy NEAR-Owner) `npm run policy:create` + `npm run owner:sign -- --cid … --keystore … --i-am-the-owner` + `policy:submit` | Wie 3b/3c mit `standard=nep366`/Keystore; funktioniert nur, wenn `OWNER_PUBLIC_KEY` Onchain-Access-Key ist (Precheck). |
-| 5 | `npm run policy-status` | Policy-Revision, `provider_policy_synced`, Budget-Usage (täglich/wöchentlich geladen vs. frei), Timelock-Countdown, letzte Operationen. |
-| 6 | `npm run policy-status -- --cid <correlation_id>` | API-Status + klassifizierter Lifecycle (`PENDING`/`UNCERTAIN`/`NEEDS_REVIEW`/`COMPLETED`/`FAILED`). Nach `UNCERTAIN`: **beobachten, nie neu senden**. |
-| 7 | `AGENT_EXECUTE=true npm run execute-demo` (nach dry-Beweis + Grant) | Live-Micro-Swap NEAR→USDC: `Correlation-ID` + Statusmaschine mit bounded Polling; `min_amount_out` aus der Vorberechtigungs-Quote (1 % Slippage). |
+| 1 | `npm run quote-demo` | `Status: DRY (dry:true — no execution)` + quote with `amount_out`, `fee`, `warnings`, `spend.amount_usd`. Without an agent: a clear pointer to step 3. |
+| 2 | `npm run execute-demo` (without the flag) | `GATE: AGENT_EXECUTE != 'true' → no execution` — abort **before** any API dispatch. Default false, hard in `treasury.executeDemo()`. |
+| 3a | **T2 path (passkey/O3):** `npm run popup` → `http://localhost:8789/register` | Touch ID dialog; then `✅ Passkey registered` — `.state/passkey.json` (public-only, 0600) with `credential_id` + DER P-256 key (API pattern `MFkwEwYHKo…`). |
+| 3b | `npm run policy:create -- --owner-type passkey` | Generated `agent_create` intent (standard=webauthn): `correlation_id` (`intent_…`), `preview.policy` (budget 3 $/day, destinations `only`+whitelist, timelock 60 s, assets NEAR/USDC only) + signing pointer to the popup page. No auto-sign, **exactly one** generate run per demo round (admission!). |
+| 3c | Human: `http://localhost:8789/sign?cid=…` → read policy → Touch ID → `npm run policy:submit -- --cid …` | Plain-text policy preview (moment of trust), `signed_data` byte-exact from the original intent → `lifecycle=…`, on success `Agent id remembered: …` → continue with 1. |
+| 4 | (Legacy NEAR owner) `npm run policy:create` + `npm run owner:sign -- --cid … --keystore … --i-am-the-owner` + `policy:submit` | Like 3b/3c with `standard=nep366`/keystore; works only if `OWNER_PUBLIC_KEY` is an on-chain access key (precheck). |
+| 5 | `npm run policy-status` | Policy revision, `provider_policy_synced`, budget usage (daily/weekly spent vs. free), timelock countdown, recent operations. |
+| 6 | `npm run policy-status -- --cid <correlation_id>` | API status + classified lifecycle (`PENDING`/`UNCERTAIN`/`NEEDS_REVIEW`/`COMPLETED`/`FAILED`). After `UNCERTAIN`: **observe, never resend**. |
+| 7 | `AGENT_EXECUTE=true npm run execute-demo` (after dry proof + grant) | Live micro swap NEAR→USDC: correlation id + state machine with bounded polling; `min_amount_out` from the preparation quote (1 % slippage). |
 
-## Datei-Landkarte
+## File map
 
-- `env.ts` — dotenv lädt Repo-Root `.env` (chmod 600, gitignored); `redact()` maskiert ALLE Secret-Muster
-  in jeder Ausgabe; Defaults: Prod-Base-URL, `AGENT_EXECUTE=false`, `DEMO_MAX_USD=3` (hart gedeckelt).
-- `client.ts` — Node-22-kompatibler Raw-fetch-REST-Wrapper (SDK deklariert `engines: node>=24`; HTTP ist
-  reines JSON, 1:1 nach `examples/09-raw-http`). JSON:API-Fehler → `ApiError{code,layer,retryable}` —
-  Verzweigung nur auf `code` (nie title/detail), Header-Werte verlassen die Datei nie.
-- `lifecycle.ts` — Statusmaschine `PENDING/UNCERTAIN/NEEDS_REVIEW/COMPLETED(+FAILED)`, persistenter
-  Idempotency-Store (`.state/operations.json`, 0600, gitignored), bounded Retries **nur mit identischem
-  Key**, Quota-Guard (100 Agent-Admissionen/24 h; 429/5xx retrybar, Custody-Ops-Limit 1.000/24 h über
-  429-Behandlung).
-- `policy.ts` — Owner-Policy-Builder: Budget-Deckel (USD), Destinations-Whitelist `only` (nur
-  Contract-/Payout-Adressen aus `TREASURY_DESTINATIONS`), `timelock_ms`, assets nur NEAR/USDC,
-  `actions:["swap"]`, `native`/`confidential` aus.
-- `sign-policy.ts` — generate → **Mensch signiert** → submit → Status. `owner-sign-helper.ts` ist ein
-  Signier-WERKZEUG, das nur der Eigentümer selbst startet (`--i-am-the-owner`); Produktcode importiert es nie.
-- `grant-prepare.ts` — Grant-Credential (`ngt_…` via SDK, läuft auf Node 22) + `grant_issue`-Intent;
-  Token nur in `.state/grants/` (0600) bzw. `INTENTS_GRANT_TOKEN`, nie auf die Konsole.
-- `owner-sign-popup-server.ts` — lokaler Loopback-Server (nur 127.0.0.1, Aufruf via `http://localhost:8789`,
-  Safari-WebAuthn braucht localhost-rpId): `/register` (startRegistration via esm.sh @simplewebauthn/browser@13,
-  Server verifiziert challenge/origin und baut COSE→DER-SPKI) und `/sign?cid=…` (Klartext-Policy-Preview +
-  startAuthentication mit `intent.payload` byte-for-byte → `signed_data` 0600 nach `.state/`). Kein API-Key,
-  keine Secrets in der Seite; Parsing via `vendor/simplewebauthn-helpers.bundle.mjs` (pinned 13.3.3, E2E getestet).
+- `env.ts` — dotenv loads the repo-root `.env` (chmod 600, gitignored); `redact()` masks ALL secret patterns
+  in every output; defaults: prod base URL, `AGENT_EXECUTE=false`, `DEMO_MAX_USD=3` (hard-capped).
+- `client.ts` — Node-22-compatible raw-fetch REST wrapper (the SDK declares `engines: node>=24`; HTTP is
+  plain JSON, 1:1 per `examples/09-raw-http`). JSON:API errors → `ApiError{code,layer,retryable}` —
+  branch only on `code` (never title/detail); header values never leave the file.
+- `lifecycle.ts` — state machine `PENDING/UNCERTAIN/NEEDS_REVIEW/COMPLETED(+FAILED)`, persistent
+  idempotency store (`.state/operations.json`, 0600, gitignored), bounded retries **only with the identical
+  key**, quota guard (100 agent admissions/24 h; 429/5xx retryable, custody-ops limit 1,000/24 h covered
+  by 429 handling).
+- `policy.ts` — owner policy builder: budget cap (USD), destinations whitelist `only` (only
+  contract/payout addresses from `TREASURY_DESTINATIONS`), `timelock_ms`, assets NEAR/USDC only,
+  `actions:["swap"]`, `native`/`confidential` off.
+- `sign-policy.ts` — generate → **human signs** → submit → status. `owner-sign-helper.ts` is a
+  signing TOOL that only the owner starts themselves (`--i-am-the-owner`); product code never imports it.
+- `grant-prepare.ts` — grant credential (`ngt_…` via SDK, runs on Node 22) + `grant_issue` intent;
+  token only in `.state/grants/` (0600) or `INTENTS_GRANT_TOKEN`, never on the console.
+- `owner-sign-popup-server.ts` — local loopback server (127.0.0.1 only, open via `http://localhost:8789`,
+  Safari WebAuthn needs the localhost rpId): `/register` (startRegistration via esm.sh @simplewebauthn/browser@13,
+  server verifies challenge/origin and builds COSE→DER-SPKI) and `/sign?cid=…` (plain-text policy preview +
+  startAuthentication with `intent.payload` byte-for-byte → `signed_data` 0600 into `.state/`). No API key,
+  no secrets in the page; parsing via `vendor/simplewebauthn-helpers.bundle.mjs` (pinned 13.3.3, E2E tested).
 
-## benutzte API-Verträge (Referenzen)
+## API contracts used (references)
 
 `GET {base}/llms.txt` · `POST /v1/generate-intent` · `POST /v1/submit-intent` · `GET /v1/status` ·
-`POST /v1/agents/{id}/swap` (`dry:true` ohne Grant/Idempotency-Key; live mit `X-Grant-Token` +
-`Idempotency-Key`) · `GET /v1/quotas` · `GET /v1/tokens`. Beispiele-Kapitel: 05-money-moves
-(Zahlungen/Idempotenz), 08-errors-and-recovery (Statusmaschine), 09-raw-http (Header-Parität).
+`POST /v1/agents/{id}/swap` (`dry:true` without grant/idempotency key; live with `X-Grant-Token` +
+`Idempotency-Key`) · `GET /v1/quotas` · `GET /v1/tokens`. Example chapters: 05-money-moves
+(payments/idempotency), 08-errors-and-recovery (state machine), 09-raw-http (header parity).
 
-## Umwelt-Setup (Tabelle)
+## Environment setup (table)
 
-| Variable | Pflicht? | Bedeutung |
+| Variable | Required? | Meaning |
 |---|---|---|
-| `INTENTS_API_KEY` | ja | `naa_…` Partner-Key — NUR `.env`/Prozessumgebung, nie Repo/Log/Commit. |
-| `INTENTS_BASE_URL` | nein | Default **Prod** `https://api.agentsonintents.com`; Demo-Deploy `https://api.demo.agentsonintents.com` nur nach Team-Freigabe. |
-| `OWNER_ACCOUNT_MAINNET` / `OWNER_PUBLIC_KEY` | nur near-owner-Pfad | **mainnet** NEAR-Konto des Menschen + `ed25519:…` Signier-Key (API-Netz: mainnet!). `OWNER_ACCOUNT` (.testnet) gehört zu den Deploy-Skripten — für Intents tabu. Passkey-Pfad braucht beides nicht (`.state/passkey.json`). |
-| `AGENT_EXECUTE` | nein | Default `false` ⇒ nur `dry:true`. `true` erst nach dry-Beweis (RULES.md). |
-| `DEMO_MAX_USD` / `DEMO_AMOUNT_USD` | nein | Cap (hart ≤ 3) / Micro-Betrag (Default 0.25 $). |
-| `TREASURY_DESTINATIONS` | nein | Komma-Liste Whitelist-Einträge (`near:acct`, `intents:acct`, `chain:addr`). |
-| `INTENTS_GRANT_TOKEN` | für execute | `ngt_…` aus `grant:prepare`-Store. |
-| `INTENTS_TIMELOCK_MS` | nein | Policy-Timelock, Default 60 000 ms. |
+| `INTENTS_API_KEY` | yes | `naa_…` partner key — ONLY `.env`/process environment, never repo/log/commit. |
+| `INTENTS_BASE_URL` | no | Default **prod** `https://api.agentsonintents.com`; demo deploy `https://api.demo.agentsonintents.com` only after team approval. |
+| `OWNER_ACCOUNT_MAINNET` / `OWNER_PUBLIC_KEY` | near-owner path only | The human's **mainnet** NEAR account + `ed25519:…` signing key (API network: mainnet!). `OWNER_ACCOUNT` (.testnet) belongs to the deploy scripts — off-limits for Intents. The passkey path needs neither (`.state/passkey.json`). |
+| `AGENT_EXECUTE` | no | Default `false` ⇒ `dry:true` only. `true` only after the dry proof (RULES.md). |
+| `DEMO_MAX_USD` / `DEMO_AMOUNT_USD` | no | Cap (hard ≤ 3) / micro amount (default 0.25 $). |
+| `TREASURY_DESTINATIONS` | no | Comma list of whitelist entries (`near:acct`, `intents:acct`, `chain:addr`). |
+| `INTENTS_GRANT_TOKEN` | for execute | `ngt_…` from the `grant:prepare` store. |
+| `INTENTS_TIMELOCK_MS` | no | Policy timelock, default 60,000 ms. |
 
-## Admissions-Budget (Quota-Disziplin)
+## Admission budget (quota discipline)
 
-**Admission budget: never regenerate the agent within a demo run, reuse grant.** Jede `generate-intent`-Agent-Erstellung
-zählt als Agent-Admission (100/24 h, Demo-Deploy-Baseline 2026-11-05 21:20: 5/100 verbraucht, Rest 95 — siehe
-EVIDENCE_LOG) und ist NICHT erstattungsfähig. Innerhalb einer Demo-Runde gilt daher: Agent genau EINMAL anlegen
-(`policy:create` einmalig), dann alle Aktionen über denselben `agent_id` + wiederverwendeten Grant
-(`grant:prepare`, Token in `.state/grants/`) fahren. `policy:create` niemals in Schleifen/Automation aufrufen —
-der Onchain-Key-Precheck bremst zwar, ersetzt aber nicht diese Regel.
+**Admission budget: never regenerate the agent within a demo run, reuse the grant.** Every `generate-intent`
+agent creation counts as an agent admission (100/24 h; demo-deploy baseline 2026-11-05 21:20: 5/100 used,
+95 remaining — see EVIDENCE_LOG) and is NOT refundable. Within one demo round therefore: create the agent
+exactly ONCE (`policy:create` once), then run all actions through the same `agent_id` + reused grant
+(`grant:prepare`, token in `.state/grants/`). Never call `policy:create` in loops/automation —
+the on-chain key precheck slows things down but does not replace this rule.
 
-## Sicherheit — Non-Negotiables (RULES.md §Sicherheit)
+## Security — non-negotiables (RULES.md §Security)
 
-1. **Secrets:** `.env` (chmod 600, gitignored) enthält `INTENTS_API_KEY`, `ONECLICK_JWT` u. a. — dieser
-   Code liest sie nur für Header; jede Konsole-/Log-Ausgabe läuft durch `redact()`. Keine Secrets in
-   Commits, Logs oder Fehlermeldungen.
-2. **Kein Auto-Signing:** Owner-Signaturen (agent_create, policy_update, grant_issue, approvals) erzeugt
-   ausschließlich der Mensch im Wallet bzw. über das explizit selbstgestartete Signier-Werkzeug.
-3. **dry:true-First:** Ausführung ist ohne `AGENT_EXECUTE=true` Code-seitig unmöglich; jede Quote zuerst
-   dry, dann Cap/Warnings prüfen, dann (nach Freigabe) live — Idempotency-Key pro Operation stabil
-   persistiert, UNCERTAIN wird beobachtet, nie dupliziert.
-4. **Identitätstrennung:** Owner ≠ Treasury ≠ Contract ≠ Swarms (RULES.md) — das Treasury signiert nur
-   Swaps innerhalb seiner Policy; Payouts autorisiert der Escrow-Contract.
+1. **Secrets:** `.env` (chmod 600, gitignored) holds `INTENTS_API_KEY`, `ONECLICK_JWT` and others — this
+   code reads them only for headers; every console/log output passes through `redact()`. No secrets in
+   commits, logs or error messages.
+2. **No auto-signing:** owner signatures (agent_create, policy_update, grant_issue, approvals) are produced
+   exclusively by the human in their wallet or via the explicitly self-started signing tool.
+3. **dry:true first:** execution is impossible in code without `AGENT_EXECUTE=true`; every quote first
+   dry, then check cap/warnings, then (after approval) live — idempotency key persisted stably per
+   operation, UNCERTAIN is observed, never duplicated.
+4. **Identity separation:** owner ≠ treasury ≠ contract ≠ swarms (RULES.md) — the treasury signs only
+   swaps within its policy; payouts are authorized by the escrow contract.

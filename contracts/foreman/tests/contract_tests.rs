@@ -1,11 +1,11 @@
-//! Phase-1 Unit-Tests (near_sdk test_utils / VMContextBuilder + testing_env!):
-//! alle 11 öffentlichen Methoden + jede require!-Rejection der Escrow-Maschine.
-//! testing_env! übernimmt Storage über Kontext-Wechsel hinweg => saubere ABLAUF-Tests.
+//! Phase-1 unit tests (near_sdk test_utils / VMContextBuilder + testing_env!):
+//! all 11 public methods + every require! rejection of the escrow machine.
+//! testing_env! carries storage across context switches => clean SEQUENCE tests.
 use foreman::{Contract, JobState, BID_WINDOW_SECONDS, MAX_BIDS};
 use near_sdk::test_utils::VMContextBuilder;
 use near_sdk::{testing_env, AccountId, NearToken};
 
-const T0: u64 = 1_700_000_000_000_000_000; // ns-Basiszeit
+const T0: u64 = 1_700_000_000_000_000_000; // ns base time
 const SEC: u64 = 1_000_000_000;
 
 fn acct(name: &str) -> AccountId {
@@ -24,7 +24,7 @@ fn agent(n: u8) -> AccountId {
     acct(&format!("agent{}.testnet", n))
 }
 
-/// Mock-Kontext für den nächsten Aufruf: Wer ruft wann mit welchem Deposit auf?
+/// Mock context for the next call: who calls when with which deposit?
 fn ctx(now: u64, who: &AccountId, deposit: u128) {
     let mut b = VMContextBuilder::new();
     b.predecessor_account_id(who.clone())
@@ -40,10 +40,10 @@ fn init() -> Contract {
     Contract::new(owner(), treasury(), foreman_acct())
 }
 
-/// Owner postet Job mit Escrow; gibt JobId zurück.
+/// Owner posts a job with escrow; returns the JobId.
 fn post(c: &mut Contract, now: u64, budget: u128, deadline_nanos: u64) -> u64 {
     ctx(now, &owner(), budget);
-    c.post_job("spec".into(), vec!["kriterium".into()], deadline_nanos)
+    c.post_job("spec".into(), vec!["criterion".into()], deadline_nanos)
 }
 
 fn bid(c: &mut Contract, job: u64, who: &AccountId, price: u128, now: u64) {
@@ -55,7 +55,7 @@ fn as_foreman(now: u64) {
     ctx(now, &foreman_acct(), 0);
 }
 
-/// expect_panic: f muss mit require!-Panic containing `code` abbrechen (Hook stumm).
+/// expect_panic: f must abort with a require! panic containing `code` (hook silenced).
 fn expect_panic<F: FnOnce()>(f: F, code: &str) {
     let prev = std::panic::take_hook();
     std::panic::set_hook(Box::new(|_| {}));
@@ -181,26 +181,26 @@ fn place_bid_window_closed() {
     );
 }
 
-/// Beweis gegen den alten T0-Hack: das Fenster hängt am echten Job.opened_at,
-/// nicht an der Systemzeit des ersten Jobs.
+/// Proof against the old T0 hack: the window hangs on the real job.opened_at,
+/// not on the system time of the first job.
 #[test]
 fn bid_window_is_per_job_not_global_t0() {
     let mut c = init();
     let job_a = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
     let late = T0 + (BID_WINDOW_SECONDS + 10) * SEC;
-    let job_b = post(&mut c, late, 1_000, T0 + 3_600 * SEC); // Job B öffnet SPÄT
+    let job_b = post(&mut c, late, 1_000, T0 + 3_600 * SEC); // job B opens LATE
     expect_panic(
         || bid(&mut c, job_a, &agent(1), 900, late + SEC),
         "BID_WINDOW_CLOSED",
     );
-    bid(&mut c, job_b, &agent(2), 900, late + SEC); // B ist frisch => Fenster offen
+    bid(&mut c, job_b, &agent(2), 900, late + SEC); // B is fresh => window open
     assert_eq!(c.get_bids(job_b).len(), 1);
 }
 
 #[test]
 fn place_bid_expired() {
     let mut c = init();
-    let job = post(&mut c, T0, 1_000, T0 + 2 * SEC); // Deadline binnen Fenster
+    let job = post(&mut c, T0, 1_000, T0 + 2 * SEC); // deadline inside the window
     expect_panic(|| bid(&mut c, job, &agent(1), 900, T0 + 3 * SEC), "EXPIRED");
 }
 
@@ -266,11 +266,11 @@ fn counter_offer_only_one_counter() {
     let mut c = init();
     let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
     as_foreman(T0 + SEC);
-    c.counter_offer(job, NearToken::from_yoctonear(500), 60, "begründung".into());
+    c.counter_offer(job, NearToken::from_yoctonear(500), 60, "reason".into());
     expect_panic(
         || {
             as_foreman(T0 + 2 * SEC);
-            c.counter_offer(job, NearToken::from_yoctonear(400), 60, "nochmal".into());
+            c.counter_offer(job, NearToken::from_yoctonear(400), 60, "again".into());
         },
         "ONLY_ONE_COUNTER",
     );
@@ -296,7 +296,7 @@ fn counter_offer_not_bidding_after_award() {
     expect_panic(
         || {
             as_foreman(T0 + 3 * SEC);
-            c.counter_offer(job, NearToken::from_yoctonear(500), 60, "spät".into());
+            c.counter_offer(job, NearToken::from_yoctonear(500), 60, "late".into());
         },
         "NOT_BIDDING",
     );
@@ -320,7 +320,7 @@ fn counter_offer_stored_with_foreman_identity() {
 
 // ---------- award ----------
 
-/// Hilfspfad: Owner postet, agent1 bietet, Foreman awards. Winner = agent1.
+/// Helper path: owner posts, agent1 bids, foreman awards. Winner = agent1.
 fn award_one_bid(c: &mut Contract) -> u64 {
     let job = post(c, T0, 1_000, T0 + 3_600 * SEC);
     bid(c, job, &agent(1), 900, T0 + SEC);
@@ -393,8 +393,8 @@ fn award_tie_goes_to_earlier_bid() {
     assert_eq!(c.get_job(job).winner, Some(agent(1)));
 }
 
-/// Rep-Tiebreak: agent1 liefert Job1 sauber ab (rep 50→59), schlägt agent2
-/// im Job2 bei gleichem Preis trotz späterem Bid (RULES: price → rep → zeit).
+/// Rep tiebreak: agent1 delivers job1 cleanly (rep 50→55), beats agent2
+/// in job2 at the same price despite a later bid (RULES: price → rep → time).
 #[test]
 fn award_tie_higher_rep_wins() {
     let mut c = init();
@@ -407,8 +407,8 @@ fn award_tie_higher_rep_wins() {
     assert_eq!(c.get_rep(agent(1)), 55, "sliding avg (50*9+100)/10");
 
     let job2 = post(&mut c, T0 + 400 * SEC, 1_000, T0 + 4000 * SEC);
-    bid(&mut c, job2, &agent(2), 500, T0 + 401 * SEC); // früher, aber rep 50
-    bid(&mut c, job2, &agent(1), 500, T0 + 402 * SEC); // später, rep 59
+    bid(&mut c, job2, &agent(2), 500, T0 + 401 * SEC); // earlier, but rep 50
+    bid(&mut c, job2, &agent(1), 500, T0 + 402 * SEC); // later, rep 55
     as_foreman(T0 + 403 * SEC);
     c.award(job2);
     assert_eq!(c.get_job(job2).winner, Some(agent(1)));
@@ -416,8 +416,8 @@ fn award_tie_higher_rep_wins() {
 
 // ---------- attach_receipt / submit_work ----------
 
-/// Spec-Beweis für die Prüfreihenfolge in attach_receipt: Winner-Check vor State-Check.
-/// Vor dem Award gibt es keinen Winner => ONLY_WINNER (nicht NOT_AWARDED).
+/// Spec proof for the check order in attach_receipt: winner check before state check.
+/// Before the award there is no winner => ONLY_WINNER (not NOT_AWARDED).
 #[test]
 fn attach_receipt_before_award_hits_only_winner_first() {
     let mut c = init();
@@ -432,7 +432,7 @@ fn attach_receipt_before_award_hits_only_winner_first() {
     );
 }
 
-/// NOT_AWARDED erreichen wir als echter Winner im Zustand Accepted (Winner gesetzt, State != Awarded).
+/// We reach NOT_AWARDED as the real winner in state Accepted (winner set, state != Awarded).
 #[test]
 fn attach_receipt_not_awarded_after_accept() {
     let mut c = init();
@@ -538,7 +538,7 @@ fn accept_rejects_third_party() {
     );
 }
 
-/// RULES-Konformität (Lead-Entscheid 05.11.): Owner darf selbst abnehmen.
+/// RULES compliance (lead decision 05.11.): the owner may accept themselves.
 #[test]
 fn accept_by_owner_ok() {
     let mut c = init();
@@ -622,7 +622,7 @@ fn refund_expired_not_expired_yet() {
     let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
     expect_panic(
         || {
-            ctx(T0 + 3_600 * SEC, &agent(9), 0); // genau deadline, +60s fehlen
+            ctx(T0 + 3_600 * SEC, &agent(9), 0); // exactly deadline, +60s still missing
             c.refund_expired(job);
         },
         "NOT_EXPIRED",
@@ -633,7 +633,7 @@ fn refund_expired_not_expired_yet() {
 fn refund_expired_ok_refunds_owner_and_marks_refunded() {
     let mut c = init();
     let job = post(&mut c, T0, 1_000, T0 + 100 * SEC);
-    ctx(T0 + 161 * SEC, &agent(9), 0); // permissionless Auslöser, deadline + 61 s
+    ctx(T0 + 161 * SEC, &agent(9), 0); // permissionless trigger, deadline + 61 s
     c.refund_expired(job);
     assert_eq!(c.get_job(job).state, JobState::Refunded);
 }
@@ -682,24 +682,24 @@ fn get_bids_keeps_placement_order() {
 fn counter_offer_persists_reason_and_view_works() {
     let mut c = init();
     let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
-    assert_eq!(c.get_counter_reason(job), None, "ohne Counter kein Grund");
+    assert_eq!(c.get_counter_reason(job), None, "no counter, no reason");
     as_foreman(T0 + SEC);
     c.counter_offer(
         job,
         NearToken::from_yoctonear(500),
         42,
-        " criterion #2+3 zum Festpreis ".into(),
+        " criterion #2+3 at a fixed price ".into(),
     );
     assert_eq!(
         c.get_counter_reason(job).as_deref(),
-        Some(" criterion #2+3 zum Festpreis "),
-        "Grund 1:1 persistent (Trim nur fürs Gate, nicht beim Speichern)"
+        Some(" criterion #2+3 at a fixed price "),
+        "reason persisted 1:1 (trim only for the gate, not when storing)"
     );
 }
 
-/// Upgrade-Beweis: Contract-State ohne 7. Feld (Altstate der Deploy-Ära vor phase4.2,
-/// z. B. Jobs 1-6 on-chain) muss weiter deserialisierbar sein — counter_reasons
-/// fällt auf das frische Map b"k" zurück statt EOF-Panic.
+/// Upgrade proof: contract state without the 7th field (old state from the deploy era
+/// before phase4.2, e.g. jobs 1-6 on-chain) must stay deserializable — counter_reasons
+/// falls back to the fresh map b"k" instead of an EOF panic.
 #[test]
 fn legacy_state_without_counter_map_still_deserializes() {
     use near_sdk::borsh::{to_vec, BorshDeserialize};
@@ -710,7 +710,7 @@ fn legacy_state_without_counter_map_still_deserializes() {
         owner: AccountId,
         treasury: AccountId,
         foreman: AccountId,
-        jobs_prefix: Vec<u8>, // LookupMap<JobId,Job> serialisiert nur den Präfix
+        jobs_prefix: Vec<u8>, // LookupMap<JobId,Job> serializes only the prefix
         next_id: u64,
         rep_prefix: Vec<u8>, // LookupMap<AccountId,u32> likewise
     }
@@ -723,16 +723,16 @@ fn legacy_state_without_counter_map_still_deserializes() {
         next_id: 7,
         rep_prefix: b"r".to_vec(),
     };
-    let bytes = to_vec(&old).expect("Altstate Bytes");
-    let c = Contract::try_from_slice(&bytes).expect("Altstate ohne 7. Feld muss lesbar bleiben");
+    let bytes = to_vec(&old).expect("old-state bytes");
+    let c = Contract::try_from_slice(&bytes).expect("old state without the 7th field must stay readable");
     assert_eq!(
         c.get_counter_reason(3),
         None,
-        "frisches Map => None, kein Panic"
+        "fresh map => None, no panic"
     );
     assert_eq!(
         c.get_rep(agent(1)),
         50,
-        "Reputation-Map aus Altstate lesbar"
+        "reputation map readable from old state"
     );
 }
