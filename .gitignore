@@ -15,6 +15,7 @@ dist/
 __pycache__/
 *.pyc
 .venv/
+.venv-receipts/
 .DS_Store
 neardev/
 credentials/
