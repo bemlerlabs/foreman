@@ -94,12 +94,23 @@ if wasm and interp and Path(wasm).is_file() and Path(interp).is_file():
             capture_output=True, text=True, env=env, cwd=str(REPO_ROOT),
         )
         if verify.returncode == 0:
-            sys.path.insert(0, str(REPO_ROOT / "core" / "receipts"))
-            from ephemora_adapter import receipt_hash as _record_hash  # noqa: E402
-
-            receipt_hash = _record_hash(real_receipt)
-            artifact_hash = real_receipt.get("artifact_hash") or artifact_hash
-            receipt_source = "wasm+es256"
+            # Hash in the SAME environment as the verifier (ephemora_cell importable) so the
+            # anchor is the JCS canonical form. In-process hashing here would silently fall back
+            # to json.dumps, which formats floats differently (128.0 vs 128) and yields a hash an
+            # independent JCS replay cannot reproduce.
+            hashed = subprocess.run(
+                [interp, "-c",
+                 "import json,sys;sys.path.insert(0,'core/receipts');"
+                 "from ephemora_adapter import receipt_hash;"
+                 "print(receipt_hash(json.load(open(sys.argv[1]))))", str(receipt_out)],
+                capture_output=True, text=True, env=env, cwd=str(REPO_ROOT),
+            )
+            if hashed.returncode == 0 and hashed.stdout.strip():
+                receipt_hash = hashed.stdout.strip()
+                artifact_hash = real_receipt.get("artifact_hash") or artifact_hash
+                receipt_source = "wasm+es256"
+            else:
+                print("RECEIPT_WARN: receipt hash failed - the mock stays")
         else:
             print("RECEIPT_WARN: real report built but verification failed - the mock stays")
     else:
