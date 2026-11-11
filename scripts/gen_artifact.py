@@ -36,7 +36,8 @@ CRITERIA = json.loads(
 )
 BUDGET = int(os.environ.get("DEMO_BUDGET_YOCTO", "900000000000000000000000"))
 ADAPTER_JOB = os.environ.get("ADAPTER_JOB", "e2e-demo-foreman-demo")
-STATE_DIR = REPO_ROOT / ".state"
+STATE_DIR = Path(os.environ.get("FOREMAN_STATE_DIR", str(REPO_ROOT / ".state")))
+STATE_DIR.mkdir(parents=True, exist_ok=True)
 BIDS_FILE = Path(os.environ.get("BIDS_FILE", str(STATE_DIR / "bids.json")))
 
 bids = json.load(open(BIDS_FILE))

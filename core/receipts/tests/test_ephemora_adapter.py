@@ -178,3 +178,38 @@ def test_cli_missing_wasm_exitcode(tmp_path):
 def test_keys_dir_gitignored():
     gi = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8").splitlines()
     assert "keys/" in gi
+
+
+# ---------------------------------------------------------------- anchor reproducibility (phase13)
+def test_receipt_hash_is_jcs_canonical(worker_wasm):
+    """The attach_receipt anchor must be the JCS canonical form an independent verifier
+    replays — not a json.dumps fallback, whose float formatting diverges (128.0 vs 128)."""
+    from ephemora_cell.execution_report import canonical_bytes
+    r = run_and_attest(str(worker_wasm), _inputs())
+    payload = {**r["record"], "alg": r.get("alg"), "signature": r.get("cell_signature")}
+    expected = hashlib.sha256(canonical_bytes(payload)).hexdigest()
+    assert receipt_hash(r) == expected
+
+
+def test_gen_artifact_anchor_matches_independent_replay(tmp_path, worker_wasm):
+    """gen_artifact must anchor a hash an independent JCS replay reproduces, regardless of
+    the hashing process's own import path (phase13 regression). Runs in an isolated state dir."""
+    state = tmp_path / "state"
+    state.mkdir(parents=True, exist_ok=True)
+    bids = [{"bidder": f"agent{i}.foreman-team.testnet", "price_yocto": str(int(p * 10**21))}
+            for i, p in enumerate([13.56, 14.15, 14.92, 15.59, 16.44], start=1)]
+    bids_file = tmp_path / "bids.json"
+    bids_file.write_text(json.dumps(bids), encoding="utf-8")
+    env = dict(os.environ,
+               FOREMAN_STATE_DIR=str(state), BIDS_FILE=str(bids_file),
+               EMPHORA_WASM=str(worker_wasm), EPHEMORA_PY=sys.executable,
+               EPHEMORA_CELL_PATH=str(Path(ec.__file__).resolve().parent.parent),
+               ADAPTER_JOB="test-anchor")
+    proc = subprocess.run([sys.executable, str(REPO_ROOT / "scripts/gen_artifact.py")],
+                          capture_output=True, text=True, cwd=str(REPO_ROOT), env=env)
+    assert proc.returncode == 0, proc.stderr
+    art = json.loads((state / "artifact.json").read_text(encoding="utf-8"))
+    assert art["receipt_source"] == "wasm+es256", proc.stdout
+    r = json.loads((state / "receipt.json").read_text(encoding="utf-8"))
+    assert verify_receipt(r) is True
+    assert art["receipt_hash"] == receipt_hash(r)
