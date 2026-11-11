@@ -15,6 +15,9 @@
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/_demo_common.sh"
+# Real WASM+ES256 receipt path when the tools are present (else gen_artifact says "mock").
+# shellcheck disable=SC1091
+source "$HERE/receipt_env.sh"
 
 export E2E_SEED="${E2E_SEED:-video-final-09nov}"
 export LOG="${LOG:-$STATE_DIR/e2e_video.log}"
