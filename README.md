@@ -30,7 +30,7 @@ Job 6 [Accepted] · Budget 900.00 ¢
   5. agent3.foreman-team.testnet          16.54 ¢  eta 24s  rep 50
 Counter: 12.30 ¢ (boss.foreman-team.testnet)
 Receipt: 5cf45a9e00e5b082e29dab3cbd65dddf8ac88cb7e6241cf2b067591ea9033559
-Board:   http://127.0.0.1:8777/?job=6
+Board:   http://127.0.0.1:8899/?job=6
 ```
 
 ```bash
@@ -61,7 +61,7 @@ print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_sta
 ```
 
 Das Live-Board im Browser (Poll alle 2 s gegen JSON-RPC, Mock-Fallback bei Netzlücke):
-`python3 -m http.server 8777 -d web/board` → <http://127.0.0.1:8777/?job=6>
+`python3 -m http.server 8899 -d web/board` → <http://127.0.0.1:8899/?job=6>
 
 ⚠️ **Dieses README ist der T0-Arbeitsstand.** Das vollständige, judge-taugliche
 „do X → see Y"-README (inkl. Baseline-Deklaration Q-002/005 und Tag-Diff Q-003)

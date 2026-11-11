@@ -129,12 +129,12 @@ PY
     say OK "job=$JOB_ID winner=$WINNER state=$STATE rep=$REP (before $REP_BEFORE) sidecar=web/board/sidecar/job${JOB_ID}.json log=$LOG"
     ;;
   dashboard)
-    if ! lsof -nP -iTCP:8777 -sTCP:LISTEN >/dev/null 2>&1; then
-      (cd "$REPO_ROOT/web/board" && python3 -m http.server 8777 --bind 127.0.0.1 > /tmp/foreman_dashboard.log 2>&1 &)
+    if ! lsof -nP -iTCP:8899 -sTCP:LISTEN >/dev/null 2>&1; then
+      (cd "$REPO_ROOT/web/board" && python3 -m http.server 8899 --bind 127.0.0.1 > /tmp/foreman_dashboard.log 2>&1 &)
       sleep 2
     fi
     JOB_ID=$(cat "$JOB_FILE" 2>/dev/null || echo 1)
-    say DASHBOARD "board server=http://127.0.0.1:8777/?job=$JOB_ID — open it any time"
+    say DASHBOARD "board server=http://127.0.0.1:8899/?job=$JOB_ID — open it any time"
     ;;
   recipe)
     JOB_ID=$(cat "$JOB_FILE")

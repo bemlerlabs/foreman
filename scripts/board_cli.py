@@ -54,7 +54,7 @@ def main(argv=None):
     ap.add_argument("--job", type=int, required=True)
     ap.add_argument("--json", action="store_true", dest="as_json")
     ap.add_argument("--pretty", action="store_true")
-    ap.add_argument("--board-url", default="http://127.0.0.1:8777/?job={job}")
+    ap.add_argument("--board-url", default="http://127.0.0.1:8899/?job={job}")
     args = ap.parse_args(argv)
 
     try:

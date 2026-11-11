@@ -54,7 +54,7 @@ Workflow — always in this order:
    Signed receipt, accept, payout, sidecar file. Some shell tools time out at 30 seconds,
    so long phases always run detached and are collected with wait.
 7. Dashboard: `python3 R/scripts/foreman_flow.py dashboard` starts the live board server and
-   prints the link http://127.0.0.1:8777/?job=<id> — offer it, opening it is optional.
+   prints the link http://127.0.0.1:8899/?job=<id> — offer it, opening it is optional.
 8. Recipe: `python3 R/scripts/foreman_flow.py recipe` writes recipe.json and recipe.md (job spec,
    acceptance criteria, all bids, the single counter-offer with its reason, receipt hash,
    payout transaction, reputation move) and registers the recipe as an ephe skill, so it
