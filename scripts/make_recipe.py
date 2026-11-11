@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import sys
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -144,9 +145,12 @@ def register_as_skill(recipe: dict, api: str) -> str | None:
             f"receipt, accept and report the payout. Cite transaction and receipt hashes only."
         ),
     }
+    # The server's CSRF gate accepts the app origin from local programs (docs/SECURITY_AND_PRIVACY.md).
+    origin = f"{urllib.parse.urlsplit(api).scheme}://{urllib.parse.urlsplit(api).netloc}"
     req = urllib.request.Request(api.rstrip("/") + "/api/skills",
                                  data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json"}, method="POST")
+                                 headers={"Content-Type": "application/json", "Origin": origin},
+                                 method="POST")
     try:
         with urllib.request.urlopen(req, timeout=15) as r:
             return json.loads(r.read()).get("name")
