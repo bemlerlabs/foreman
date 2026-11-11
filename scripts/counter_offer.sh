@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # phase3: Foreman (boss) places EXACTLY ONE counter-offer (RULES 07 prompt) — price 10 % below
 # the best bid, reasoning references the job's acceptance_criteria.
-# call:   ./scripts/counter_offer.sh [JOB_ID]   (default: /tmp/foreman_job_id.txt)
+# call:   ./scripts/counter_offer.sh [JOB_ID]   (default: .state/job_id.txt)
 source "$(dirname "$0")/_demo_common.sh"
 
-JOB_ID="${1:-$(cat /tmp/foreman_job_id.txt)}"
-BIDS_FILE="${BIDS_FILE:-/tmp/foreman_bids.json}"
+JOB_ID="${1:-$(cat "$STATE_DIR/job_id.txt")}"
+BIDS_FILE="${BIDS_FILE:-$STATE_DIR/bids.json}"
 [[ -f "$BIDS_FILE" ]] || { echo "MISSING: $BIDS_FILE" >&2; exit 1; }
 
 read -r PRICE ETA <<<"$(python3 -c "

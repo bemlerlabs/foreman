@@ -2,7 +2,7 @@
 """cli_bids — bid generator for bid_loop.sh (near-feasibility, task-3).
 
 Call:
-    python3 core/bidding/cli_bids.py --seed foreman-demo --out /tmp/foreman_bids.json
+    python3 core/bidding/cli_bids.py --seed foreman-demo --out .state/bids.json
 
 Writes exactly one JSON file:
     [{"bidder": "agent1.foreman-team.testnet", "price_yocto": "...", "eta_secs": 40}, ... x5]

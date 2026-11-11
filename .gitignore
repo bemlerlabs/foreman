@@ -22,3 +22,4 @@ keys/
 *.json!package.json
 # the local ephe demo runtime (learning state, not part of the submission)
 .ephe/
+.state/

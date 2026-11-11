@@ -17,9 +17,9 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/_demo_common.sh"
 
 export E2E_SEED="${E2E_SEED:-video-final-09nov}"
-export LOG="${LOG:-/tmp/foreman_e2e_video_09nov.log}"
+export LOG="${LOG:-$STATE_DIR/e2e_video.log}"
 BREMSE="${BREMSE:-27}"   # hold after post: bids land with countdown ~90s (120s window, 4s skew buffer)
-JOB_FILE=/tmp/foreman_video_job.txt
+JOB_FILE="$STATE_DIR/video_job.txt"
 PHASE="${1:-}"
 
 say() { echo "VIDEO_$1 $(date +%H:%M:%S) $2" | tee -a "$LOG"; }
@@ -27,14 +27,14 @@ say() { echo "VIDEO_$1 $(date +%H:%M:%S) $2" | tee -a "$LOG"; }
 case "$PHASE" in
   post)
     python3 "$REPO_ROOT/core/bidding/cli_bids.py" --seed "$E2E_SEED" \
-      --out /tmp/foreman_bids.json --spec "$DEMO_SPEC" --budget-yocto "$DEMO_BUDGET_YOCTO" | tee -a "$LOG"
+      --out "$STATE_DIR/bids.json" --spec "$DEMO_SPEC" --budget-yocto "$DEMO_BUDGET_YOCTO" | tee -a "$LOG"
     ADAPTER_JOB="video-$E2E_SEED" python3 "$HERE/gen_artifact.py" | tee -a "$LOG"
     DEADLINE_NS=$(( $(date +%s) * 1000000000 + DEADLINE_SECONDS * 1000000000 ))
     ARGS=$(SPEC="$DEMO_SPEC" CRIT="$DEMO_CRITERIA_JSON" DL="$DEADLINE_NS" python3 -c "
 import json,os
 print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.environ['CRIT']),'deadline_nanos':int(os.environ['DL'])}))")
     TX=$(near_call "$OWNER" "$CONTRACT" post_job "$ARGS" --depositYocto "$DEMO_BUDGET_YOCTO")
-    JOB_ID=$(call_result "$(cat "${LAST_CALL_FILE:-/tmp/foreman_last_call_out}")")
+    JOB_ID=$(call_result "$(cat "${LAST_CALL_FILE:-$STATE_DIR/last_call_out}")")
     [[ -n "$JOB_ID" ]] || { echo "VIDEO_FAIL job_id parse — $LOG" >&2; exit 1; }
     echo "$JOB_ID" > "$JOB_FILE"
     say POSTED "job=$JOB_ID txid=$TX seed=$E2E_SEED budget=0.9NEAR deadline=+${DEADLINE_SECONDS}s — report the job id, then run the bids phase"
@@ -43,13 +43,13 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     JOB_ID=$(cat "$JOB_FILE")
     say BRAKE "holding ${BREMSE}s so bids land with the countdown in frame, then 5 bids in parallel (429-hardened)"
     sleep "$BREMSE"
-    BIDS_FILE=/tmp/foreman_bids.json "$HERE/video_bid_loop.sh" "$JOB_ID"
+    BIDS_FILE="$STATE_DIR/bids.json" "$HERE/video_bid_loop.sh" "$JOB_ID"
     if [[ "$PHASE" == "bids+middle" ]]; then
       say GAP "30s capture pause after bids, then middle runs automatically"
       sleep 30
       "$HERE/counter_offer.sh" "$JOB_ID" | tee -a "$LOG"
       TX=$(near_call "$FOREMAN" "$CONTRACT" award "{\"job_id\":$JOB_ID}")
-      WINNER=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['winner'])")
+      WINNER=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['winner'])" "$STATE_DIR/artifact.json")
       say AWARD "job=$JOB_ID winner=$WINNER txid=$TX"
     fi
     ;;
@@ -57,7 +57,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     JOB_ID=$(cat "$JOB_FILE")
     "$HERE/counter_offer.sh" "$JOB_ID" | tee -a "$LOG"
     TX=$(near_call "$FOREMAN" "$CONTRACT" award "{\"job_id\":$JOB_ID}")
-    WINNER=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['winner'])")
+    WINNER=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['winner'])" "$STATE_DIR/artifact.json")
     say AWARD "job=$JOB_ID winner=$WINNER txid=$TX"
     ;;
   acceptdemo)
@@ -67,7 +67,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     TX=$(near_call "$FOREMAN" "$CONTRACT" accept "{\"job_id\":$JOB_ID,\"delivery_score\":90}")
     RC=$?
     set -e
-    if [[ $RC -ne 0 ]] && grep -q "NOT_DELIVERED" "${LAST_CALL_FILE:-/tmp/foreman_last_call_out}"; then
+    if [[ $RC -ne 0 ]] && grep -q "NOT_DELIVERED" "${LAST_CALL_FILE:-$STATE_DIR/last_call_out}"; then
       say S6_OK "accept without a deliverable rejected: NOT_DELIVERED (rc=$RC) — board stays Awarded"
     else
       echo "VIDEO_FAIL S6: accept was NOT rejected as expected (rc=$RC) — HOLD the run, inform the lead" >&2
@@ -76,9 +76,9 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     ;;
   finish)
     JOB_ID=$(cat "$JOB_FILE")
-    WINNER=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['winner'])")
-    RECEIPT=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['receipt_hash'])")
-    ARTIFACT=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['artifact_hash'])")
+    WINNER=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['winner'])" "$STATE_DIR/artifact.json")
+    RECEIPT=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['receipt_hash'])" "$STATE_DIR/artifact.json")
+    ARTIFACT=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['artifact_hash'])" "$STATE_DIR/artifact.json")
     TX=$(near_call "$WINNER" "$CONTRACT" attach_receipt "{\"job_id\":$JOB_ID,\"receipt_hash\":\"$RECEIPT\"}")
     say RECEIPT "winner=$WINNER hash=${RECEIPT:0:16}… txid=$TX"
     TX=$(near_call "$WINNER" "$CONTRACT" submit_work "{\"job_id\":$JOB_ID,\"artifact_hash\":\"$ARTIFACT\"}")
@@ -109,7 +109,7 @@ PY
     COUNTER_REASON_RAW=$(near_view "$CONTRACT" get_counter_reason "{\"job_id\":$JOB_ID}" | tr -d '\n')
     SIDECAR="$REPO_ROOT/web/board/sidecar/job${JOB_ID}.json"
     mkdir -p "$(dirname "$SIDECAR")"
-    SC_JOB="$JOB_ID" SC_ACCEPT_TX="$ACCEPT_TX" SC_REASON="$COUNTER_REASON_RAW" SC_WINNER="$WINNER" SC_LOG="$LOG" \
+    SC_JOB="$JOB_ID" SC_ACCEPT_TX="$ACCEPT_TX" SC_REASON="$COUNTER_REASON_RAW" SC_WINNER="$WINNER" SC_LOG="$LOG" SC_REPO="$REPO_ROOT" \
       python3 - "$SIDECAR" <<'PY'
 import json, os, sys
 raw = os.environ["SC_REASON"].strip()
@@ -121,7 +121,7 @@ doc = {
     "accept_tx": os.environ["SC_ACCEPT_TX"],
     "counter_reason": reason,
     "winner": os.environ["SC_WINNER"],
-    "e2e_log": os.environ["SC_LOG"],
+    "e2e_log": os.path.relpath(os.environ["SC_LOG"], os.environ["SC_REPO"]),
 }
 open(sys.argv[1], "w").write(json.dumps(doc, indent=2, ensure_ascii=False) + "\n")
 print("SIDECAR_OK", sys.argv[1])
@@ -130,7 +130,7 @@ PY
     ;;
   dashboard)
     if ! lsof -nP -iTCP:8899 -sTCP:LISTEN >/dev/null 2>&1; then
-      (cd "$REPO_ROOT/web/board" && python3 -m http.server 8899 --bind 127.0.0.1 > /tmp/foreman_dashboard.log 2>&1 &)
+      (cd "$REPO_ROOT/web/board" && python3 -m http.server 8899 --bind 127.0.0.1 > "$STATE_DIR/dashboard.log" 2>&1 &)
       sleep 2
     fi
     JOB_ID=$(cat "$JOB_FILE" 2>/dev/null || echo 1)

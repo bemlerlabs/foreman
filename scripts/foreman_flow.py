@@ -28,7 +28,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 RUNNER = REPO / "scripts" / "video_run.sh"
 BOARD = REPO / "scripts" / "board_cli.py"
-JOB_FILE = Path("/tmp/foreman_video_job.txt")
+JOB_FILE = REPO / ".state" / "video_job.txt"
 PHASES = ("post", "bids", "middle", "acceptdemo", "finish", "dashboard", "recipe")
 
 
@@ -39,7 +39,7 @@ def _job_id() -> str:
         return "?"
 
 
-RUN_DIR = Path("/tmp/foreman_flow")
+RUN_DIR = REPO / ".state" / "flow"
 
 
 def _log_path(phase: str) -> Path:

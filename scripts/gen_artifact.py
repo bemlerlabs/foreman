@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """phase3: deterministic artifact/receipt hashes for the live bidding round.
 
-Reads /tmp/foreman_bids.json (from the official core/bidding/cli_bids.py),
+Reads .state/bids.json (from the official core/bidding/cli_bids.py),
 picks the winner (cheapest bid, RULES order price -> rep -> time) and computes
 its deliverable hash through the adapter's MOCK engine (deterministic: payload
-without ran_at). Writes /tmp/foreman_artifact.json
+without ran_at). Writes .state/artifact.json
   {winner, artifact_hash, receipt_hash}
 Seed identity: same cli_bids seed + same ADAPTER_JOB => byte-identical (T5).
 """
@@ -36,7 +36,8 @@ CRITERIA = json.loads(
 )
 BUDGET = int(os.environ.get("DEMO_BUDGET_YOCTO", "900000000000000000000000"))
 ADAPTER_JOB = os.environ.get("ADAPTER_JOB", "e2e-demo-foreman-demo")
-BIDS_FILE = Path(os.environ.get("BIDS_FILE", "/tmp/foreman_bids.json"))
+STATE_DIR = REPO_ROOT / ".state"
+BIDS_FILE = Path(os.environ.get("BIDS_FILE", str(STATE_DIR / "bids.json")))
 
 bids = json.load(open(BIDS_FILE))
 if len(bids) != 5:
@@ -72,7 +73,7 @@ if wasm and interp and Path(wasm).is_file() and Path(interp).is_file():
     # over real data from this run rather than over invented numbers.
     series = sorted(int(round(int(b["price_yocto"]) / 10**22)) for b in bids)
     payload = json.dumps({"values": series, "spec": SPEC})
-    receipt_out = Path("/tmp/foreman_receipt.json")
+    receipt_out = STATE_DIR / "receipt.json"
     receipt_out.unlink(missing_ok=True)
     env = dict(os.environ)
     env["PYTHONPATH"] = cell_path or env.get("PYTHONPATH", "")
@@ -88,8 +89,8 @@ if wasm and interp and Path(wasm).is_file() and Path(interp).is_file():
             [interp, "-c",
              "import json,sys;sys.path.insert(0,'core/receipts');"
              "from ephemora_adapter import verify_receipt;"
-             "r=json.load(open('/tmp/foreman_receipt.json'));"
-             "sys.exit(0 if verify_receipt(r) else 1)"],
+             "r=json.load(open(sys.argv[1]));"
+             "sys.exit(0 if verify_receipt(r) else 1)", str(receipt_out)],
             capture_output=True, text=True, env=env, cwd=str(REPO_ROOT),
         )
         if verify.returncode == 0:
@@ -110,7 +111,7 @@ if receipt_hash is None:
 
 out = {"winner": winner, "artifact_hash": artifact_hash, "receipt_hash": receipt_hash,
        "receipt_source": receipt_source, "packages": len(deliverable.packages)}
-Path("/tmp/foreman_artifact.json").write_text(json.dumps(out, indent=1) + "\n")
+(STATE_DIR / "artifact.json").write_text(json.dumps(out, indent=1) + "\n")
 print(f"ARTIFACT_OK winner={winner} packages={len(deliverable.packages)} "
       f"artifact={artifact_hash[:16]}… receipt={receipt_hash[:16]}… "
       f"receipt_source={receipt_source}")

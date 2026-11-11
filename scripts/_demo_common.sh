@@ -4,6 +4,9 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# State lives inside the checkout: the Ephe agent sandbox denies /tmp writes.
+STATE_DIR="${FOREMAN_STATE_DIR:-$REPO_ROOT/.state}"
+mkdir -p "$STATE_DIR"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 if [[ -f "$REPO_ROOT/.env" ]]; then
@@ -27,7 +30,7 @@ export DEMO_BUDGET_YOCTO="${DEMO_BUDGET_YOCTO:-900000000000000000000000}" # 0.9 
 DEADLINE_SECONDS="${DEADLINE_SECONDS:-600}"                                # lead directive: now + 10 min
 GAS="${GAS:-100000000000000}"                                              # 100 TGas
 
-LOG="${LOG:-/tmp/foreman_e2e_manual.log}"
+LOG="${LOG:-$STATE_DIR/e2e_manual.log}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Finding 07.11.: the default testnet RPC was temporarily DEPRECATED-429 (TooManyRequests on bid bursts);
@@ -74,7 +77,7 @@ near_call() {
     # near_send exit 3 = tx landed with a contract failure -> CALL-FAIL path below
   fi
   echo "$out" >>"$LOG"
-  LAST_CALL_FILE="${LAST_CALL_FILE:-/tmp/foreman_last_call_out}"
+  LAST_CALL_FILE="${LAST_CALL_FILE:-$STATE_DIR/last_call_out}"
   printf '%s' "$out" >"$LAST_CALL_FILE"
   if [[ $rc -ne 0 ]] || grep -qE '"Failure"|Failed|Error:' <<<"$out"; then
     echo "CALL-FAIL method=$method signer=$who args=$args" >&2

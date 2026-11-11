@@ -16,7 +16,9 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
-LOG="${LOG:-/tmp/foreman_market_offer.log}"
+STATE_DIR="${FOREMAN_STATE_DIR:-$HERE/../.state}"
+mkdir -p "$STATE_DIR"
+LOG="${LOG:-$STATE_DIR/market_offer.log}"
 MARKET_BASE="${MARKET_BASE_URL:-https://market.near.ai}"
 TASK_TEXT="${DEMO_SPEC:-research-report: NEAR testnet RPC latency, finality and gas costs across 3 regions; deliver CSV + summary + sources}"
 

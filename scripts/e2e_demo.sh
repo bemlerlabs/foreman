@@ -2,18 +2,18 @@
 # phase3: full runner of the live bidding round (T3/T4 proof, T5 gate: 2x identical flow).
 # Flow: gen_bids -> post_job -> sleep 5 -> bids (parallel) -> counter_offer -> award
 #       -> attach_receipt -> submit_work -> accept -> view verification.
-# All tx ids + commands go to /tmp/foreman_e2e_run<N>.log (N = running counter).
+# All tx ids + commands go to .state/e2e_run<N>.log (N = running counter).
 # call:   ./scripts/e2e_demo.sh
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
+source "$HERE/_demo_common.sh"
+
 N=1
-while [[ -f "/tmp/foreman_e2e_run${N}.log" ]]; do N=$((N + 1)); done
-export LOG="/tmp/foreman_e2e_run${N}.log"
+while [[ -f "$STATE_DIR/e2e_run${N}.log" ]]; do N=$((N + 1)); done
+export LOG="$STATE_DIR/e2e_run${N}.log"
 : >"$LOG"
 echo "== foreman e2e run $N — $(date -u +%FT%TZ) ==" >>"$LOG"
-
-source "$HERE/_demo_common.sh"
 
 # 0) Receipt environment: real WASM path when the tools are present (otherwise the run says "mock")
 # shellcheck disable=SC1091
@@ -22,7 +22,7 @@ source "$HERE/receipt_env.sh"
 # 1) Seed-deterministic bids (official generator) + artifact hashes
 E2E_SEED="${E2E_SEED:-foreman-demo}"
 python3 "$REPO_ROOT/core/bidding/cli_bids.py" --seed "$E2E_SEED" \
-  --out /tmp/foreman_bids.json --spec "$DEMO_SPEC" --budget-yocto "$DEMO_BUDGET_YOCTO" | tee -a "$LOG"
+  --out "$STATE_DIR/bids.json" --spec "$DEMO_SPEC" --budget-yocto "$DEMO_BUDGET_YOCTO" | tee -a "$LOG"
 ADAPTER_JOB="e2e-demo-$E2E_SEED" python3 "$HERE/gen_artifact.py" | tee -a "$LOG"
 
 # 2) Owner posts the job (deposit 0.9 NEAR, deadline now+10min)
@@ -47,9 +47,9 @@ TX=$(near_call "$FOREMAN" "$CONTRACT" award "{\"job_id\":$JOB_ID}")
 echo "AWARD_OK job=$JOB_ID by=$FOREMAN txid=$TX" | tee -a "$LOG"
 
 # 6) Winner: receipt -> artifact (mandatory order RULES/receipt-before-submit)
-WINNER=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['winner'])")
-RECEIPT=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['receipt_hash'])")
-ARTIFACT=$(python3 -c "import json;print(json.load(open('/tmp/foreman_artifact.json'))['artifact_hash'])")
+WINNER=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['winner'])" "$STATE_DIR/artifact.json")
+RECEIPT=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['receipt_hash'])" "$STATE_DIR/artifact.json")
+ARTIFACT=$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))['artifact_hash'])" "$STATE_DIR/artifact.json")
 TX=$(near_call "$WINNER" "$CONTRACT" attach_receipt "{\"job_id\":$JOB_ID,\"receipt_hash\":\"$RECEIPT\"}")
 echo "RECEIPT_OK winner=$WINNER hash=${RECEIPT:0:16}… txid=$TX" | tee -a "$LOG"
 TX=$(near_call "$WINNER" "$CONTRACT" submit_work "{\"job_id\":$JOB_ID,\"artifact_hash\":\"$ARTIFACT\"}")
