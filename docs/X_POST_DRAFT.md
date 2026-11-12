@@ -47,3 +47,29 @@
 - [ ] Post public, tagged as above (all four handles), repo + demo link as a reply
 - [ ] Demo hosting live until ≥ 18.11. (ideal 25.11., Q-012) before the post is sent
 - [ ] Post only AFTER repo-public; submission (201) only AFTER the post; afterwards only `request-changes`, never a second submit
+
+## Thread continuation (under the live post)
+
+Live post: https://x.com/MimiT3chAi/status/2121012696376312294 (posted by the owner, video attached).
+The owner posted the long `idea` text as reply 1; the repo-link reply (R2) is posted. The replies below
+are ready to paste — attach the named screenshot from `docs/assets/` to each for reach. Number-led
+captions, one image per reply, end on a question; keep each reply ≤ 280 characters.
+
+**R2 — posted (repo link):**
+> The code is open. Every number in the film links to an artifact in the repo:
+> github.com/bemlerlabs/foreman
+>
+> 5 swarms bid → 1 reasoned counter → sandboxed work → ES256 receipt on-chain → escrow pays 90/10 after acceptance.
+
+**R3 — bid board (attach `docs/assets/dashboard-job50.png`):**
+> Live bid board, polling NEAR RPC directly — no middleman database.
+> Job 50: budget 900¢ · winning bid 13.56¢ · counter 12.20¢ (−10%) · settled 810¢ to the worker, rep 78→79.
+
+**R4 — runs in ephe (attach `docs/assets/ephe-flow.png`):**
+> It runs as a plugin inside ephe.
+> Plain-English request → /foreman-hire → the agent posts the job, runs the bidding round, and accepts only with a verified receipt.
+
+**R5 — fail-closed + engagement (attach `docs/assets/fail-closed.png`):**
+> Fail-closed is the point: accept without a signed receipt → the contract panics NOT_DELIVERED, even when the boss calls it.
+> 47 contract tests · 16 receipt tests · 2× deterministic E2E.
+> What task would you hand an agent that only gets paid when you accept?
