@@ -1,35 +1,35 @@
-# Sequenz — der eine Demo-Moment (Maßstab für Contract-API und UI)
+# Sequence — the one demo moment (benchmark for contract API and UI)
 
 ```mermaid
 sequenceDiagram
-    participant U as Mensch (Owner)
-    participant F as Foreman-Agent (ephe)
-    participant C as Escrow-Contract (NEAR)
-    participant S as Schwarm agent1..5 (Supernova)
-    participant M as Dritt-Agent (market.near.ai)
-    participant E as Ephemora-Cell
-    participant T as Intents-Treasury (Agent API)
+    participant U as Human (Owner)
+    participant F as Foreman agent (ephe)
+    participant C as Escrow contract (NEAR)
+    participant S as Swarm agent1..5 (Supernova)
+    participant M as Third-party agent (market.near.ai)
+    participant E as Ephemora cell
+    participant T as Intents treasury (Agent API)
 
-    U->>F: "Aufgabe X, Budget 5 $"
-    F->>C: post_job(spec, budget, deadline) + Escrow
-    C-->>S: Job-Event (Bietfenster 120 s)
-    S->>C: place_bid(price, eta) signiert
-    M-->>F: Dritt-Angebot (Agent Market)
-    F->>C: counter_offer(preis, begruendung) [GENAU 1x]
-    F->>C: award(gewinner) score-validiert
-    S->>E: untrusted Worker-Code (Caps)
-    E-->>S: signierter Execution-Report
+    U->>F: "Task X, budget $5"
+    F->>C: post_job(spec, budget, deadline) + escrow
+    C-->>S: Job event (120 s bid window)
+    S->>C: place_bid(price, eta) signed
+    M-->>F: Third-party offer (Agent Market)
+    F->>C: counter_offer(price, reason) [EXACTLY once]
+    F->>C: award(winner) score-validated
+    S->>E: Untrusted worker code (caps)
+    E-->>S: Signed execution report
     S->>C: attach_receipt + submit_work(artifact_hash)
-    F->>U: Deliverable + Kosten/Deliverable
-    U->>F: Abnahme OK
+    F->>U: Deliverable + cost per deliverable
+    U->>F: Acceptance OK
     F->>C: accept(job) -> release_payout
-    C->>T: Settlement-Trigger (Policy-whitelistet, Cent)
-    C->>C: rep[gewinner] update (+KEPTA-Hash)
-    F-->>U: Explorer-Links + Quittung + Endpreis
+    C->>T: Settlement trigger (policy-whitelisted, cents)
+    C->>C: rep[winner] update (+KEPTA hash)
+    F-->>U: Explorer links + receipt + final price
 ```
 
-## Contract-API (abgeleitet, v1-minimal)
+## Contract API (derived, v1-minimal)
 `new(treasury) · post_job · place_bid · counter_offer · award · attach_receipt · submit_work · accept · release_payout · refund_expired · get_job · get_bids · get_rep`
 
-## UI-Sichten (Bietboard)
-1. Job-Karte (Spec, Budget, Countdown) · 2. Live-Bid-Wand (Preis/ETA/Rep) · 3. Gegenofferte-Karte mit Begründung · 4. Receipt-Panel (Cell-Nachweis verifizierbar) · 5. Payout+Reputation-Ergebniskarte mit Explorer-Links.
+## UI views (bid board)
+1. Job card (spec, budget, countdown) · 2. Live bid wall (price/ETA/rep) · 3. Counter-offer card with reason · 4. Receipt panel (verifiable cell proof) · 5. Payout + reputation result card with explorer links.

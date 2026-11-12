@@ -1,53 +1,53 @@
-# Foreman — Video-Sketch T7 (Ziel: 90–110 s, 1920×1080, 2 Screenshots/Videos pro Shot beweisbar)
+# Foreman — video sketch T7 (target: 90–110 s, 1920×1080, 2 screenshots/videos per shot provable)
 
-**Regel von heute:** Jeder Shot braucht ein reproduzierbares Artefakt (Terminal/Tx/Quote > Ästhetik).
-Sprechstil: sachlich, Zahlen statt Adjektive. Kein AI-Slop-Pathos. Untertitel-Track Deutsch, On-Screen-Englisch.
+**Rule of the day:** every shot needs a reproducible artifact (terminal/tx/quote > aesthetics).
+Speaking style: factual, numbers instead of adjectives. No AI-slop pathos. Subtitle track German, on-screen English.
 
-| # | Zeit | Shot | Quelle / Aufnahme | Beweis-Artefakt im Frame |
+| # | Time | Shot | Source / recording | Proof artifact in frame |
 |---|------|------|-------------------|--------------------------|
-| S1 | 0:00–0:08 | Titelkarte: FOREMAN — agents hire agents on NEAR | HyperFrames-Komposition (DESIGN.md-Tokens) | Tagline + 4 Track-Pills (swarms/agents/business/open) |
-| S2 | 0:08–0:16 | Problem: Agenten haben kein Bankkonto das darf | Komposition, 3 Stat-Kacheln | „no enforceable money layer" These |
-| S3 | 0:16–0:30 | ephe-Plugin aktiv: `/foreman-hire research-report … budget 0.9` | Live-Aufnahme ephe SSE-Chat + `ephe plugin list` | „foreman on 0.1.0" + Tx D7ZgMP… |
-| S4 | 0:30–0:45 | Board: offene Biet-Runde, Countdown läuft, 5 Bids trudeln ein | Bildschirmaufnahme web/board `?job=N` (Frischlauf video-final-09nov) | 5 Bids mit Cent-Preisen, LIVE-Puls, RPC-Kette |
-| S5 | 0:45–0:55 | Gegenofferte: GENAU EINE, Begründung on-chain | Zoom Panel 3 | `ON-CHAIN: GET_COUNTER_REASON(JOB=N) LIVE` |
-| S6 | 0:55–1:05 | Fail-closed: accept ohne Receipt → `NOT_DELIVERED` | Terminal-Mitschnitt take12-Muster (Frischlauf) | rc=3 contract_error=NOT_DELIVERED + leere Receipt-Karte |
-| S7 | 1:05–1:15 | Receipt: Worker in Ephemora-Cell → signiert → verifiziert | Terminal `verify_receipt: True` + Panel 4 | record_sha256 437d0f76… + fuel-Report |
-| S8 | 1:15–1:25 | Abnahme → Payout → Reputation | Board Panel 5 + nearblocks-Link + Rep-Kurve | +0.81/+0.0897, Rep 50→72 Kurve |
-| S9 | 1:25–1:35 | Geld-Echtheit: Intents-Policy per Touch-ID + dry:true-Quote | /tmp/board_proof Popup-Shots + CLI-Output | agent 7a317e59…, policy_hash 07426bce…, Quote-ID |
-| S10 | 1:35–1:45 | Dritt-Hire ODER deklarierte Alternative | Montag Entscheidung | echt: Fremd-Wallet ≠ eigene 8 Konten |
-| S11 | 1:45–1:52 | Zahlenkarte: cost per deliverable in Cent, Biet-Spread, Rep-Δ | Daten aus Sidecars (gemessen) | {cost_per_deliverable} real gemessen |
-| S12 | 1:52–2:00 | Ende: GitHub + Tracks + Disclaimer (Mock-Schwärme offengelegt) | Komposition | bemlerlabs/foreman · Apache-2.0 |
+| S1 | 0:00–0:08 | Title card: FOREMAN — agents hire agents on NEAR | HyperFrames composition (DESIGN.md tokens) | Tagline + 4 track pills (swarms/agents/business/open) |
+| S2 | 0:08–0:16 | Problem: agents have no bank account that may | Composition, 3 stat tiles | "no enforceable money layer" thesis |
+| S3 | 0:16–0:30 | ephe plugin active: `/foreman-hire research-report … budget 0.9` | Live recording ephe SSE chat + `ephe plugin list` | "foreman on 0.1.0" + tx D7ZgMP… |
+| S4 | 0:30–0:45 | Board: open bidding round, countdown running, 5 bids trickling in | Screen recording web/board `?job=N` (fresh run video-final-09nov) | 5 bids with cent prices, LIVE pulse, RPC chain |
+| S5 | 0:45–0:55 | Counter-offer: EXACTLY ONE, reason on-chain | Zoom panel 3 | `ON-CHAIN: GET_COUNTER_REASON(JOB=N) LIVE` |
+| S6 | 0:55–1:05 | Fail-closed: accept without receipt → `NOT_DELIVERED` | Terminal recording take12 pattern (fresh run) | rc=3 contract_error=NOT_DELIVERED + empty receipt card |
+| S7 | 1:05–1:15 | Receipt: worker in Ephemora cell → signed → verified | Terminal `verify_receipt: True` + panel 4 | record_sha256 437d0f76… + fuel report |
+| S8 | 1:15–1:25 | Acceptance → payout → reputation | Board panel 5 + nearblocks link + rep curve | +0.81/+0.0897, rep 50→72 curve |
+| S9 | 1:25–1:35 | Money realness: Intents policy via Touch ID + dry:true quote | /tmp/board_proof popup shots + CLI output | agent 7a317e59…, policy_hash 07426bce…, quote ID |
+| S10 | 1:35–1:45 | Third-party hire OR declared alternative | Monday decision | real: foreign wallet ≠ own 8 accounts |
+| S11 | 1:45–1:52 | Numbers card: cost per deliverable in cents, bid spread, rep Δ | Data from sidecars (measured) | {cost_per_deliverable} really measured |
+| S12 | 1:52–2:00 | End: GitHub + tracks + disclaimer (mock swarms disclosed) | Composition | bemlerlabs/foreman · Apache-2.0 |
 
-**Offen:** S10 Entscheidung (Markt-Registrierung/Guthaben), S4/S6 Frischlauf-Timing (near-feasibility postet, scout nimmt auf).
-**Sound:** ruhiger Bed-Track, Voiceover erst nach Schnitt-Freigabe.
+**Open:** S10 decision (market registration/balance), S4/S6 fresh-run timing (near-feasibility posts, scout records).
+**Sound:** calm bed track, voiceover only after edit approval.
 
 ---
 
-## Judge-Beschuss 09.11. (video-final-09nov, 94 s, 11 Szenen) — judge-backsolver
-**Votum:** Freigabe reif nach 5 kleinen Eingriffen; 3 der 4 Kernbeweise sind in 35 s sichtbar, die Lese- und Glaubwürdigkeitsdetails tragen den Rest. Bewiesene Kernkette: post → 5 Bids on-chain → genau EINE begründete Gegenofferte → Fail-closed → signiertes Receipt.
+## Judge review 09.11. (video-final-09nov, 94 s, 11 scenes) — judge-backsolver
+**Verdict:** ready for approval after 5 small interventions; 3 of the 4 core proofs are visible in 35 s, the readability and credibility details carry the rest. Proven core chain: post → 5 bids on-chain → exactly ONE reasoned counter-offer → fail-closed → signed receipt.
 
-### TOP-5-ÄNDERUNGEN (Impact/Aufwand)
-1. **Ehrlichster-Fehler-muss-lesbar-sein-Prinzip:** Das stärkste Beweis-Asset ist der Terminal-Roh-Screenshot `/tmp/ephe_take12_3_accept_error.png` (take12, Job 31): Zeile „00:21 accept OHNE receipt/submit … Contract-Panic NOT_DELIVERED", echter near-cli-Fehlerblob `FunctionCallError {ExecutionError: Smart contract panicked: NOT_DELIVERED}` + echte Call-tx `gzWA9Q5HVh9ktoXaJ6UPZFrXFSHVRAZoRxFPHQ3OO`. Im Film ist derselbe Shot so weit runterskaliert, dass er ~35 Zeilen unlesbaren Graubrei ergibt. **Fix:** echten Screenshot 1:1 einblenden und 2–3 s statisch auf die Fehlerzeile zoomen (der 740 px breite Streifen in t46 ist unbrauchbar). Das ist der Haseeb-Shot des Films.
-2. **S06-Bildunterschrift korrigieren (Haseeb-Falle):** „… — even when your own agent asks" ist als Claim falsch: accept wird vom BOSS-Konto ausgeführt (EVIDENCE: accept accountID boss.foreman-team.testnet), nicht vom Worker-Agenten. Die Behauptung lenkt vom eigentlichen, stärkeren Fakt ab. **Fix:** „— even when the boss himself calls it."
-3. **Receipt-Fenster füllen:** In S07 ist das Terminal-Fenster zu ~90 % Schwarzfläche; `verify_receipt: True` + 64-Zeichen-`record_sha256 437d0f765847…268de46` (in EVIDENCE als reproduziert verifiziert) schwimmen verloren oben links. **Fix:** `fuel_consumed`/`mem_peak`/`egress_log_hash` des signed Records (3–4 Zeilen aus EVIDENCE/Receipt-JSON) dazustellen; ein Frame = Sandbox-Attest statt Einzeiler-Behauptung.
-4. **S04-Bid-Wand mobil lesbar machen:** Kontonamen sind im Vollbild rechts angeschnitten („gent4.foreman-team.testnet"), alle fünf „ETA 24 s" = verdächtig uniform. **Fix:** rechte Spalten (ETA/Score) beschneiden, Kontonamen vollständig; ein real gemessener Score-Wert pro Zeile statt uniformer ETA.
-5. **S11-Disclosure-Anmutung:** Der Text ist inhaltlich vorbildlich (team-controlled accounts + no backend + EVIDENCE_LOG-Verweis, drittstellen-konsistent zu README/X-Post), aber auf 1080p graublau auf schwarz mit ~2:1-Kontrast und wirkt ausgeblendet. **Fix:** 1–2 s länger halten, Kontrast/Helligkeit hoch, Label „DISCLOSURE" gut sichtbar. Zusätzlich (klein): S03 „The boss agent posts the job" zeigt nur `ephe plugin list` — die Tx-Panels tauchen erst ab S04 auf; 2 s `/foreman-hire`-SSE-Chat mit Tx-ID nachrüsten, sonst bleibt die Autonomie-Dokumente-Behauptung im selben Shot unbelegt. **Nicht ändern:** das „no middleman database"-Claim ist gedeckt — Board pollt direkt gegen RPC (EVIDENCE: board_cli liest contract views).
+### TOP-5 CHANGES (impact/effort)
+1. **Most-honest-error-must-be-readable principle:** the strongest proof asset is the raw terminal screenshot `/tmp/ephe_take12_3_accept_error.png` (take12, job 31): line "00:21 accept WITHOUT receipt/submit … contract panic NOT_DELIVERED", a real near-cli error blob `FunctionCallError {ExecutionError: Smart contract panicked: NOT_DELIVERED}` + a real call tx `gzWA9Q5HVh9ktoXaJ6UPZFrXFSHVRAZoRxFPHQ3OO`. In the film the same shot is scaled down so far that it yields ~35 lines of unreadable gray mush. **Fix:** show the real screenshot 1:1 and zoom statically onto the error line for 2–3 s (the 740 px wide strip in t46 is unusable). This is the Haseeb shot of the film.
+2. **Correct the S06 caption (Haseeb trap):** "… — even when your own agent asks" is false as a claim: accept is executed by the BOSS account (EVIDENCE: accept accountID boss.foreman-team.testnet), not by the worker agent. The claim distracts from the actual, stronger fact. **Fix:** "— even when the boss himself calls it."
+3. **Fill the receipt window:** in S07 the terminal window is ~90% black area; `verify_receipt: True` + the 64-char `record_sha256 437d0f765847…268de46` (verified as reproduced in EVIDENCE) float lost top left. **Fix:** add `fuel_consumed`/`mem_peak`/`egress_log_hash` of the signed record (3–4 lines from EVIDENCE/receipt JSON); one frame = a sandbox attestation instead of a one-line claim.
+4. **Make the S04 bid wall readable on mobile:** account names are cut off on the right in full screen ("gent4.foreman-team.testnet"), all five "ETA 24 s" = suspiciously uniform. **Fix:** crop the right columns (ETA/score), account names complete; one really measured score value per row instead of a uniform ETA.
+5. **S11 disclosure look:** the text is exemplary in content (team-controlled accounts + no backend + EVIDENCE_LOG reference, consistent across README/X post), but on 1080p it is gray-blue on black with ~2:1 contrast and looks faded out. **Fix:** hold 1–2 s longer, raise contrast/brightness, make the "DISCLOSURE" label clearly visible. Additionally (small): S03 "The boss agent posts the job" shows only `ephe plugin list` — the tx panels only appear from S04; add 2 s of `/foreman-hire` SSE chat with a tx ID, otherwise the autonomy-documents claim stays unproven in the same shot. **Do not change:** the "no middleman database" claim is covered — the board polls directly against RPC (EVIDENCE: board_cli reads contract views).
 
-### K-MATRIX-BEWERTUNG DER REIHENFOLGE
-Problem (These, gut getimt „They just don't") → Plugin/Autonomie (K1) → Bids (K2-Live) → Counter (K2-Tiefe) → Fail-closed (Beweiskultur-Highlight) → Receipt (K2-Tiefe) → Payout (K2-Geld) → Treasury/Policy (K2-Treasury) → Zahlen (Impact) → Ende. Passt: die vier stärksten Beweise sind in den ersten 55 s, der Zuschauer muss nichts zurückspulen. Einzige Schwäche: S01 (0–6 s) verkauft nicht, warum das jemanden außerhalb von NEAR kümmert — ein 3-Sekunden-„why care"-Satz in S02 (z. B. „Every agent that wants to buy work has the same missing piece") wäre der Billigste aller Fixes; Titel „Agents have ideas" (S02) funktioniert, „with real money rails" (S01) ist nah dran — nicht blockierend.
+### K-MATRIX ASSESSMENT OF THE ORDER
+Problem (thesis, well timed "They just don't") → plugin/autonomy (K1) → bids (K2-live) → counter (K2-depth) → fail-closed (proof-culture highlight) → receipt (K2-depth) → payout (K2-money) → treasury/policy (K2-treasury) → numbers (impact) → end. Fits: the four strongest proofs are in the first 55 s, the viewer need not rewind anything. Only weakness: S01 (0–6 s) does not sell why anyone outside NEAR should care — a 3-second "why care" sentence in S02 (e.g. "Every agent that wants to buy work has the same missing piece") would be the cheapest of all fixes; the title "Agents have ideas" (S02) works, "with real money rails" (S01) is close — not blocking.
 
-### KÜRZUNG AUF 100 s (realistisch: 94 → ~75 s)
-**NIEMALS schneiden:** S03 (Plugin + Autonomie, K1), S04 (Live-Bids + RPC-Kette), S05 (eine begründete Gegenofferte — Unique Feature), S06 (Fail-closed — stärkstes Unterscheidungsmerkmal, mit Fix 1), S07 (signed Receipt), S08 (Payout-Zahlen + Panel mit `release_payout`/`accept`-Tx-IDs), S11 (Disclosure).
-**VERZICHTBAR (gestrichen):** S09 Treasury/Policy — dry:true ist als einziger Intents-Beweis im Film (kein Execute-Tx, s. Glaubwürdigkeitsblock) und der Overlay-„quote …dry:true" in S09 konserviert; S10 Zahlenkarte — Zahlen stecken bereits in S04/S08; S02 These-Kacheln — These in 3 s in S01/S03 unterbringen.
-**S10 Dritt-Hire (Szenenplan):** nur mit echtem Fremd-Hire (Verkäufer-Handle + Wallet ≠ eigene 8 Konten, tx im Frame, Negativ-Check im EVIDENCE_LOG dokumentiert); wenn unklar: ganz raus + X-Post V2 statt V3 — niemals „declared self" einspielen und V3 behalten.
+### CUT TO 100 s (realistic: 94 → ~75 s)
+**NEVER cut:** S03 (plugin + autonomy, K1), S04 (live bids + RPC chain), S05 (one reasoned counter-offer — unique feature), S06 (fail-closed — strongest differentiator, with fix 1), S07 (signed receipt), S08 (payout numbers + panel with `release_payout`/`accept` tx IDs), S11 (disclosure).
+**DISPENSABLE (struck):** S09 treasury/policy — dry:true is the only Intents proof in the film (no execute tx, see credibility block) and the overlay "quote …dry:true" in S09 preserves it; S10 numbers card — numbers already sit in S04/S08; S02 thesis tiles — fit the thesis into 3 s in S01/S03.
+**S10 third-party hire (scene plan):** only with a real foreign hire (seller handle + wallet ≠ own 8 accounts, tx in frame, negative check documented in EVIDENCE_LOG); if unclear: drop entirely + X post V2 instead of V3 — never play "declared self" and keep V3.
 
 ### CLAIMS vs. EVIDENCE
-1. S09 „Caps enforced by policy, not by trust" — im Film nur dry:true-Quote + policy_hash; **kein Execute-Tx**, kein Wallet-Funding, kein Intents-Settlement. Claim-Grad zu hoch. **Fix:** Satz auf „Spending caps live in the policy — dry-run verified; mainnet settlement follows Q-007." umformulieren ODER Execute-Tx-Beweis in 1–2 s nachreichen, dann kann der X-Post „paid actual cents via Intents" wahr bleiben (V3-Rückgrat).
-2. S01 „with real money rails" — gedeckt durch NEAR-Testnet-Payout (EVIDENCE PAYOUT_OK), aber nicht durch Intents-Settlement; S08 „real transaction that accepts" ist sauber formuliert. Kein Film-Fix nötig, nur kein „real money"-Narrativ ohne den Execute-Tx.
-3. S04 „no middleman database" — gedeckt (direct contract polling), OK.
-4. S05 „10 % unter Bestbid" — 13,55 → 12,19 sind faktisch 10,04 %, „10 %" ist korrekt gerundet.
-5. S10 „5/5 on-chain tx" — durch die fünf place_bid-tx gedeckt, wenn die 5/5-Anzahl im S04-Overlay auf die fünf Bid-Transaktionen referenziert (ist plausibel, kurz verifizieren).
+1. S09 "Caps enforced by policy, not by trust" — in the film only a dry:true quote + policy_hash; **no execute tx**, no wallet funding, no Intents settlement. Claim level too high. **Fix:** reword the sentence to "Spending caps live in the policy — dry-run verified; mainnet settlement follows Q-007." OR add execute-tx proof in 1–2 s, then the X post "paid actual cents via Intents" can stay true (V3 backbone).
+2. S01 "with real money rails" — covered by the NEAR testnet payout (EVIDENCE PAYOUT_OK), but not by Intents settlement; S08 "real transaction that accepts" is cleanly worded. No film fix needed, just no "real money" narrative without the execute tx.
+3. S04 "no middleman database" — covered (direct contract polling), OK.
+4. S05 "10% below best bid" — 13.55 → 12.19 is actually 10.04%, "10%" is correctly rounded.
+5. S10 "5/5 on-chain tx" — covered by the five place_bid tx, if the 5/5 count in the S04 overlay references the five bid transactions (plausible, verify briefly).
 
-### GLAUEWÜRDIGKEIT / AI-SLOP-SPUREN
-- **EN/DE-Mix in Beweismitteln:** Gegenofferten-Text deutsch („Festpreis 10 % unter Bestbid"), Counter-Overlay gemischt, Film sonst EN-on-screen — wirkt generiert statt dokumentiert. Fix: Zitat-Overlay einheitlich; die deutsche Original-Zeile ist authentisch und darf bleiben, aber dann konsequent.
-- Disclosure-Kontrast (s. Fix 5), „quote …dry:true"-Overlay-Verkürzung (kein Trick, aber schlechtes Licht), S10 „31 jobs on escrow.foreman-team.testnet" ist stark (echte Betriebslast, kein Mock-Verdacht), Ephemora-Cell Apache-Attribution auf S11 ✓, „Built with ephe" ✓, keine Testnet-Warnung nötig (steht in jeder Kontoadresse).
+### CREDIBILITY / AI-SLOP TRACES
+- **EN/DE mix in evidence:** counter-offer text German ("Festpreis 10 % unter Bestbid"), counter overlay mixed, film otherwise EN on-screen — looks generated rather than documented. Fix: make the quote overlay uniform; the German original line is authentic and may stay, but then consistently.
+- Disclosure contrast (see fix 5), "quote …dry:true" overlay shortening (no trick, but bad light), S10 "31 jobs on escrow.foreman-team.testnet" is strong (real operating load, no mock suspicion), Ephemora cell Apache attribution on S11 ✓, "Built with ephe" ✓, no testnet warning needed (it is in every account address).

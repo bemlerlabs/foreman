@@ -1,7 +1,7 @@
-# Anfrage an NEAR Intents Team (t.me/near_intents) — vor Nutzung von API-Geld einreichen
-# (Beweiskultur: Fund-Verhalten der Demo-Umgebung bestätigen lassen, wie in 03_NEAR_FEASIBILITY.md vermerkt)
+# Request to the NEAR Intents team (t.me/near_intents) — submit before using API money
+# (Proof culture: have the demo environment's funding behavior confirmed, as noted in 03_NEAR_FEASIBILITY.md)
 
---- Copy-Paste-Text (Englisch, hackathon-Kontext, kurz) ---
+--- Copy-paste text (English, hackathon context, short) ---
 
 Hi NEAR Intents team 👋 Building "Foreman" for NEAR HACKATHON (repo will be public by 13.11).
 Two quick questions before we wire real (tiny) money into our demo:
@@ -14,10 +14,10 @@ Two quick questions before we wire real (tiny) money into our demo:
    owner signs budget/destination limits once, and the agent operates grants (ngt_…) within
    them? Our caps: NEAR/USDC only, ≤ 3 USD total, dry:true first for every quote.
 
-Would love a 👍/👎 on using the demo endpoint with cent amounts — we'd rather ask than surprise anyone. Danke! #NEARHackathon
+Would love a 👍/👎 on using the demo endpoint with cent amounts — we'd rather ask than surprise anyone. Thanks! #NEARHackathon
 
 
---- Update 06.11. — zwei Zusatztitel zum Posten (Q3+Q4) ---
+--- Update 06.11. — two additional items to post (Q3+Q4) ---
 
 3. agent_create comes back as intent.standard=nep366. Our browser wallet (Meteor) exposes signMessage/signAndSendTransaction
    but no signDelegateActions. Which wallet/version in your stack implements wallet.signDelegateActions for NEP-366
@@ -30,7 +30,7 @@ Would love a 👍/👎 on using the demo endpoint with cent amounts — we'd rat
 Bonus: any hackathon dev-funding (a few NEAR on mainnet) for the live-swap part of our demo? Happy to credit in the
 demo post. #NEARHackathon
 
---- Ende Update ---
+--- End update ---
 
---- Ende ---
-Status: ⬜ vom USER in t.me/near_intents zu senden (oder Lead übergibt Text)
+--- End ---
+Status: ⬜ to be sent by the USER in t.me/near_intents (or the Lead hands over the text)

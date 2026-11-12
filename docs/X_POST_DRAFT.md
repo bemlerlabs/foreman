@@ -1,27 +1,27 @@
-# X_POST_DRAFT — Demo-Post Foreman (Entwurf zur Abnahme durch den Lead)
-<!-- Regeln aus HACKATHON.md „The demo post": erste Zeile = User-Problem für Außenstehende · EIN vollständiger Moment · NEAR-Rolle konkret benannt · Next Step. Video MUSS vom Menschen selbst gepostet werden; Agenten dürfen nur den Text entwerfen. Zeichen-Zählung inkl. Tags geprüft (2026-11-05): V1=280 V2=270 V3=271 (mit {cost_per_deliverable}→"$0.04"), Langfassung=1701. Platzhalter vor Post-Vergabe ersetzen; Repo-/Demo-Links als Antwort unter den Post hängen (halten den Post unter 280). -->
+# X_POST_DRAFT — Foreman demo post (draft for Lead approval)
+<!-- Rules from HACKATHON.md "The demo post": first line = user problem for outsiders · ONE complete moment · NEAR role named concretely · next step. The video MUST be posted by the human themselves; agents may only draft the text. Character count incl. tags checked (2026-11-05): V1=280 V2=270 V3=271 (with {cost_per_deliverable}→"$0.04"), long version=1701. Replace placeholders before post approval; hang repo/demo links as a reply under the post (keeps the post under 280). -->
 
-## Variante 1 — Problem-first (Haseeb-Rahmen: Zahl statt Narrativ)
+## Variant 1 — problem-first (Haseeb frame: number instead of narrative)
 > AI agents can't buy work: nobody pays before delivery is proven. Our agent hires competing agent swarms on NEAR: live bids, ONE reasoned counter-offer, on-chain escrow, payout after acceptance. {cost_per_deliverable} per delivered task. Built @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
 
-*280 Zeichen inkl. Platzhalter-Füllung. Pflicht: {cost_per_deliverable} durch reale Zahl aus docs/EVIDENCE_LOG.md ersetzen (Vergleichsbasis: Auftragsspec + Stundenlohn-Äquivalent), sonst Variante 2 nehmen.*
+*280 characters incl. placeholder fill. Mandatory: replace {cost_per_deliverable} with a real number from docs/EVIDENCE_LOG.md (comparison basis: job spec + hourly-wage equivalent), otherwise take variant 2.*
 
-## Variante 2 — Demo-Moment-first (der 60-Sekunden-Beweis)
+## Variant 2 — demo-moment-first (the 60-second proof)
 > 60s: task+budget in → 5 swarms on NEAR sub-accounts bid → agent negotiates ONE counter-offer → winner runs sandboxed, signs the execution receipt on-chain → escrow releases cents via NEAR Intents. Video+repo ↓ Built @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
 
-*271 Zeichen. Stark, wenn das Video wirklich den Countdown + Bid-Wand + Receipt-Panel zeigt (sonst ist "60s" eine unbewiesene Behauptung — OKC-Regel).*
+*271 characters. Strong if the video really shows the countdown + bid wall + receipt panel (otherwise "60s" is an unproven claim — OKC rule).*
 
-## Variante 2-final — für den Post freigegebenes Muster (2026-11-12, 265 Zeichen inkl. Tags)
+## Variant 2-final — pattern approved for the post (2026-11-12, 265 characters incl. tags)
 > AI agents can't pay each other safely. Foreman on NEAR: 5 swarms bid → ONE reasoned counter-offer → sandboxed work, ES256 receipt on-chain → escrow pays 90/10 after acceptance. Built at NEAR HACKATHON @NEARProtocol #NEARHackathon #AIAgents @NearLegion @NearBuilders
 
-*Ersetzt V2: "60s" war unbewiesen (der Film ist 98 s), und "escrow releases cents via NEAR Intents" war ein Overclaim — der Payout läuft über accept() des Escrow-Contracts (90/10, Tx FBmYW7aU…). Intents ist als dry:true-vorbereitete Policy-Treasury belegt, nicht als Settlement. Video anhängen (foreman-film_final.mp4); Repo-Link (+ Live-Board-URL, falls gehostet) als Antwort unter den Post.*
+*Replaces V2: "60s" was unproven (the film is 98 s), and "escrow releases cents via NEAR Intents" was an overclaim — the payout runs through accept() of the escrow contract (90/10, tx FBmYW7aU…). Intents is proven as a dry:true-prepared policy treasury, not as settlement. Attach the video (foreman-film_final.mp4); repo link (+ live board URL if hosted) as a reply under the post.*
 
-## Variante 3 — Market-of-markets-first (Mert/Illia-Rahmen)
+## Variant 3 — market-of-markets-first (Mert/Illia frame)
 > Our agent bought work from a stranger: quoted on market.near.ai, haggled once, escrowed on NEAR, paid real cents via the Intents Agent API policy treasury, kept signed receipts. An economy between agents, not a demo. @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
 
-*271 Zeichen. Höchste Resonanz-Chance im NEAR-Kontext, weil Agent-Market-Integration Partner-Signal ist. Nur wählbar, wenn der Dritt-Hire live passiert ist (sonst nicht posten — Lüge).*
+*271 characters. Highest resonance chance in the NEAR context, because Agent Market integration is a partner signal. Only selectable if the third-party hire happened live (otherwise do not post — a lie).*
 
-## Langfassung — 2000-Zeichen-`idea`-Feld der Submission (und Faden-Antwort zum Post)
+## Long version — the 2000-character `idea` field of the submission (and thread reply to the post)
 > AI agents can read, write and reason — but they still cannot buy work from each other with real money. There is no enforceable money flow between agents: who pays before delivery and quality are proven, and who can prove what ran in their name?
 >
 > Foreman is a general-contractor agent: you give it a task and a budget. It breaks the task down, gets competing quotes from 5 autonomous swarms (each with its own NEAR sub-account and function-call key) and from independent third-party agents on the NEAR AI Agent Market (market.near.ai), places exactly one reasoned counter-offer, awards by score, and pays only after acceptance.
@@ -39,11 +39,11 @@
 > Repo + demo video ↓
 > @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
 
-*1706 Zeichen inkl. Tags — passt exakt ins `idea`-Feld (20–2000, HACKATHON.md) UND als 1. Faden-Antwort. Für das idea-Feld dürfen die Handles am Ende entfallen (kein Twitter-Feld).*
+*1706 characters incl. tags — fits exactly into the `idea` field (20–2000, HACKATHON.md) AND as the 1st thread reply. For the idea field the handles at the end may be dropped (not a Twitter field).*
 
-## Auslieferungs-Checkliste (vor dem Posten, vom Menschen abzuhaken)
-- [ ] Video: EIN Durchlauf des Demo-Moments (Job → Bids → Gegenofferte → Receipt → Payout), ungeschnitten ≥ die 60 s, Panels lesbar
-- [ ] {cost_per_deliverable} gesetzt und durch EVIDENCE_LOG-Artefakt gedeckt
-- [ ] Post öffentlich, tagged wie oben (alle vier Handles), Repo- + Demo-Link als Antwort
-- [ ] Demo-Hosting bis ≥ 18.11. (ideal 25.11., Q-012) live, bevor der Post abgesetzt wird
-- [ ] Post erst NACH Repo-Public; Submission (201) erst NACH dem Post; danach nur noch `request-changes`, niemals Zweit-Submit
+## Delivery checklist (before posting, to be ticked by the human)
+- [ ] Video: ONE run of the demo moment (job → bids → counter-offer → receipt → payout), uncut ≥ the 60 s, panels readable
+- [ ] {cost_per_deliverable} set and covered by an EVIDENCE_LOG artifact
+- [ ] Post public, tagged as above (all four handles), repo + demo link as a reply
+- [ ] Demo hosting live until ≥ 18.11. (ideal 25.11., Q-012) before the post is sent
+- [ ] Post only AFTER repo-public; submission (201) only AFTER the post; afterwards only `request-changes`, never a second submit

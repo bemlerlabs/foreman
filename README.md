@@ -71,6 +71,23 @@ print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_sta
   --input '{"latencies_ms":[12.4,301.2,88.0,55.1,42.7]}' --out /tmp/receipt.json
 ```
 
+## See it run
+
+**Demo film (98 s, 1080p):** [docs/assets/demo-film.mp4](docs/assets/demo-film.mp4) — one continuous
+take on testnet: plain-English request → 5 swarm bids → exactly one reasoned counter-offer →
+fail-closed reject without a receipt → signed ES256 receipt → 90/10 payout → reputation update.
+
+| | |
+|---|---|
+| Live bid board, job 50 | ![Foreman bid board](docs/assets/dashboard-job50.png) |
+| Settled result (810.00 ¢ worker, 10 % fee, rep 78→79) | ![settled result](docs/assets/dashboard-result.png) |
+| Fail-closed: accept without receipt panics NOT_DELIVERED | ![fail-closed](docs/assets/fail-closed.png) |
+| In ephe: plain-English request routes to the Foreman skill | ![ephe request](docs/assets/ephe-request.png) |
+| In ephe: bids land on-chain, board state in chat | ![ephe bids](docs/assets/ephe-bids.png) |
+
+Animated: [ephe-request.gif](docs/assets/ephe-request.gif) · [ephe-bids.gif](docs/assets/ephe-bids.gif) ·
+[ephe-flow.png](docs/assets/ephe-flow.png) (plugin run, job 50).
+
 ## Using the plugin in ephe
 
 Foreman ships as an ephe plugin (`plugin-pack/`, installed outside this repo for license hygiene):
