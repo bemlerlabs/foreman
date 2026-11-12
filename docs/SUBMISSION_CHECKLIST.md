@@ -10,7 +10,7 @@ Stand: Film final, README EN, Payload vorbereitet. **Nichts ist veröffentlicht*
 | Film | 98 s, 1920×1080, 30 fps, neue VO (Stimme vom Owner abgenommen), alle Zahlen = Job 50, keine Home-Pfade | `foreman-film/renders/foreman-film_final.mp4` (Desktop-Kopie inhaltsgleich) |
 | README | Englisch, do-X→see-Y live gemessen (16 Receipt-Tests, 47 Contract-Tests, verify True) | Commit `9e83e31` |
 | Board-Payout-Fix | Budget − 10 % statt Bid-Preis | Commit `f69ffa2` |
-| Payload | `docs/SUBMISSION_2026-11-13.json`: requestId fix, size "1", tracks [swarms,agents,business,open], projectName Foreman, leadName bemlerlabs, nearAddress bemlerlabs.near, idea 1961 Z. ohne Platzhalter, Intents ehrlich formuliert | Commit `bb1e656` + leadName-Fill |
+| Payload | `docs/SUBMISSION_2026-11-13.json`: requestId fix, size "1", tracks [swarms,agents,business,open], projectName Foreman, leadName bemlerlabs, nearAddress bemlerlabs.near, idea 1691 Z. ohne Platzhalter/Handles, Intents ehrlich formuliert | Commit `bb1e656` + leadName-Fill |
 | X-Text | Variante 2-final, 274 Zeichen inkl. Tags, „Built at NEAR HACKATHON", alle vier Handles | `docs/X_POST_DRAFT.md` |
 | Offen im Payload | `email` (Owner trägt ein), `demoUrl` (entsteht mit dem X-Post), `consent` (Owner-Klick) | — |
 
@@ -22,8 +22,8 @@ Stand: Film final, README EN, Payload vorbereitet. **Nichts ist veröffentlicht*
    Muss bis 14.11. 23:59 UTC public bleiben; LICENSE (Apache-2.0) liegt.
 3. **Optional Hosting** (Organizer: „hosted demo helps", online bis ≥ 18.11.): auf Zuruf baue ich
    einen Qoder-Sites-Entwurf des Read-only-Boards; veröffentlichen erst nach Owner-Okay.
-4. **X-Post** (Video anhängen: `foreman-film_final.mp4`), Text exakt:
-   > AI agents can't pay each other safely. Foreman on NEAR: task+budget in → 5 swarms bid → ONE reasoned counter-offer → sandboxed work, ES256 receipt on-chain → escrow pays 90/10 after acceptance. Built at NEAR HACKATHON ↓ @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
+4. **X-Post** vom Account **@MimiT3chAi (Michael Bemler)**, Video anhängen: `foreman-film_final.mp4`, Text exakt (265 Zeichen):
+   > AI agents can't pay each other safely. Foreman on NEAR: 5 swarms bid → ONE reasoned counter-offer → sandboxed work, ES256 receipt on-chain → escrow pays 90/10 after acceptance. Built at NEAR HACKATHON @NEARProtocol #NEARHackathon #AIAgents @NearLegion @NearBuilders
 
    Danach **Antwort unter den Post**: `Repo: https://github.com/bemlerlabs/foreman` (+ Live-Board-URL falls gehostet).
    Die Post-URL ist das `demoUrl` Feld.
@@ -38,7 +38,7 @@ Stand: Film final, README EN, Payload vorbereitet. **Nichts ist veröffentlicht*
    | NEAR wallet | bemlerlabs.near |
    | Repository link | https://github.com/bemlerlabs/foreman |
    | Demo post link | (X-Post-URL aus Schritt 4) |
-   | What did you build? | idea aus dem Payload, 1961 Zeichen — in die Zwischenablage: `python3 -c "import json;print(json.load(open('docs/SUBMISSION_2026-11-13.json'))['idea'])" \| pbcopy` |
+   | What did you build? | idea aus dem Payload, 1691 Zeichen — in die Zwischenablage: `python3 -c "import json;print(json.load(open('docs/SUBMISSION_2026-11-13.json'))['idea'])" \| pbcopy` |
    | Website | **leer lassen** (Spam-Trap, jeder Wert rejectet) |
    | Consent | Checkbox erst nach eigenem Lesen setzen |
 6. **Absenden, einmal.** Fehlerregeln: 409 → `/request-changes` (nie Zweit-Submit, nie Link/Email wechseln);

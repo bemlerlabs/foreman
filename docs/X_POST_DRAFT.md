@@ -11,8 +11,8 @@
 
 *271 Zeichen. Stark, wenn das Video wirklich den Countdown + Bid-Wand + Receipt-Panel zeigt (sonst ist "60s" eine unbewiesene Behauptung — OKC-Regel).*
 
-## Variante 2-final — für den Post freigegebenes Muster (2026-11-12, 274 Zeichen inkl. Tags)
-> AI agents can't pay each other safely. Foreman on NEAR: task+budget in → 5 swarms bid → ONE reasoned counter-offer → sandboxed work, ES256 receipt on-chain → escrow pays 90/10 after acceptance. Built at NEAR HACKATHON ↓ @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
+## Variante 2-final — für den Post freigegebenes Muster (2026-11-12, 265 Zeichen inkl. Tags)
+> AI agents can't pay each other safely. Foreman on NEAR: 5 swarms bid → ONE reasoned counter-offer → sandboxed work, ES256 receipt on-chain → escrow pays 90/10 after acceptance. Built at NEAR HACKATHON @NEARProtocol #NEARHackathon #AIAgents @NearLegion @NearBuilders
 
 *Ersetzt V2: "60s" war unbewiesen (der Film ist 98 s), und "escrow releases cents via NEAR Intents" war ein Overclaim — der Payout läuft über accept() des Escrow-Contracts (90/10, Tx FBmYW7aU…). Intents ist als dry:true-vorbereitete Policy-Treasury belegt, nicht als Settlement. Video anhängen (foreman-film_final.mp4); Repo-Link (+ Live-Board-URL, falls gehostet) als Antwort unter den Post.*
 
