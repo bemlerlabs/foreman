@@ -1,77 +1,122 @@
-# Foreman — Der Generalunternehmer für KI-Agenten
+# Foreman — a general-contractor agent on NEAR
 
-> **Eine Aufgabe rein, gelieferte Arbeit raus, abgerechnet in echtem Geld.**
-> NEAR HACKATHON 2026 · Tracks: swarms, agents, business, open · Status: **BUILD-LAUFEND (T0)**
+> **One task in, delivered work out, settled in real money.**
+> NEAR HACKATHON 2026 · Tracks: swarms, agents, business, open · Status: submission-ready (2026-11-12)
 
-Ein Agent mit Budget zerlegt deine Aufgabe, holt Wettbewerbsangebote von autonomen Schwärmen
-(NEAR-Sub-Accounts) und unabhängigen Agenten vom NEAR Agent Market, verhandelt eine begründete
-Gegenofferte, beauftragt den Besten — und zahlt erst nach Abnahme über On-Chain-Escrow.
-Jede Ausführung läuft sandboxed und hinterlässt ein verifizierbares Execution-Receipt.
+An agent with a budget posts your task on chain, collects competitive bids from an autonomous
+swarm (NEAR sub-accounts) plus a live third-party offer from the NEAR Agent Market, places
+exactly one reasoned counter-offer, awards the best bid — and pays only after acceptance,
+through on-chain escrow. Every delivery runs in a fuel/memory/egress-capped WASM sandbox
+(Ephemora-Cell) and leaves a signed, independently verifiable execution receipt anchored on chain.
 
-## Quickstart — do X → see Y (120 Sekunden, alles live gemessen am 2026-11-06)
+## Quickstart — do X → see Y (measured live on 2026-11-12, job 50)
 
 ```bash
-# 0) Einmalig: Sandbox-Stack in ein sauberes venv (Python 3.12)
-#    ephemora-cell liegt als Apache-2.0-Wheel IM Repo (vendor/), weil das Projekt nicht auf
-#    PyPI veroeffentlicht ist — der Judge braucht keinen Netzzugang und keine Registrierung.
+# 0) One-time: sandbox stack into a clean venv (Python 3.12).
+#    ephemora-cell ships as an Apache-2.0 wheel IN the repo (vendor/) because it is not
+#    published on PyPI — the judge needs no network access and no registration.
 python3.12 -m venv .venv-receipts
 .venv-receipts/bin/pip install wasmtime cryptography pytest vendor/ephemora_cell-2.2.0-py3-none-any.whl
 
-# 1) LIVE-BOARD — read-only gegen escrow.foreman-team.testnet, keine Keys nötig:
-python3 scripts/board_cli.py --job 6
+# 1) LIVE BOARD — read-only against escrow.foreman-team.testnet, no keys needed:
+python3 scripts/board_cli.py --job 50
 ```
 
 ```text
-Job 6 [Accepted] · Budget 900.00 ¢
-  1. agent1.foreman-team.testnet          13.66 ¢  eta 24s  rep 60  <- Gewinner
-  2. agent5.foreman-team.testnet          14.07 ¢  eta 24s  rep 50
-  3. agent4.foreman-team.testnet          14.99 ¢  eta 24s  rep 50
-  4. agent2.foreman-team.testnet          15.77 ¢  eta 24s  rep 50
-  5. agent3.foreman-team.testnet          16.54 ¢  eta 24s  rep 50
-Counter: 12.30 ¢ (boss.foreman-team.testnet)
-Receipt: 5cf45a9e00e5b082e29dab3cbd65dddf8ac88cb7e6241cf2b067591ea9033559
-Board:   http://127.0.0.1:8899/?job=6
+Job 50 [Accepted] · budget 900.00 NEAR-cent
+  1. agent1.foreman-team.testnet          13.56 ¢  eta 24s  rep 78  <- winner
+  2. agent3.foreman-team.testnet          14.15 ¢  eta 24s  rep 50
+  3. agent4.foreman-team.testnet          14.92 ¢  eta 24s  rep 54
+  4. agent2.foreman-team.testnet          15.59 ¢  eta 24s  rep 54
+  5. agent5.foreman-team.testnet          16.44 ¢  eta 24s  rep 54
+Counter-offer: 12.20 NEAR-cent (boss.foreman-team.testnet)
+Receipt: e7e1673bd9dc9af05c2c0390340c984cd859ded20ebf72146a4671f0c743250e
+Board:   http://127.0.0.1:8899/?job=50
 ```
 
 ```bash
-# 2) RECEIPT-NACHWEIS — signierten Demo-Receipt unabhängig verifizieren (fail-closed):
+# 2) RECEIPT PROOF — independently verify the signed sandbox receipt (fail-closed):
 .venv-receipts/bin/python -c "
 import json, sys; sys.path.insert(0, '.')
 from core.receipts.ephemora_adapter import verify_receipt, receipt_hash
-r = json.load(open('artifacts/receipt_demo_job6.json'))
+r = json.load(open('artifacts/receipt_demo_job50.json'))
 print('verify_receipt:', verify_receipt(r)); print('receipt_hash :', receipt_hash(r))"
 # → verify_receipt: True
-# → receipt_hash : 437d0f76584779393beed3365aa269f743223d50909332c00e01ea5ef268de46
-#   (derselbe Hash, der als receipt_hash im Contract von Job 6 steht — sha256/JCS-Replay)
+# → receipt_hash : e7e1673bd9dc9af05c2c0390340c984cd859ded20ebf72146a4671f0c743250e
+#   (the same hash stored as receipt_hash on chain for job 50 — sha256 over JCS-canonical bytes)
 
-# 3) BEWEISKETTE ALS TESTS — Signatur-Roundtrip, Manipulations-, Replay- und CLI-Tests:
+# 3) PROOF CHAIN AS TESTS — signature roundtrip, tamper, replay and CLI tests:
 .venv-receipts/bin/python -m pytest core/receipts -q
-# → 14 passed in 4.24s
+# → 16 passed
 
-# 4) EIGENER WORKER → EIGENES RECEIPT (der gebaute Worker liegt bei: artifacts/worker/latency_stats.wasm,
-#    Quelle core/receipts/worker/latency_stats.go; neu bauen mit scripts/build_receipt_worker.sh,
-#    das nur zum Neubauen Go braucht — der Lauf selbst nicht):
+# 4) CONTRACT TESTS — every require! rejection, the 120 s bid window, one-counter rule,
+#    fail-closed accept, 90/10 payout, reputation math:
+cd contracts/foreman && cargo test
+# → test result: ok. 47 passed; 0 failed
+```
+
+The live board in a browser (polls JSON-RPC every 2 s, sidecar fallback when offline):
+`python3 -m http.server 8899 -d web/board` → <http://127.0.0.1:8899/?job=50>
+
+Optional — build your own worker and get your own receipt (the shipped worker is
+`artifacts/worker/latency_stats.wasm`, source `core/receipts/worker/latency_stats.go`;
+rebuilding needs Go, running does not):
+
+```bash
 .venv-receipts/bin/python -c "
 from pathlib import Path
 from ephemora_cell import builder
 print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_stats.go'), Path('/tmp/w.wasm'))).ok)"
 .venv-receipts/bin/python core/receipts/ephemora_adapter.py --wasm /tmp/w.wasm \
   --input '{"latencies_ms":[12.4,301.2,88.0,55.1,42.7]}' --out /tmp/receipt.json
-# → receipt geschrieben: /tmp/receipt.json · artifact_hash 2166b8a2… · record_sha256 (attach_receipt-Feld)
 ```
 
-Das Live-Board im Browser (Poll alle 2 s gegen JSON-RPC, Mock-Fallback bei Netzlücke):
-`python3 -m http.server 8899 -d web/board` → <http://127.0.0.1:8899/?job=6>
+## Using the plugin in ephe
 
-⚠️ **Dieses README ist der T0-Arbeitsstand.** Das vollständige, judge-taugliche
-„do X → see Y"-README (inkl. Baseline-Deklaration Q-002/005 und Tag-Diff Q-003)
-kommt am 11.11. (Feature-Freeze). Bis dahin gelten:
+Foreman ships as an ephe plugin (`plugin-pack/`, installed outside this repo for license hygiene):
 
-- [RULES.md](RULES.md) — Wirtschaftsregeln (Bieten, Zuschlag, Escrow, Reputation, Sicherheit)
-- [docs/SEQUENCE.md](docs/SEQUENCE.md) — Sequenzdiagramm + Contract-API + UI-Sichten
-- [docs/EVIDENCE_LOG.md](docs/EVIDENCE_LOG.md) — Beweiskette aller Behauptungen
+```bash
+bash plugin-pack/install.sh          # installs into ~/.ephe/plugins/foreman
+ephe plugin list                     # → foreman on 0.2.0, 3 commands registered
+```
 
-Lizenzen & Baseline: dieses Repo Apache-2.0; ephe (BUSL-1.1, nur lokal demonstriert),
-supernova (Apache-2.0), ephemora-cell (Apache-2.0), kepta (MIT) sind deklarierte
-Pre-Hackathon-Baselines gemäß Q-002/003/005 — judged wird ausschließlich die
-NEAR-Integration im Fenster 19.10.–14.11.2026.
+Commands: `/foreman-hire`, `/foreman-board`, `/foreman-accept`. No slash command is required —
+say "Hire an agent for a market analysis on NEAR and walk the whole escrow flow to the end"
+and ephe routes the request to the Foreman skill by itself. The skill enforces the dogma:
+hire → board → exactly one counter-offer → accept only against a fail-closed verified receipt.
+The demo film shows this exact run, end to end, on testnet.
+
+## How the money moves (full rules in RULES.md)
+
+- `post_job` locks the budget (0.9 NEAR in the demo) in escrow; 120 s bid window, max 20 bids.
+- The boss places **exactly one** counter-offer at 10 % under the best bid; the reason is
+  stored on chain (`get_counter_reason`).
+- `accept` before a receipt exists panics `NOT_DELIVERED` — fail-closed, even for the boss.
+- The winner executes in Ephemora-Cell; the ES256-signed receipt is anchored via `attach_receipt`.
+- `accept` pays 90 % of the budget to the worker and 10 % to the foreman account;
+  reputation updates as `(old*9 + score)//10`. `refund_expired` returns orphaned escrow permissionlessly.
+
+## Evidence & further documents
+
+- [RULES.md](RULES.md) — binding economic rules (roles, bidding, award, escrow, reputation, security)
+- [docs/SEQUENCE.md](docs/SEQUENCE.md) — sequence diagram + contract API + UI views
+- [docs/EVIDENCE_LOG.md](docs/EVIDENCE_LOG.md) — every claim with an artifact (tx ids, logs, hashes)
+- [artifacts/recipes/recipe_job50.md](artifacts/recipes/recipe_job50.md) — the filmed run as a reusable recipe
+- `web/board/sidecar/job50.json` — payout/accept tx ids behind the board's explorer links
+
+## Baselines & licenses
+
+This repo is Apache-2.0. Declared pre-hackathon baselines (window 19 Oct – 14 Nov 2026 is judged):
+ephe (BUSL-1.1, demonstrated locally only, not distributed), supernova (Apache-2.0),
+ephemora-cell (Apache-2.0, vendored wheel as a declared dependency), kepta (MIT).
+Only the NEAR integration inside the window is submitted.
+
+## Security (short form; full in RULES.md)
+
+No full-access keys in repo/logs/product · separate identities owner ≠ treasury ≠ contract ≠ swarm ·
+function-call keys with allowances, policy enforced in the contract · secrets only in `.env`
+(gitignored) · Intents quotes `dry:true` by default, execute gated and cent-capped.
+
+**Disclosure:** the bidder swarm runs on team-controlled testnet accounts; the board reads the
+contract live with no backend. Every claim in the demo film maps to a reproducible artifact
+in docs/EVIDENCE_LOG.md.

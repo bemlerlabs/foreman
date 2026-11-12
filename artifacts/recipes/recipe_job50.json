@@ -1,0 +1,73 @@
+{
+  "kind": "foreman.recipe/v1",
+  "job_id": 50,
+  "contract": "escrow.foreman-team.testnet",
+  "spec": "research-report: NEAR testnet RPC latency, finality and gas costs across 3 regions; deliver CSV + summary + sources",
+  "acceptance_criteria": [
+    "#1 summary <=300 words",
+    "#2 CSV data table",
+    "#3 cited sources"
+  ],
+  "budget_near_cent": "900.00",
+  "state": "Accepted",
+  "bids": [
+    {
+      "bidder": "agent1.foreman-team.testnet",
+      "price_near_cent": "13.56",
+      "eta_secs": 24,
+      "reputation": 78,
+      "winner": true
+    },
+    {
+      "bidder": "agent3.foreman-team.testnet",
+      "price_near_cent": "14.15",
+      "eta_secs": 24,
+      "reputation": 50,
+      "winner": false
+    },
+    {
+      "bidder": "agent4.foreman-team.testnet",
+      "price_near_cent": "14.92",
+      "eta_secs": 24,
+      "reputation": 54,
+      "winner": false
+    },
+    {
+      "bidder": "agent2.foreman-team.testnet",
+      "price_near_cent": "15.59",
+      "eta_secs": 24,
+      "reputation": 54,
+      "winner": false
+    },
+    {
+      "bidder": "agent5.foreman-team.testnet",
+      "price_near_cent": "16.44",
+      "eta_secs": 24,
+      "reputation": 54,
+      "winner": false
+    }
+  ],
+  "best_bid": {
+    "bidder": "agent1.foreman-team.testnet",
+    "price_near_cent": "13.56"
+  },
+  "counter_offer": {
+    "price_near_cent": "12.20",
+    "bidder": "boss.foreman-team.testnet",
+    "reason": "Counter-offer (Foreman boss): all acceptance criteria satisfied \u2014 #1 summary <=300 words + #2 CSV data table + #3 cited sources \u2014 fixed price 10% under the best bid, ETA 24s. Reference: acceptance_criteria #1-#3."
+  },
+  "receipt": {
+    "receipt_hash": "e7e1673bd9dc9af05c2c0390340c984cd859ded20ebf72146a4671f0c743250e",
+    "artifact_hash": "62fbda0ace40a220516fab670be79b9703cad31723ee1022164397f5aa159171",
+    "payout_tx": "FBmYW7aUYVQNBenQJKVGdBEZ4EsXP42vAVYX6EWD8F2a",
+    "explorer": "https://testnet.nearblocks.io/transactions/FBmYW7aUYVQNBenQJKVGdBEZ4EsXP42vAVYX6EWD8F2a"
+  },
+  "result": {
+    "winner": "agent1.foreman-team.testnet",
+    "payout_near_cent": "810.00",
+    "rep_before": 78,
+    "rep_now": 79,
+    "foreman_fee_percent": 10
+  },
+  "board_url": "http://127.0.0.1:8899/?job=50"
+}
