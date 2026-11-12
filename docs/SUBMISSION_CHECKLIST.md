@@ -1,53 +1,60 @@
-# Submission readiness — 2026-11-10
+# Submission readiness — final handoff, 2026-11-12
 
-Stand nach dem T5-Gate. Ziel: Einreichen am **12. oder 13.11. tagsüber** (User-Regel), niemals 14.11.
-Was hier steht, ist belegt; was fehlt, ist als USER-Schritt markiert.
+Stand: Film final, README EN, Payload vorbereitet. **Nichts ist veröffentlicht** (Owner-Entscheidung
+12.11.: „nur vorbereiten"). Alles unten ist copy-paste-fertig; die öffentlichen Schritte klickt der Owner.
 
-## Fertig (LEAD/Team, belegt)
+## Fertig (belegt)
 
 | Stück | Stand | Beleg |
 |---|---|---|
-| Kette end-to-end | 2× in Folge bestanden, deterministisch | `docs/T5_GATE_2026-11-10.md`, `docs/EVIDENCE_LOG.md` (10.11.) |
-| Signierter Receipt | echte WASM-Ausführung unter Fuel-Budget, ES256, verifiziert | Receipt-Record `0037679e…` / `4b9c5993…`; `receipt_source=wasm+es256` |
-| Dritt-Angebot | live vom NEAR Agent Market gelesen (`web-research`, 0,50 USD) | `MARKET_OFFER_OK … live=1` in beiden Läufen |
-| Judge-Quickstart kalt | Sandbox-Wheel **im Repo** (Apache-2.0, 99 kB) + gebauter Worker im Repo | `vendor/`, `artifacts/worker/latency_stats.wasm` |
-| Board | Sidecars der Gate-Jobs 44/45 liegen bei, `board_cli.py --job 44` | `web/board/sidecar/job44.json` |
-| Film | 98 s, 1920×1080, 30 fps, −13.2 LUFS; neue Narration (Kokoro, 11 Zeilen), Carve + Ducking, Sound-Design, Zahlen aus dem Gate-Lauf | `foreman-film/renders/foreman-film_2026-11-10_13-57-10.mp4` (98 s, −13.2 LUFS, −2.5 dBTP) |
-| Submission-Payload | `requestId` gesetzt, `size "1"`, 4 Tracks, `idea` 1921 Zeichen | `docs/SUBMISSION_2026-11-13.json` |
-| X-Post-Text | Variante 2 (Demo-Moment) passt zum Film; Variante 3 ist gesperrt (kein echter Dritt-Hire) | `docs/X_POST_DRAFT.md` |
+| Film | 98 s, 1920×1080, 30 fps, neue VO (Stimme vom Owner abgenommen), alle Zahlen = Job 50, keine Home-Pfade | `foreman-film/renders/foreman-film_final.mp4` (Desktop-Kopie inhaltsgleich) |
+| README | Englisch, do-X→see-Y live gemessen (16 Receipt-Tests, 47 Contract-Tests, verify True) | Commit `9e83e31` |
+| Board-Payout-Fix | Budget − 10 % statt Bid-Preis | Commit `f69ffa2` |
+| Payload | `docs/SUBMISSION_2026-11-13.json`: requestId fix, size "1", tracks [swarms,agents,business,open], projectName Foreman, leadName bemlerlabs, nearAddress bemlerlabs.near, idea 1961 Z. ohne Platzhalter, Intents ehrlich formuliert | Commit `bb1e656` + leadName-Fill |
+| X-Text | Variante 2-final, 274 Zeichen inkl. Tags, „Built at NEAR HACKATHON", alle vier Handles | `docs/X_POST_DRAFT.md` |
+| Offen im Payload | `email` (Owner trägt ein), `demoUrl` (entsteht mit dem X-Post), `consent` (Owner-Klick) | — |
 
-## USER-Schritte vor dem Submit (nur der Owner)
+## Owner-Schritte (in dieser Reihenfolge, jeder öffentlich/irreversibel)
 
-1. **Repo public schalten** `bemlerlabs/foreman` — erst nach dem Freeze (11.11. 12:00), bleibt bis 25.11.
-2. **Film hochladen** (X verlangt das Video beim Post; 98 s, 108 MB).
-3. **X-Post publizieren** — erste Zeile = Problem, NEAR-Rolle benannt, Tags `@NEARProtocol #NEARHackathon @NearLegion @NearBuilders`; Repo + Demo-Link als Antwort, damit der Post unter 280 Zeichen bleibt.
-4. **`demoUrl` liefern** für das Payload-Feld (`website` existiert nicht — nur `demoUrl` in der Submission-Maske).
-5. **Payload laut vorlesen, „JA" sagen** — dann POST (201 quittieren). Regeln: nie zweimal pro Repo; 409 → request-changes, nie Link/Email wechseln; 503 → 1 Min warten, gleiche `requestId`; 403 → STOP.
+1. **Push** (Repo ist noch privat, 12 Commits ahead):
+   `git push origin main`
+2. **Repo public**: `gh repo edit bemlerlabs/foreman --visibility public` (oder GitHub Settings).
+   Muss bis 14.11. 23:59 UTC public bleiben; LICENSE (Apache-2.0) liegt.
+3. **Optional Hosting** (Organizer: „hosted demo helps", online bis ≥ 18.11.): auf Zuruf baue ich
+   einen Qoder-Sites-Entwurf des Read-only-Boards; veröffentlichen erst nach Owner-Okay.
+4. **X-Post** (Video anhängen: `foreman-film_final.mp4`), Text exakt:
+   > AI agents can't pay each other safely. Foreman on NEAR: task+budget in → 5 swarms bid → ONE reasoned counter-offer → sandboxed work, ES256 receipt on-chain → escrow pays 90/10 after acceptance. Built at NEAR HACKATHON ↓ @NEARProtocol #NEARHackathon @NearLegion @NearBuilders
+
+   Danach **Antwort unter den Post**: `Repo: https://github.com/bemlerlabs/foreman` (+ Live-Board-URL falls gehostet).
+   Die Post-URL ist das `demoUrl` Feld.
+5. **Formular** <https://nearhackathon.com/#apply> — Felder:
+   | Feld | Wert |
+   |---|---|
+   | Project name | Foreman |
+   | Team lead | bemlerlabs |
+   | Email | (Owner trägt ein; max. 2 Submissionen pro E-Mail) |
+   | Team size | 1 (solo) |
+   | Tracks | swarms · agents · business · open (AI Swarms, Agent Economy, Business, Open Innovation) |
+   | NEAR wallet | bemlerlabs.near |
+   | Repository link | https://github.com/bemlerlabs/foreman |
+   | Demo post link | (X-Post-URL aus Schritt 4) |
+   | What did you build? | idea aus dem Payload, 1961 Zeichen — in die Zwischenablage: `python3 -c "import json;print(json.load(open('docs/SUBMISSION_2026-11-13.json'))['idea'])" \| pbcopy` |
+   | Website | **leer lassen** (Spam-Trap, jeder Wert rejectet) |
+   | Consent | Checkbox erst nach eigenem Lesen setzen |
+6. **Absenden, einmal.** Fehlerregeln: 409 → `/request-changes` (nie Zweit-Submit, nie Link/Email wechseln);
+   503 → 1 Min warten, gleiche requestId; 403 → STOP (Fenster zu).
 
 ## Was der Film bewusst nicht behauptet
 
-- Kein echter Dritt-*Hire* (Zahlung an einen Fremd-Agenten): gezeigt wird ein reales **Angebot** des
-  Markts, keine Hire-Transaktion. Deshalb ist X-Variante 3 gesperrt.
-- Die Schwarm-Konten sind team-kontrolliert; das steht als Disclosure im Film und im README.
+- Kein echter Dritt-*Hire*: gezeigt wird ein reales Markt-**Angebot** (0,50 USD, live gelesen), keine Hire-Transaktion.
+- Settlement läuft über `accept()` des Escrow-Contracts (90/10); Intents ist als dry:true-vorbereitete
+  Policy-Treasury belegt — Payload und X-Text sind entsprechend formuliert (kein Overclaim).
+- Schwarm-Konten team-kontrolliert; Disclosure im Film (Endkarte) und README.
 
-## Offen für Phase 6/7 (LEAD)
+## Regeln-Abgleich (live gegen nearhackathon.com/HACKATHON.md, 12.11.)
 
-- Freeze 11.11. 12:00: keine neuen Ideen, README-Q-003-Diff, LICENSE-Notes, Cold-Test (G6).
-- Film-Take mit den neuen Zeilen ist gerendert; wenn der Owner eine Sprecher-Stimme will, bleibt der
-  Soundtrack unverändert (Voiceover ist im Sketch optional).
-
-## Am 10.11. gegen die Organizer-Quelle geprüft
-
-[DevGrants Daily](https://devgrantsdaily.com/items/2026-10-24-near-hackathon-build-beyond-boundaries/)
-hat die Angaben am 24.10. gegen die offizielle Seite abgeglichen:
-
-- Build-Fenster **1.11. 00:00 UTC → 14.11. 23:59 UTC**, Judging 16.–18.11., Ergebnisse bis 18.11.
-- **$250.000** Pool, **ein** Grand Prize à **$55.000**, **13 Tracks** mit je $10.000/$3.000/$2.000.
-- Einreichen: Repo **public**, **Demo-Post auf X**, Formular mit beiden Links, Beschreibung, Team-Größe,
-  Tracks, NEAR-Auszahlungskonto. **Eine Einreichung pro Team, nach dem Absenden nicht änderbar.**
-- Offizielle Track-Namen (Auszug): Unstoppable DeFi · Privacy and Private AI · **AI Swarms** ·
-  **Agent Economy** · Games With Real Economies · **Open Innovation**.
-
-Daraus folgt: die Endkarte nennt „AI Swarms · Agent Economy · Open Innovation"; die Payload-Tracks
-bleiben bei den vier IDs aus der Submission-Maske. Filmtitel-Kicker sagt „NEAR HACKATHON 2026 ·
-AGENT SWARMS".
+- Videolänge: keine Vorgabe → 98 s ok. Problem-first ✓, ein vollständiger Moment ✓, NEAR-Rolle konkret ✓.
+- X-Post: „built at NEAR HACKATHON" ✓, @NEARProtocol #NEARHackathon ✓, Video attached ✓.
+- AI-Screening (Q-017): README maschinenlesbar ✓, Evidence-Log ✓, Cold-Start via vendored Wheel ✓.
+- Baselines deklariert ✓; judged wird nur die NEAR-Integration im Fenster 19.10.–14.11.
+- Tracks-Endkarte = offizielle Namen ✓; Payload-IDs = Formular-IDs ✓.
