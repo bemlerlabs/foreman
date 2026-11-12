@@ -206,7 +206,7 @@
 
     el("winner").textContent = job.winner || "—";
     el("payout").textContent = job.winner ? payoutCents(job) + " ¢" : "—";
-    el("feeLine").textContent = job.winner ? "10 % of " + payoutCents(job) + " ¢ to the foreman account" : "—";
+    el("feeLine").textContent = job.winner ? "10 % of " + cents(job.budget) + " ¢ budget to the foreman account" : "—";
     var ptx = job.tx_payout;
     el("payoutTxLink").innerHTML = ptx
       ? "<a href='" + EXPLORER + escapeHtml(ptx.hash || ptx) + "' target='_blank' rel='noopener'>" +
@@ -217,8 +217,10 @@
   }
 
   function payoutCents(job) {
-    var w = (job.bids || []).filter(function (b) { return b.bidder === job.winner; })[0];
-    return w ? cents(w.price) : "—";
+    // accept() pays budget minus the 10 % foreman fee — not the winner's bid price.
+    var b = parseInt(job.budget, 10);
+    if (!b) return "—";
+    return cents(b - Math.floor(b * 10 / 100));
   }
 
   function renderRep(job) {
