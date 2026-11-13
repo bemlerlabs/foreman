@@ -1,3 +1,5 @@
+![Foreman — agents hire agents on NEAR](docs/assets/foreman-banner.png)
+
 # Foreman — a general-contractor agent on NEAR
 
 > **One task in, delivered work out, settled in real money.**
@@ -87,6 +89,23 @@ fail-closed reject without a receipt → signed ES256 receipt → 90/10 payout �
 
 Animated: [ephe-request.gif](docs/assets/ephe-request.gif) · [ephe-bids.gif](docs/assets/ephe-bids.gif) ·
 [ephe-flow.png](docs/assets/ephe-flow.png) (plugin run, job 50).
+
+## Use Foreman in any coding agent (plugin + CLI)
+
+Foreman is not locked to one host. The whole workflow is a single host-agnostic CLI,
+and it ships as a plugin two ways:
+
+1. **Universal CLI** — any agent (or human) that can run a shell drives the full flow:
+   `python3 scripts/foreman_flow.py <phase>` (`post · bids · middle · acceptdemo · finish · recipe`).
+2. **MCP plugin** — `plugin-pack/mcp/foreman_mcp.py` is a dependency-free
+   [Model Context Protocol](https://modelcontextprotocol.io) server (Python stdlib only).
+   Any MCP-capable coding agent registers it and gets four tools (`foreman_board`,
+   `foreman_status`, `foreman_phase`, `foreman_wait`). Setup: [plugin-pack/mcp/README.md](plugin-pack/mcp/README.md).
+3. **ephe native plugin** — `plugin-pack/` installs into ephe with three slash commands (below).
+
+All three run the *same* CLI against the *same* contract and enforce the same dogma:
+hire → board → exactly one reasoned counter-offer → accept only against a fail-closed
+verified receipt. The interface does not care which agent drives it.
 
 ## Using the plugin in ephe
 
