@@ -4,8 +4,7 @@
 This is the portable, host-agnostic seam. It speaks the Model Context Protocol
 (JSON-RPC 2.0 over stdio) using only the Python standard library — no third-party
 dependency, no network install. Any coding agent that can register an MCP server
-(Claude Desktop, Cursor, Cline, Continue, Windsurf, Zed, ...) can drive the whole
-Foreman escrow workflow through these tools. Agents without MCP support use the
+loads it with the same four lines of config; agents without MCP support use the
 same CLI directly: `python3 scripts/foreman_flow.py <phase>`.
 
 Run it from a foreman checkout (the repo root is resolved from this file's location):

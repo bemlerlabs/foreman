@@ -23,7 +23,7 @@ through on-chain escrow. Every delivery runs in a fuel/memory/egress-capped WASM
 - [See it run](#see-it-run)
 - [How it is put together](#how-it-is-put-together)
 - [Use Foreman in any coding agent](#use-foreman-in-any-coding-agent)
-- [Using the plugin in ephe](#using-the-plugin-in-ephe)
+- [Installing the plugin](#installing-the-plugin)
 - [How the money moves](#how-the-money-moves)
 - [Tests and gates](#tests-and-gates)
 - [Known limits](#known-limits)
@@ -155,8 +155,8 @@ Full detail, including the receipt chain and what breaks when each boundary fail
 
 ## Use Foreman in any coding agent
 
-Foreman is not locked to one host. The whole workflow is a single host-agnostic CLI, and it ships
-as a plugin two ways:
+Foreman is not locked to one host. The whole workflow is a single host-agnostic CLI, and it loads as
+a plugin three ways:
 
 1. **Universal CLI** — any agent (or human) that can run a shell drives the full flow:
    `python3 scripts/foreman_flow.py <phase>` with phases `post · bids · middle · acceptdemo ·
@@ -165,14 +165,16 @@ as a plugin two ways:
 2. **MCP plugin** — `plugin-pack/mcp/foreman_mcp.py` is a dependency-free
    [Model Context Protocol](https://modelcontextprotocol.io) server: Python stdlib only, JSON-RPC
    over stdio, four tools (`foreman_board`, `foreman_status`, `foreman_phase`, `foreman_wait`).
-   Setup: [plugin-pack/mcp/README.md](plugin-pack/mcp/README.md).
-3. **ephe native plugin** — `plugin-pack/` installs into ephe with three slash commands (below).
+   This is the normal route; setup: [plugin-pack/mcp/README.md](plugin-pack/mcp/README.md) and
+   `bash plugin-pack/install.sh` (below).
+3. **Host-native skill pack** — optional, per host. `plugin-pack/install-ephe.sh` is the worked
+   example we ship; the same shape applies to any host that reads its own skill/command format.
 
 | Host | Status | How it connects |
 |---|---|---|
 | OpenCode | **filmed in this repo** (free GLM-5.3-Flash) | the `mcpServers` block in [plugin-pack/mcp/README.md](plugin-pack/mcp/README.md) |
 | Claude Code | **filmed in this repo** (Qwen 3.8 Flash, `qwen3.8-flash-next`, served from our own DGX Spark) | the same block, in its MCP config |
-| Any other MCP host (Cursor, Cline, Continue, Windsurf, Zed, Claude Desktop) | same stdio contract, not filmed here | register `python3 <REPO>/plugin-pack/mcp/foreman_mcp.py` |
+| Any other host that speaks MCP | same stdio contract, **not filmed here** | register `python3 <REPO>/plugin-pack/mcp/foreman_mcp.py` |
 | Agents without MCP | supported | the CLI above, or `make cli-board` |
 
 Two honest notes about that table. Only the two filmed rows are evidence; the third is the same
@@ -182,12 +184,31 @@ checked it. And `foreman_phase`/`foreman_wait` are not read-only: they shell out
 and the host's tool-approval gate still applies. `foreman_board` and `foreman_status` need
 neither.
 
-## Using the plugin in ephe
+## Installing the plugin
 
-Foreman ships as an ephe plugin (`plugin-pack/`, installed outside this repo for license hygiene):
+There is nothing to install. The server resolves the repo root from its own file location, so the
+checkout you already have is the installation, and one command prints the registration for it:
 
 ```bash
-bash plugin-pack/install.sh          # installs into ~/.ephe/plugins/foreman
+bash plugin-pack/install.sh           # the mcpServers block, with this checkout's path filled in
+bash plugin-pack/install.sh --probe   # plus: start the server and list the four tools it answers
+```
+
+Paste that block into whatever your agent uses to register MCP servers — most read a JSON file, some
+have a settings screen, and the field is not named the same thing in every host. Look up "MCP
+server" in your agent's own documentation; the four lines you give it are the same everywhere, and
+[plugin-pack/mcp/README.md](plugin-pack/mcp/README.md) holds the shape, the tool contract and a
+probe to run in a terminal that needs no agent at all.
+
+Read-only tools work immediately, with no key and no account. The write phases (`post`, `finish`)
+run the same CLI a human would, under whoever's testnet credentials are configured, and pass through
+the host's own approval gate — registering the server grants Foreman nothing.
+
+Hosts that take a native skill pack get one extra convenience on top, and this repo ships the one
+example it actually uses. **ephe** is where the films were recorded:
+
+```bash
+bash plugin-pack/install-ephe.sh     # registers plugin-pack/foreman/ -> ~/.ephe/plugins/foreman
 ephe plugin list                     # → foreman on 0.2.0, 3 commands registered
 ```
 
@@ -195,7 +216,9 @@ Commands: `/foreman-hire`, `/foreman-board`, `/foreman-accept`. No slash command
 say "Hire an agent for a market analysis on NEAR and walk the whole escrow flow to the end"
 and ephe routes the request to the Foreman skill by itself. The skill enforces the dogma:
 hire → board → exactly one counter-offer → accept only against a fail-closed verified receipt.
-The demo film shows this exact run, end to end, on testnet.
+The demo film shows this exact run, end to end, on testnet. None of this is a dependency: any other
+host gets the same four tools over MCP, and the ephe pack is only a convenience wrapper around the
+same CLI.
 
 ## How the money moves
 

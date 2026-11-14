@@ -11,8 +11,11 @@ Agents that do not support MCP can still drive Foreman through the same CLI dire
 ## Register the server
 
 The server resolves the repo root from its own location, so it runs straight from a
-checkout — nothing to install. Point your agent's MCP config at it. The standard
-`mcpServers` shape (replace `<REPO>` with the absolute path of your foreman checkout):
+checkout — nothing to install. Point your agent's MCP config at it. `bash plugin-pack/install.sh`
+prints the block below with the path of this checkout already filled in, and
+`bash plugin-pack/install.sh --probe` additionally starts the server and lists the four tools it
+answers with, offline. The standard `mcpServers` shape (replace `<REPO>` with the absolute path of
+your foreman checkout):
 
 ```json
 {

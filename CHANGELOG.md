@@ -32,6 +32,13 @@ is made yet.
   on-screen events (`docs/assets/dual-tui-demo.mp4`).
 
 ### Changed
+- The install story stopped being one host's install story. `plugin-pack/install.sh` copied a plugin
+  pack into `~/.ephe/plugins/` — a name that promised a universal installer and delivered a
+  host-specific one. It now prints the `mcpServers` block for this checkout, and `--probe` starts
+  the server and lists the four tools it answers with, offline; for every MCP host that block *is*
+  the installation. The host-native pack keeps its own script, named for what it is
+  (`plugin-pack/install-ephe.sh`). The README section is "Installing the plugin", and the per-host
+  pack is described as the optional wrapper it always was.
 - Prose that cited a preparation checklist no reader has stopped here: `S1`–`S4` in
   `docs/WHY_FOREMAN.md`, `docs/MARKET_NOTES.md` and `RULES.md`, the baseline-tag id `Q-003` in
   `docs/EVIDENCE_LOG.md` and the gate record, the `C2`/`C3` and `phase 6`/`phase 7` stage names in
