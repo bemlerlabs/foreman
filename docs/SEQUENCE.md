@@ -3,7 +3,7 @@
 ```mermaid
 sequenceDiagram
     participant U as Human (Owner)
-    participant F as Foreman agent (ephe)
+    participant F as Foreman agent (any MCP host)
     participant C as Escrow contract (NEAR)
     participant S as Swarm agent1..5 (Supernova)
     participant M as Third-party agent (market.near.ai)

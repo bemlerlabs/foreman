@@ -1,4 +1,4 @@
-# DESIGN.md — Foreman Bid-Board Design System (phase4.3)
+# DESIGN.md — Foreman Bid-Board Design System
 
 Benchmark: Linear / Vercel Dashboard / Stripe. No framework, no build step — hand-written CSS
 on custom properties; CDN used only for fonts (with a full system-stack fallback for offline video).
@@ -23,7 +23,7 @@ on custom properties; CDN used only for fonts (with a full system-stack fallback
 Rules: no further color hues. Green ≠ money, amber = money. Use color areas sparingly; status is
 communicated via dot + text, not full-color cards.
 
-### 1a. Light variant (phase4.4, `data-theme="light"`)
+### 1a. Light variant (`data-theme="light"`)
 
 Identical token names, values rotated; accents stay exactly the same (the green ≠ money rule holds
 in both themes):

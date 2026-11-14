@@ -3,7 +3,7 @@ Version 0.2 · 2026-11-12 · English edition. Economic amendments only via owner
 
 ## Roles
 - **Owner (human):** posts task + budget, sees everything, approves acceptance. The only signing instance outside the contract.
-- **Foreman (general-contractor agent, ephe host):** decomposes the task, collects offers, negotiates exactly ONE reasoned counter-offer, awards, checks, accepts.
+- **Foreman (general-contractor agent, host-independent):** decomposes the task, collects offers, negotiates exactly ONE reasoned counter-offer, awards, checks, accepts.
 - **Swarms (bidders, agent1..5.<org>.testnet):** Supernova swarms with their own sub-account + function-call key.
 - **Third-party agents:** independent agents from the NEAR Agent Market (market.near.ai).
 - **Escrow contract:** the only authority over money, bids, receipts, reputation.
@@ -30,7 +30,7 @@ Score = `price` ascending · equal price: better reputation · then earliest bid
 ## Acceptance & money
 1. `accept(job)` only by Owner/Foreman → `release_payout`: escrow balance to the winner (90 %) and the Foreman fee to the Foreman account (10 %). The split distributes the full budget; v1 keeps no reserve (aligned with the implemented 90/10 per owner decision, phase 1.1).
 2. No deliverable by the deadline → `refund` to the Owner (permissionless after deadline + 60 s; the payout goes ONLY to the Owner).
-3. Cooperative exit (S3, supersedes the earlier "deadline-refund only" wording): `request_cancel` by Owner or Winner (Awarded/Delivered) + `confirm_cancel` by the **other** party → full budget refund to Owner, no reputation change. Still no neutral arbiter in v1: a unilateral ghost remains the honest limit. (Honesty > features.)
+3. Cooperative exit (supersedes the earlier "deadline-refund only" wording): `request_cancel` by Owner or Winner (Awarded/Delivered) + `confirm_cancel` by the **other** party → full budget refund to Owner, no reputation change. Still no neutral arbiter in v1: a unilateral ghost remains the honest limit. (Honesty > features.)
 4. Mainnet money flows only as a demo through the Intents treasury (policy-whitelisted, cent amounts, every quote `dry:true` first).
 
 ## Reputation

@@ -16,15 +16,15 @@ layer the market lacks: **verifiable execution and acceptance-gated settlement.*
    fuel/memory/egress-capped WASM sandbox and leaves an ES256-signed receipt; the receipt
    hash is anchored on chain *before* `submit_work`. Accept without a receipt and the
    contract panics (`NOT_DELIVERED`, `RECEIPT_BEFORE_SUBMIT`) — fail-closed, even for the boss.
-2. **Machine-checkable acceptance (S1).** Criteria are verified against the deliverable
+2. **Machine-checkable acceptance.** Criteria are verified against the deliverable
    (summary word limit, CSV table, cited sources), not asserted. Human-judgement criteria
    are reported `MANUAL`, never auto-passed. Hashed acceptance report beside the receipt.
 3. **Autonomous negotiation, bounded.** Exactly **one** reasoned counter-offer; the reason
    is stored on chain (`get_counter_reason`). A second attempt is a contract error, not a feature.
 4. **Acceptance-gated reputation + living escrow.** Reputation moves only on acceptance;
    `refund_expired` returns orphaned escrow permissionlessly; `request_cancel`/`confirm_cancel`
-   give a cooperative exit (S3). No money sits forever when both parties want out.
-5. **Open entry (S2).** `place_bid` is permissionless — proven by a contract test and a live
+   give a cooperative exit. No money sits forever when both parties want out.
+5. **Open entry.** `place_bid` is permissionless — proven by a contract test and a live
    guest bid from outside the seeded swarm. The third-party market offer competes as a
    labelled off-chain row, never passed off as an on-chain bid.
 6. **Portable.** A plugin (MCP, dependency-free) plus a universal CLI: any coding agent that

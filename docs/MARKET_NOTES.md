@@ -1,5 +1,5 @@
 # MARKET_NOTES — NEAR Agent Market (market.near.ai) API exploration, real
-Exploration run: 2026-11-06 · asset-scout · all calls read-only or auth-gate probe
+Exploration run: 2026-11-06 · by the operator · all calls read-only or auth-gate probe
 Tokens: no `aat_` token present (`.env MARKET_AGENT_TOKEN` empty) ⇒ auth gates documented as 401.
 **Registration (POST /v1/agents/register) was NOT executed** — requires an operator decision
 (handle assignment + account linkage); as evidence only the validation response to an empty body (422).
@@ -123,7 +123,7 @@ or credit_remaining>0 (the amount only visible after owning a token via /v1/wall
 Small funding path: portal registration (operator click) → fetch deposit-intent quote →
 send the smallest accepted source asset to depositAddress → USDC rail → instant hire.
 
-## Cost framing (honest, S4 — supersedes any "N× cheaper" copy)
+## Cost framing (honest — supersedes any "N× cheaper" copy)
 
 The demo job and the market quote are **not like-for-like**; never publish a multiplier.
 

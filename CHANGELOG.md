@@ -32,6 +32,14 @@ is made yet.
   on-screen events (`docs/assets/dual-tui-demo.mp4`).
 
 ### Changed
+- Prose that cited a preparation checklist no reader has stopped here: `S1`–`S4` in
+  `docs/WHY_FOREMAN.md`, `docs/MARKET_NOTES.md` and `RULES.md`, the baseline-tag id `Q-003` in
+  `docs/EVIDENCE_LOG.md` and the gate record, the `C2`/`C3` and `phase 6`/`phase 7` stage names in
+  `docs/T5_GATE_2026-11-10.md`, `asset-scout` in two evidence rows, and the `phase4.3`/`phase4.4`
+  headings in `docs/DESIGN.md`. The `T5_GATE` line "9.4 % below the cheapest bid" corrected to
+  **10 %** — 12.30 against 13.66 is the `RULES.md` margin, and the evidence row for that same run
+  already recorded it as `−10 %`. Roles reworded host-neutral (`docs/SEQUENCE.md`, `RULES.md`).
+  No rule, claim or number was dropped: where an id carried the meaning, the meaning is written out.
 - `CONTRIBUTING.md` set up the venv with a hand-written `pip install` that named three packages
   where `make bootstrap` installs four, so a contributor who followed it exactly had no `ruff` and
   `make check` failed on the lint step. It now names `make bootstrap`, and adds the typecheck line.
