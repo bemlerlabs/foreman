@@ -7,9 +7,19 @@ Redistributed here as an unmodified wheel so a judge can run the receipt path wi
 to a package index (the project is not published on PyPI).
 
 - `ephemora_cell-2.2.0-py3-none-any.whl` — built from the Apache-2.0 source, no changes
+  SHA-256 `178088f126af088f6ffaa56416340ede85940729b62a5b46423fa7a74e612a62`
 - `LICENSE.ephemora-cell` — the licence text as shipped with the source
-- `README.ephemora-cell.md` — the project's own readme
+- `README.ephemora-cell.md` — the project's own readme, kept byte-for-byte from upstream so the
+  documented behaviour matches the shipped wheel. Its relative links (`docs/…`, `benchmarks/…`)
+  resolve in the upstream repository, not here — only this NOTICE file and the wheel are ours.
+
+Source: `https://github.com/MichaelS1011/ephemora-cell`, version 2.2.0 — both read from the wheel's
+own `METADATA`, not from a guess. Retrieved 2026-11-06 (see the phase-5 rows in docs/EVIDENCE_LOG.md).
 
 Install together with its one runtime dependency:
 
     pip install wasmtime vendor/ephemora_cell-2.2.0-py3-none-any.whl
+
+Verify before installing (no network needed):
+
+    shasum -a 256 vendor/ephemora_cell-2.2.0-py3-none-any.whl

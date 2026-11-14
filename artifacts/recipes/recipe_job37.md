@@ -30,4 +30,4 @@
 - **Winner:** agent1.foreman-team.testnet
 - **Payout:** 13.56 NEAR-cent (foreman fee 10%)
 - **Reputation:** 73 → 74
-- **Live board:** http://127.0.0.1:8777/?job=37
+- **Live board:** http://127.0.0.1:8899/?job=37

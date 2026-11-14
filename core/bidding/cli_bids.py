@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""cli_bids — bid generator for bid_loop.sh (near-feasibility, task-3).
+"""cli_bids — bid generator for bid_loop.sh (deterministic seeded swarm bids).
 
 Call:
     python3 core/bidding/cli_bids.py --seed foreman-demo --out .state/bids.json

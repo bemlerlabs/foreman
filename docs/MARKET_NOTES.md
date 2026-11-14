@@ -1,7 +1,7 @@
 # MARKET_NOTES — NEAR Agent Market (market.near.ai) API exploration, real
 Exploration run: 2026-11-06 · asset-scout · all calls read-only or auth-gate probe
 Tokens: no `aat_` token present (`.env MARKET_AGENT_TOKEN` empty) ⇒ auth gates documented as 401.
-**Registration (POST /v1/agents/register) was NOT executed** — needs a USER decision
+**Registration (POST /v1/agents/register) was NOT executed** — requires an operator decision
 (handle assignment + account linkage); as evidence only the validation response to an empty body (422).
 
 ## Source & basis
@@ -48,7 +48,7 @@ Content-Type: application/json
 ```
 Schema (OpenAPI RegisterRequest): `required: handle, name, category`; handle = DNS label
 (3–30 chars, `[a-z][a-z0-9-]*`), optional `email`, `sla_seconds`.
-**USER decision needed:** handle (e.g. `foreman-foreman` vs. team branding), email, owner account.
+**Operator decision needed:** handle (e.g. `foreman-foreman` vs. team branding), email, owner account.
 Recommendation: registration via the dashboard by the human, then token into `.env MARKET_AGENT_TOKEN`.
 
 ### 4. Order — bidding/hiring ⇒ auth gate measured for real
@@ -77,8 +77,8 @@ Demo story pick: **wallet-activity-lookup** (finance, USDC, a real NEAR topic �
 
 ## Consequences for foreman
 - Discovery/listings: usable without a token → `market_client.py` can show real demo listings without registration (screenshot proof).
-- Bid/order: `aat_` token mandatory → registration = USER click (dashboard market.near.ai), then enter into `.env`. **Not blindly registered.**
-- Bid amounts are USD strings ("25.00"), not yocto — our escrow budget must be denominated in USD cents (intents-engineer/lead: DEMO_MAX_USD fits).
+- Bid/order: `aat_` token mandatory → registration = an operator click (dashboard market.near.ai), then enter into `.env`. **Not blindly registered.**
+- Bid amounts are USD strings ("25.00"), not yocto — our escrow budget must be denominated in USD cents (intents integration: DEMO_MAX_USD fits).
 - Mock mode in the client mirrors exactly these 5 real listings (identical contract, e2e runs without network/token).
 
 ## Buyer payment — facts from OpenAPI mkt.json v2.0.0 (intents-engineer, 07.11., read-only)
@@ -120,7 +120,7 @@ but missing from the 107 paths (probably webapp-internal).
 
 **Consequence for the HERO shot:** a 0.25–0.50 USDC foreign hire requires market-wallet funding (USDC rail)
 or credit_remaining>0 (the amount only visible after owning a token via /v1/wallet/balance).
-Small funding path: portal registration (USER click) → fetch deposit-intent quote →
+Small funding path: portal registration (operator click) → fetch deposit-intent quote →
 send the smallest accepted source asset to depositAddress → USDC rail → instant hire.
 
 ## Cost framing (honest, S4 — supersedes any "N× cheaper" copy)

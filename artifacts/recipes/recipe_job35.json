@@ -69,5 +69,5 @@
     "rep_now": 54,
     "foreman_fee_percent": 10
   },
-  "board_url": "http://127.0.0.1:8777/?job=35"
+  "board_url": "http://127.0.0.1:8899/?job=35"
 }

@@ -2,14 +2,15 @@
 """core/receipts/ephemora_adapter.py — Ephemora receipt adapter (T4, phase5).
 
 Thin layer over the Apache-2.0 package `ephemora_cell` (baseline github.com/MichaelS1011/
-ephemora-cell). NO ephe import — ephe served only as the reference path
-(docs/EPHE_CELL_MAP.md §1/§5, BUSL hygiene). Signatures verbatim per EPHE_CELL_MAP §2:
+ephemora-cell); the vendored wheel and its README live in vendor/. Nothing here imports the
+BUSL-licensed `ephe` package — the Apache baseline is the only runtime dependency.
+Signatures verbatim from that package:
 
   run_isolated(wasm_path, config, args, stdin_data, …) -> dict   [process_executor.py:136]
   ExecutionReport(...).sign(signer, alg="ES256") -> dict           [execution_report.py:151]
   ExecutionReport.verify(signed_record, verifier) -> bool          [execution_report.py:187]
 
-Data flow (docs/EPHE_CELL_MAP.md §6): worker WASM -> run_isolated -> ExecutionReport
+Data flow: worker WASM -> run_isolated -> ExecutionReport
 (signed with our own ES256 cell key, .env RECEIPT_KEY_PATH) -> receipt.json with
 egress_log_hash + artifact_hash. verify is fail-closed; the adapter raises on False.
 
@@ -151,7 +152,7 @@ def sha256_hex(data: bytes) -> str:
 
 
 def egress_log_hash(entries: list) -> str:
-    """Adapter-owned hash over egress audit entries (EPHE_CELL_MAP §2f/§6).
+    """Adapter-owned hash over egress audit entries.
 
     Entries are hashed via their canonical JSON representation, sorted; an empty
     list = clean egress => sha256("[]") — deliberately a real hash, not None.
@@ -163,7 +164,7 @@ def egress_log_hash(entries: list) -> str:
 def run_and_attest(wasm_path: str, inputs: Any, caps: Optional[Caps] = None,
                    egress_entries: Optional[list] = None,
                    artifact_bytes: Optional[bytes] = None) -> dict:
-    """Runs the worker isolated and returns the signed receipt (EPHE_CELL_MAP §6).
+    """Runs the worker isolated and returns the signed receipt.
 
     Thin layer: a) run_isolated->ExecutionReport, b) egress_log_hash/artifact_hash,
     c) ES256 signature with the local cell key, d) fail-closed verify before returning.
