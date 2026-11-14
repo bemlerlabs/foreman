@@ -36,7 +36,7 @@ hostile operator, and the docs never claim they are.
 | Bid count is bounded | `MAX_BIDS = 20` | `place_bid_max_bids_enforced` |
 | A stale delivery cannot capture escrow | delivered-timeout + `cancel_mutual` | `refund_expired_ok_refunds_owner_and_marks_refunded`, `cancel_mutual_delivered_refunds` |
 | Exactly one counter-offer per job, and only by the Foreman identity | `counter_offer` | `counter_offer_only_one_counter`, `counter_offer_stored_with_foreman_identity` |
-| Payout is 90 % of the **posted budget** (10 % foreman fee) — not of the winning bid | `accept` (`FOREMAN_FEE_NUM`) | `accept_ok_updates_state_and_rep`; live deltas `+0.810000 / +0.089684` in `docs/EVIDENCE_LOG.md` |
+| Payout is 90 % of the **posted budget** (10 % foreman fee) — not of the winning bid | `accept` (`FOREMAN_FEE_NUM`) | `accept_ok_updates_state_and_rep`; live deltas `+0.810000` to the worker and `+0.089684`…`+0.089688` to the foreman (fee minus accept gas) in `docs/EVIDENCE_LOG.md` |
 | A bid above the budget never enters the book | `place_bid` | `place_bid_price_over_budget_rejected` |
 | A receipt that does not verify is an error, not a warning | `core/receipts/ephemora_adapter.py` (`verify` raises) | signature/tamper/replay pytest |
 
@@ -62,6 +62,13 @@ what is machine-checkable.
   treats a pasted key, JWT or `aat_`/`naa_` token as an exposure: rotate it, then fix the history.
 - The Intents treasury path signs policies through a local loopback popup and keeps `AGENT_EXECUTE`
   off by default, so a quote is proven with `dry:true` before anything can spend.
+- One operator convenience has been removed from the working tree and is disclosed here rather than
+  quietly dropped: `ops/key-grant/` was a one-click page that granted a public key to a **mainnet**
+  account. It held no private material — an account name and the public key being granted — and it
+  could only act while that account's own wallet signed, but a testnet-only project has no business
+  publishing the account, the key and the grant mechanism together. Nothing in the demo, the tests or
+  the docs used it. Removal from the tree does not remove it from git history, so the key it named
+  should be treated as known and revoked if it is still attached and not needed.
 
 ## Out of scope
 

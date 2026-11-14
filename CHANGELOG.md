@@ -11,6 +11,12 @@ is made yet.
 ### Added
 - GIFs and stills cut from the dual-host demo film, placed next to the text they prove
   (`docs/assets/`).
+- The README front page rebuilt around them: a quickstart that shows real measured output, the
+  four films with durations, a GIF table, a stills table, the host matrix and the questions a
+  reviewer asks.
+- CI gained a `proofs` job that replays the two offline claims on every push — the recorded job-50
+  receipt must still verify and still hash to the value anchored on chain, and the acceptance gate
+  must still pass from committed artifacts alone. Both run with no network and no keys.
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CITATION.cff`, a document index and a
   `Makefile` so the gates are one command instead of a paragraph.
 - Architecture document with a scalable diagram (`docs/ARCHITECTURE.md`, `docs/assets/foreman-architecture.svg`).
@@ -23,6 +29,9 @@ is made yet.
 - Evidence log gained a key distinguishing artifacts a reader can verify (repo path, tx hash,
   command) from captures that were ephemeral, and dropped internal role names in favour of
   maintainer/operator.
+- Source comments no longer cite internal preparation-checklist ids (`Q-005`, `Q-012`, `S6/S7/S8`)
+  that resolve to nothing in this repository; each now states the fact itself — which baseline
+  library and license, which shot the phase produces.
 - Vendored third-party NOTICE now states the wheel's SHA-256 and its provenance read from the
   package metadata.
 
@@ -30,6 +39,11 @@ is made yet.
 - Eight internal preparation documents (submission checklist, outreach drafts, working plans). They
   described how the entry was pitched rather than what the software does, and every claim that cited
   them now cites the vendored package or an on-chain transaction.
+- `ops/key-grant/` — a one-click page that granted a key to a **mainnet** account. Nothing in the
+  demo, the tests or the docs used it, and a public repository for a testnet-only project has no
+  business publishing the account, the key and the grant mechanism together. The files were moved
+  outside the repo, not deleted; they remain in git history, so revoking that key is the owner's
+  action (see [SECURITY.md](SECURITY.md)).
 
 ## [0.2.0] — 2026-11-12 — submission freeze
 
