@@ -17,6 +17,10 @@ is made yet.
 - CI gained a `proofs` job that replays the two offline claims on every push — the recorded job-50
   receipt must still verify and still hash to the value anchored on chain, and the acceptance gate
   must still pass from committed artifacts alone. Both run with no network and no keys.
+- The hygiene gate checks markdown table shape: every row must carry its header's cell count. A row
+  whose claim contains a stray `|` raises nothing anywhere else — it simply stops lining up with its
+  header, and the surplus text lands in the last column — and four rows of `docs/EVIDENCE_LOG.md`
+  were in exactly that state.
 - `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `CITATION.cff`, a document index and a
   `Makefile` so the gates are one command instead of a paragraph.
 - Architecture document with a scalable diagram (`docs/ARCHITECTURE.md`, `docs/assets/foreman-architecture.svg`).
@@ -26,12 +30,22 @@ is made yet.
 ### Changed
 - `.gitignore` rewritten: it carried a malformed pattern that matched nothing (`*.json!package.json`)
   and a duplicated WASM negation; it now also covers the caches this repo actually produces.
+- Four `docs/EVIDENCE_LOG.md` rows no longer carry a stray `|` or a surplus column, so their claims
+  line up with the header they belong to. No text was lost: the surplus was folded into the column
+  it describes, one row that named an internal role where an artifact belongs now names the evidence
+  and states that it lives outside the repository, and the quoted hash formula of a closed finding
+  is spelled out in words with the two commits that contain it verbatim.
 - Evidence log gained a key distinguishing artifacts a reader can verify (repo path, tx hash,
   command) from captures that were ephemeral, and dropped internal role names in favour of
   maintainer/operator.
-- Source comments no longer cite internal preparation-checklist ids (`Q-005`, `Q-012`, `S6/S7/S8`)
-  that resolve to nothing in this repository; each now states the fact itself — which baseline
-  library and license, which shot the phase produces.
+- Comments in shipped code no longer cite ids from a preparation checklist that never entered this
+  repository — `Q-005`/`Q-012`, `S1`–`S8`, and a `phaseN:` prefix on 17 script and module headers
+  plus several lines of the contract. A reader cannot resolve any of them, and an unresolvable
+  reference reads as something the author forgot to remove rather than something the author forgot
+  to explain. Each site now states the fact itself: which baseline library and license, which shot
+  a phase exists to capture, which method is the cooperative exit. The marker strings a phase run is
+  waited on (`VIDEO_S6_OK`, consumed by `scripts/foreman_flow.py`) are unchanged, so no recorded log
+  or live wait loop breaks.
 - Vendored third-party NOTICE now states the wheel's SHA-256 and its provenance read from the
   package metadata.
 

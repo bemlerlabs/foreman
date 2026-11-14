@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase5: build the receipt worker (a Go program compiled to wasip1 WASM).
+# Build the receipt worker (a Go program compiled to wasip1 WASM).
 #
 # The worker is the code the demo really executes: it receives the run's bid prices as a series
 # of values, computes over them and emits an artifact. The adapter runs it under a fuel budget and

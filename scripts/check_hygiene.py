@@ -3,8 +3,9 @@
 
     python3 scripts/check_hygiene.py            # all checks
     python3 scripts/check_hygiene.py --links    # just dead links
+    python3 scripts/check_hygiene.py --tables   # just markdown table shape
 
-Stdlib only, read-only, exits non-zero on a finding. Three groups:
+Stdlib only, read-only, exits non-zero on a finding. Four groups:
 
   links    relative links and `path/to/file.ext` mentions in markdown that resolve to nothing,
            which is how documentation silently rots after a rename
@@ -12,6 +13,8 @@ Stdlib only, read-only, exits non-zero on a finding. Three groups:
            headers in tracked files
   media    tracked files above the per-file size GitHub will serve, and the total payload a
            judge has to download to see the demos
+  tables   markdown rows whose cell count differs from their header, which is how a `|` inside a
+           long evidence-log claim makes the row stop lining up with the columns it belongs to
 
 Known limitation: the vendored upstream readme (vendor/README.ephemora-cell.md) is kept
 byte-for-byte, so its links are relative to the upstream repository, not this one.
@@ -134,6 +137,59 @@ def check_leaks(files: list[str]) -> list[str]:
     return problems
 
 
+def _cells(line: str) -> list[str]:
+    """Split a markdown table row on its unescaped pipes."""
+    body = line.strip().strip("|")
+    out, buf, i = [], [], 0
+    while i < len(body):
+        ch = body[i]
+        if ch == "\\" and i + 1 < len(body) and body[i + 1] == "|":
+            buf.append("|")
+            i += 2
+            continue
+        if ch == "|":
+            out.append("".join(buf).strip())
+            buf = []
+            i += 1
+            continue
+        buf.append(ch)
+        i += 1
+    out.append("".join(buf).strip())
+    return out
+
+
+def check_tables(files: list[str]) -> list[str]:
+    """Every row of a markdown table must carry the header's cell count.
+
+    A stray `|` inside a long claim raises nothing anywhere: GitHub renders the surplus as text and
+    shifts every column after it, so the rows holding the most evidence are the ones most likely to
+    be misread. This is the check that catches it, because the file still looks right in an editor.
+    """
+    problems = []
+    for path in files:
+        if not path.endswith(".md") or skipped(path):
+            continue
+        lines = open(os.path.join(ROOT, path), encoding="utf-8", errors="replace").read().splitlines()
+        fence, width = None, None
+        for lineno, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if stripped.startswith("```") or stripped.startswith("~~~"):
+                fence, width = (None if fence else stripped[:3]), None
+                continue
+            if fence or not (stripped.startswith("|") and stripped.endswith("|") and len(stripped) > 1):
+                width = None
+                continue
+            cells = _cells(line)
+            if width is None:
+                nxt = lines[lineno].strip() if lineno < len(lines) else ""
+                if "-" in nxt and re.fullmatch(r"\|[\s:|-]+\|", nxt):
+                    width = len(cells)
+                continue
+            if len(cells) != width:
+                problems.append(f"{path}:{lineno}: row has {len(cells)} cells, the header has {width}")
+    return problems
+
+
 def check_media(files: list[str]) -> list[str]:
     problems = []
     total = 0
@@ -149,15 +205,18 @@ def check_media(files: list[str]) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--links", action="store_true", help="run the dead-link check only")
+    ap.add_argument("--tables", action="store_true", help="run the table-shape check only")
     ap.add_argument("--quiet", action="store_true", help="print findings only")
     args = ap.parse_args()
 
     files = scan_files()
-    groups = []
     if args.links:
-        groups.append(("links", check_links(files)))
+        groups = [("links", check_links(files))]
+    elif args.tables:
+        groups = [("tables", check_tables(files))]
     else:
         groups = [("links", check_links(files)),
+                  ("tables", check_tables(files)),
                   ("leaks", check_leaks(files)),
                   ("media", check_media(tracked_files()))]
 

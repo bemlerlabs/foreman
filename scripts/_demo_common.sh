@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase3: shared library for the live bidding round (post_job/bid_loop/counter_offer/e2e_demo).
+# Shared library for the live bidding round (post_job/bid_loop/counter_offer/e2e_demo).
 # NO secrets here — accounts from .env (repository rule), signing via ~/.near-credentials/testnet.
 set -euo pipefail
 

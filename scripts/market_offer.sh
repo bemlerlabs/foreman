@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase5: the demo's third-party offer - a real agent quoted by the NEAR Agent Market.
+# The demo's third-party offer - a real agent quoted by the NEAR Agent Market.
 #
 # Why this exists: the T5 gate text asks for "5 bids + 1 third-party offer". Two market routes are
 # public, so the offer is fetched live, without an aat_ token and without hiring anyone:

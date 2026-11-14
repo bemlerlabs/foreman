@@ -1,4 +1,4 @@
-"""Machine-checkable acceptance gate (S1).
+"""Machine-checkable acceptance gate.
 
 Turns decorative acceptance criteria into a real, reproducible check: the gate reads
 the job's acceptance_criteria and verifies the deliverable against every criterion that

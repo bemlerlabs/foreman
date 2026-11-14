@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase3: owner posts the demo job with an escrow deposit on escrow.foreman-team.testnet.
+# Owner posts the demo job with an escrow deposit on escrow.foreman-team.testnet.
 # Deposit 0.9 NEAR (07 prompt), deadline now+10min. JobId -> stdout + .state/job_id.txt.
 # call:   ./scripts/post_job.sh            (LOG=.state/e2e_manual.log overridable)
 source "$(dirname "$0")/_demo_common.sh"

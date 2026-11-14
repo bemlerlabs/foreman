@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""phase3: deterministic artifact/receipt hashes for the live bidding round.
+"""Deterministic artifact/receipt hashes for the live bidding round.
 
 Reads .state/bids.json (from the official core/bidding/cli_bids.py),
 picks the winner (cheapest bid, RULES order price -> rep -> time) and computes

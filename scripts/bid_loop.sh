@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase3: reads bids from .state/bids.json ([{bidder,price_yocto,eta_secs}]) and
+# Reads bids from .state/bids.json ([{bidder,price_yocto,eta_secs}]) and
 # calls place_bid for all swarms IN PARALLEL (bid window only 120s — speed counts).
 # place_bid is @payable: --depositYocto 0 is set explicitly (lead note).
 # Usage:   ./scripts/bid_loop.sh [JOB_ID]     (default: .state/job_id.txt)

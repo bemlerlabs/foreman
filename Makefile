@@ -33,7 +33,7 @@ contract-test: ## the on-chain suite (55 tests: every require! rejection, window
 lint: ## ruff over our Python (syntax errors + undefined names; see pyproject.toml for why)
 	$(PY) -m ruff check core scripts plugin-pack
 
-hygiene: ## dead links, leak patterns and media budget across tracked files
+hygiene: ## dead links, table shape, leak patterns and media budget across tracked files
 	$(PY) scripts/check_hygiene.py
 
 links: ## dead-link check only

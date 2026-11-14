@@ -1,1 +1,1 @@
-"""Machine-checkable acceptance gate (S1). See verify.py."""
+"""Machine-checkable acceptance gate. See verify.py."""

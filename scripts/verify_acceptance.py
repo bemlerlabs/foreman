@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""scripts/verify_acceptance.py — machine-checkable acceptance gate (S1).
+"""scripts/verify_acceptance.py — machine-checkable acceptance gate.
 
 Checks a deliverable against the job's acceptance_criteria. Criteria that are
 machine-checkable (summary word limit, CSV data table, cited sources) are verified;

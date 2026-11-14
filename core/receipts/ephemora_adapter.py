@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""core/receipts/ephemora_adapter.py — Ephemora receipt adapter (T4, phase5).
+"""core/receipts/ephemora_adapter.py — the Ephemora receipt adapter.
 
 Thin layer over the Apache-2.0 package `ephemora_cell` (baseline github.com/MichaelS1011/
 ephemora-cell); the vendored wheel and its README live in vendor/. Nothing here imports the

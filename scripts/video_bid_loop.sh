@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase7: video bid loop — uses the 429-hardened near_call from _demo_common.sh,
+# Video bid loop — uses the 429-hardened near_call from _demo_common.sh,
 # incl. retry+backoff and the near_send.cjs fallback against dRPC (send_tx).
 # place_bid is @payable: --depositYocto 0 is set explicitly (lead note).
 # call:   ./scripts/video_bid_loop.sh <JOB_ID>

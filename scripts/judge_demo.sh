@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# One-command judge demo (S5). Live by default; --offline uses only repo artifacts.
+# One-command judge demo. Live by default; --offline uses only repo artifacts.
 #   bash scripts/judge_demo.sh            # live read-only board + proofs + tests
 #   bash scripts/judge_demo.sh --offline  # no network: recorded recipe + proofs + tests
 # Prereq: the receipts venv from the README Quickstart (python3.12 -m venv .venv-receipts ...).

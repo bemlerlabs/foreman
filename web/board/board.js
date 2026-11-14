@@ -317,7 +317,7 @@
       }
     }).catch(function () { MOCK = true; setLive(false); });
   }
-  // Phase4.4: light/dark — default dark; ?theme=light overrides, choice persists in localStorage.
+  // Light/dark theme: default dark; ?theme=light overrides, choice persists in localStorage.
   function applyTheme(t) {
     if (t === "light") document.documentElement.setAttribute("data-theme", "light");
     else document.documentElement.removeAttribute("data-theme");

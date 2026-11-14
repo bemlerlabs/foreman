@@ -157,7 +157,7 @@ fn place_bid_ok_snapshots_rep_and_time() {
 fn place_bid_permissionless_outside_swarm() {
     let mut c = init();
     let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
-    // Openness (S2): an identity outside the seeded swarm and outside owner/foreman
+    // Openness: an identity outside the seeded swarm and outside owner/foreman
     // may bid — place_bid has no identity gate, only window/price/max/duplicate.
     let guest = acct("guest.notforeman.testnet");
     bid(&mut c, job, &guest, 700, T0 + 5 * SEC);
@@ -693,7 +693,7 @@ fn get_bids_keeps_placement_order() {
     assert_eq!(bids[1].bidder, agent(2));
 }
 
-// ---------- counter_reason (phase4.2) ----------
+// ---------- counter_reason ----------
 
 #[test]
 fn counter_offer_persists_reason_and_view_works() {
@@ -715,7 +715,7 @@ fn counter_offer_persists_reason_and_view_works() {
 }
 
 /// Upgrade proof: contract state without the 7th field (old state from the deploy era
-/// before phase4.2, e.g. jobs 1-6 on-chain) must stay deserializable — counter_reasons
+/// that added counter_reasons, e.g. jobs 1-6 on-chain) must stay deserializable — counter_reasons
 /// falls back to the fresh map b"k" instead of an EOF panic.
 #[test]
 fn legacy_state_without_counter_map_still_deserializes() {
@@ -754,7 +754,7 @@ fn legacy_state_without_counter_map_still_deserializes() {
     );
 }
 
-// ---------- request_cancel / confirm_cancel (S3) ----------
+// ---------- request_cancel / confirm_cancel ----------
 
 /// Helper: awarded job with a delivered receipt (state Delivered, winner agent1).
 fn delivered_one(c: &mut Contract) -> u64 {

@@ -1,4 +1,4 @@
-"""Tests core/receipts/ephemora_adapter — Ephemora receipt chain (phase5).
+"""Tests core/receipts/ephemora_adapter — Ephemora receipt chain.
 
 Runner: python -m pytest core/receipts
 (Apache package ephemora_cell + wasmtime + cryptography required; otherwise skip.)
@@ -179,7 +179,7 @@ def test_keys_dir_gitignored():
     assert "keys/" in gi
 
 
-# ---------------------------------------------------------------- anchor reproducibility (phase13)
+# ---------------------------------------------------------------- anchor reproducibility
 def test_receipt_hash_is_jcs_canonical(worker_wasm):
     """The attach_receipt anchor must be the JCS canonical form an independent verifier
     replays — not a json.dumps fallback, whose float formatting diverges (128.0 vs 128)."""
@@ -192,7 +192,7 @@ def test_receipt_hash_is_jcs_canonical(worker_wasm):
 
 def test_gen_artifact_anchor_matches_independent_replay(tmp_path, worker_wasm):
     """gen_artifact must anchor a hash an independent JCS replay reproduces, regardless of
-    the hashing process's own import path (phase13 regression). Runs in an isolated state dir."""
+    the hashing process's own import path. Runs in an isolated state dir."""
     state = tmp_path / "state"
     state.mkdir(parents=True, exist_ok=True)
     bids = [{"bidder": f"agent{i}.foreman-team.testnet", "price_yocto": str(int(p * 10**21))}

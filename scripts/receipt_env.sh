@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase5: find the environment for the real receipt path, or say honestly that it is missing.
+# Find the environment for the real receipt path, or say honestly that it is missing.
 #
 # Three things are looked for: the built worker, an interpreter with wasmtime, and the
 # ephemora_cell package (Apache-2.0). A self-contained venv (.venv-receipts, built from the

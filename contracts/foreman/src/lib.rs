@@ -18,7 +18,7 @@ pub const MAX_BIDS: usize = 20;
     BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, PartialEq, NearSchema,
 )]
 #[borsh(crate = "near_sdk::borsh")]
-#[abi(json)] // NEP-330 ABI (phase1.2): JsonSchema impl at __abi-generate
+#[abi(json)] // NEP-330 ABI: JsonSchema impl exposed at __abi-generate
 pub enum JobState {
     Open,
     Bidding,
@@ -31,7 +31,7 @@ pub enum JobState {
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, NearSchema)]
 #[borsh(crate = "near_sdk::borsh")]
-#[abi(json)] // NEP-330 ABI (phase1.2)
+#[abi(json)] // NEP-330 ABI
 pub struct Bid {
     pub bidder: AccountId,
     pub price: NearToken,
@@ -42,7 +42,7 @@ pub struct Bid {
 
 #[derive(BorshDeserialize, BorshSerialize, Serialize, Deserialize, Clone, Debug, NearSchema)]
 #[borsh(crate = "near_sdk::borsh")]
-#[abi(json)] // NEP-330 ABI (phase1.2)
+#[abi(json)] // NEP-330 ABI
 pub struct Job {
     pub id: JobId,
     pub spec: String,
@@ -68,7 +68,7 @@ pub struct Contract {
     jobs: LookupMap<JobId, Job>,
     next_id: JobId,
     reputation: LookupMap<AccountId, u32>, // 0..=100, start 50
-                                           // counter_reasons (phase4.2) is deliberately NOT a struct field: a transient
+                                           // counter_reasons is deliberately NOT a struct field: a transient
                                            // LookupMap handle on prefix b"k" (see counter_reasons()) writes straight to
                                            // storage — contract/job Borsh layout stays bit-for-bit stable for old state (jobs 1-6).
 }
@@ -275,7 +275,7 @@ impl Contract {
         self.jobs.insert(job_id, job);
     }
 
-    /// Cooperative exit (S3): either party (owner or winner) requests a cancel while the
+    /// Cooperative exit: either party (owner or winner) requests a cancel while the
     /// job is Awarded or Delivered. Closes the "delivered but both refuse → money sits"
     /// hole without a pretend arbiter: the OTHER party must confirm. Full budget returns
     /// to the owner; no reputation change (mutual agreement, no fault proven).
@@ -330,11 +330,11 @@ impl Contract {
     pub fn get_rep(&self, agent: AccountId) -> u32 {
         self.reputation.get(&agent).copied().unwrap_or(50)
     }
-    /// Reason of the counter-offer, if present (phase4.2, RULES "reasoned counter-offer").
+    /// Reason of the counter-offer, if present (RULES.md: reasoned counter-offer).
     pub fn get_counter_reason(&self, job_id: JobId) -> Option<String> {
         Self::counter_reasons().get(&job_id).cloned()
     }
-    /// Pending mutual-cancel requester, if any (S3).
+    /// Pending mutual-cancel requester, if any.
     pub fn get_cancel_request(&self, job_id: JobId) -> Option<AccountId> {
         Self::cancel_requests().get(&job_id).cloned()
     }
@@ -345,7 +345,7 @@ impl Contract {
     fn counter_reasons() -> LookupMap<JobId, String> {
         LookupMap::new(b"k".to_vec())
     }
-    /// Pending mutual-cancel requests (S3): transient LookupMap prefix b"c", same
+    /// Pending mutual-cancel requests: transient LookupMap prefix b"c", same
     /// layout-stable pattern as counter_reasons — no struct field, no Borsh break.
     fn cancel_requests() -> LookupMap<JobId, AccountId> {
         LookupMap::new(b"c".to_vec())

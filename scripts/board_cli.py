@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""scripts/board_cli.py — board status of the bid board as JSON (phase6, ephe plugin ingredient).
+"""scripts/board_cli.py — board status of the bid board as JSON (the read path the MCP board tool shells out to).
 
 Read-only against escrow.foreman-team.testnet (JSON-RPC call_function, fastnear → near.org),
 plus the optional sidecar file web/board/sidecar/job<N>.json (payout_tx, counter_reason).

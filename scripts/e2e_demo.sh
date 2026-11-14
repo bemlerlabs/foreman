@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# phase3: full runner of the live bidding round (T3/T4 proof, T5 gate: 2x identical flow).
+# Full runner of the live bidding round. The gate it exists to satisfy
+# (docs/T5_GATE_2026-11-10.md) is two identical flows in a row on an empty terminal.
 # Flow: gen_bids -> post_job -> sleep 5 -> bids (parallel) -> counter_offer -> award
 #       -> attach_receipt -> submit_work -> accept -> view verification.
 # All tx ids + commands go to .state/e2e_run<N>.log (N = running counter).
@@ -89,7 +90,7 @@ REP_EXPECT=$(python3 -c "print(($REP_BEFORE * 9 + 90) // 10)")
 [[ "$STATE" == "Accepted" && "$REP" == "$REP_EXPECT" ]] || {
   echo "E2E_FAIL: state=$STATE rep=$REP (expected Accepted/$REP_EXPECT from rep_before=$REP_BEFORE) — $LOG" >&2; exit 1; }
 
-# 8b) Sidecar for the bid board (phase4.2, reads web/board/sidecar/job<N>.json):
+# 8b) Sidecar for the bid board (reads web/board/sidecar/job<N>.json):
 # payout occurs inside the accept tx (transfer receipts) — same tx id in both fields.
 COUNTER_REASON_RAW=$(near_view "$CONTRACT" get_counter_reason "{\"job_id\":$JOB_ID}" | tr -d '\n')
 SIDECAR="$REPO_ROOT/web/board/sidecar/job${JOB_ID}.json"

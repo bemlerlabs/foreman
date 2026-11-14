@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase3: Foreman (boss) places EXACTLY ONE counter-offer (RULES 07 prompt) — price 10 % below
+# Foreman (the boss account) places EXACTLY ONE counter-offer (RULES.md) — price 10 % below
 # the best bid, reasoning references the job's acceptance_criteria.
 # call:   ./scripts/counter_offer.sh [JOB_ID]   (default: .state/job_id.txt)
 source "$(dirname "$0")/_demo_common.sh"

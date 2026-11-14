@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# phase1: deploys foreman.wasm to testnet via cargo-near 0.22 (build + deploy + init in one step).
+# Deploys foreman.wasm to testnet via cargo-near 0.22 (build + deploy + init in one step).
 #
 # Usage:  ./scripts/deploy-testnet.sh
 # Prereq: near login (keychain credentials of the contract account), cargo-near installed,
@@ -46,7 +46,7 @@ INIT_ARGS=$(printf '{"owner":"%s","treasury":"%s","foreman":"%s"}' \
 cd contracts/foreman
 # cargo-near 0.22 transaction-builder chain: deploy(build) -> init new() -> prepaid-gas -> network -> sign -> send.
 # Formats: gas as "N TGas", deposit with token unit ("0NEAR") — the cargo-near parser requires units (T1 deploy verified).
-# phase1.2: full ABI (NEP-330) — --no-abi removed, Job/Bid/JobState carry NearSchema derives.
+# Full ABI (NEP-330): --no-abi removed, Job/Bid/JobState carry NearSchema derives.
 cargo near deploy build-non-reproducible-wasm "$CONTRACT_ACCOUNT" \
   with-init-call new json-args "$INIT_ARGS" \
   prepaid-gas "100 TGas" \

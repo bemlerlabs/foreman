@@ -1,4 +1,4 @@
-"""Tests for the machine-checkable acceptance gate (S1).
+"""Tests for the machine-checkable acceptance gate.
 
 Run from the repo root:  python3 -m pytest core/acceptance -q
 """
