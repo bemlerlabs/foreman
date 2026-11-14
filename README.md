@@ -145,6 +145,8 @@ The demo film shows this exact run, end to end, on testnet.
 
 ## Evidence & further documents
 
+- One-command judge demo: `bash scripts/judge_demo.sh` (add `--offline` for no network).
+- [docs/WHY_FOREMAN.md](docs/WHY_FOREMAN.md) — the honest delta vs existing marketplaces + limits
 - [RULES.md](RULES.md) — binding economic rules (roles, bidding, award, escrow, reputation, security)
 - [docs/SEQUENCE.md](docs/SEQUENCE.md) — sequence diagram + contract API + UI views
 - [docs/EVIDENCE_LOG.md](docs/EVIDENCE_LOG.md) — every claim with an artifact (tx ids, logs, hashes)
