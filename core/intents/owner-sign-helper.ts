@@ -131,10 +131,12 @@ async function main() {
       ),
     };
     const digest = createHash("sha256").update(encodeDelegateAction(delegateAction as never)).digest();
+    // The installed 7.4.0 declares SignedDelegate as a class it does not export, so the plain
+    // object — which is exactly what its serializer reads — carries the cast instead of a wrapper.
     const signedDelegate = encodeSignedDelegate({
-      delegateAction: delegateAction as never,
+      delegateAction,
       signature: new Signature({ keyType: 0, data: keyPair.sign(new Uint8Array(digest)).signature }),
-    });
+    } as never);
     const signed = {
       standard: intent.standard,
       payload: intent.payload,

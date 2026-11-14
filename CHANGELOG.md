@@ -74,6 +74,13 @@ is made yet.
   runners were already warning about on every job. Two automated pull requests proposed the same
   change; applied here it is one commit on the branch everything else already builds from, and each
   job's deprecation note is gone rather than merely reviewed.
+- The NEP-366 delegate helper carries its cast on the object the serializer reads. `near-api-js`
+  7.5.x types `encodeSignedDelegate` as taking a `SignedDelegate`, and the fix the compiler suggests
+  — construct one — is a crash on the version this repository installs, because 7.4.0 declares that
+  class in its type surface and does not export it at runtime. What both versions' Borsh serializer
+  walks is the two plain fields, so the helper keeps them plain and casts them. Measured on the
+  installed artifact: the signed delegate encodes byte-identically with and without the 7.5.x class
+  wrapper, so this is a type-level change and the on-chain bytes do not move.
 
 ### Removed
 - Eight internal preparation documents (submission checklist, outreach drafts, working plans). They
