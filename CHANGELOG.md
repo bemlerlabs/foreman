@@ -81,6 +81,12 @@ is made yet.
   walks is the two plain fields, so the helper keeps them plain and casts them. Measured on the
   installed artifact: the signed delegate encodes byte-identically with and without the 7.5.x class
   wrapper, so this is a type-level change and the on-chain bytes do not move.
+- The four automated dependency pull requests were taken, each on its own gate: `near-sdk` 5.30.1
+  (contract suite unchanged at 55), `typescript` 7.0.2 and `@types/node` 26.6.6 (typecheck clean
+  against the versions that landed), and the Intents group — `@near-intents-agent-api/sdk` 0.8.2,
+  `near-api-js` 7.5.3, `dotenv` 18.0.10 — which compiles only because of the delegate cast above.
+  They arrived red because each branch was cut before the bid generator learned to default to the
+  published swarm, so every one was rebased onto `main` and its checks read again before the merge.
 
 ### Removed
 - Eight internal preparation documents (submission checklist, outreach drafts, working plans). They
