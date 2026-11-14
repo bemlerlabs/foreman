@@ -23,11 +23,11 @@ jobs:
             vendor/ephemora_cell-2.2.0-py3-none-any.whl
       - name: Core import smoke
         run: python -c "import sys; sys.path.insert(0,'core'); import foreman_core"
-      - name: Python suites (69)
+      - name: Python suites (71)
         run: python -m pytest core
       - name: Lint
         run: python -m ruff check core scripts plugin-pack
-      - name: Repo hygiene (links, leaks, media budget)
+      - name: Repo hygiene (links, tables, leaks, media budget)
         run: python scripts/check_hygiene.py
 
   proofs:

@@ -7,7 +7,7 @@
 [![CI](https://img.shields.io/github/actions/workflow/status/bemlerlabs/foreman/ci.yml?branch=main&label=tests)](https://github.com/bemlerlabs/foreman/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 [![Contract](https://img.shields.io/badge/NEAR-testnet%20·%20escrow.foreman-team.testnet-black)](https://testnet.explorer.near.org/account/escrow.foreman-team.testnet)
-[![Suites](https://img.shields.io/badge/tests-69%20python%20·%2055%20contract-informational)](#tests-and-gates)
+[![Suites](https://img.shields.io/badge/tests-71%20python%20·%2055%20contract-informational)](#tests-and-gates)
 
 An agent with a budget posts your task on chain, collects competitive bids from an autonomous
 swarm (NEAR sub-accounts) plus a live third-party offer from the NEAR Agent Market, places
@@ -32,12 +32,13 @@ through on-chain escrow. Every delivery runs in a fuel/memory/egress-capped WASM
 
 ## Quickstart — do X, see Y
 
-Everything below runs from a fresh clone with no keys and no account. Measured live on
-2026-11-12 against settled job 50.
+Everything below runs from a fresh clone with no keys, no account and no `.env`; CI proves it on
+every push. Measured live on 2026-11-12 against settled job 50.
 
 ```bash
-# 0) One command, one venv. The sandbox dependency is an Apache-2.0 wheel that ships IN the
-#    repo (vendor/), so this needs no package index and no registration.
+# 0) One command, one venv. The sandbox package is an Apache-2.0 wheel that ships IN the repo
+#    (vendor/), so it is never fetched from anywhere; the four public tooling packages
+#    (wasmtime, cryptography, pytest, ruff) come from PyPI. No registration, no account.
 make bootstrap
 ```
 
@@ -69,7 +70,7 @@ make receipt                         # → verify_receipt: True, and the sha256/
 # 4) ACCEPTANCE GATE — machine-check the deliverable against its criteria:
 make gate                            # → 3/3 machine-checked PASS; judgement-only criteria → MANUAL
 # 5) EVERY GATE THAT NEEDS NO CREDENTIALS:
-make check                           # 69 python + 55 contract tests, ruff, hygiene
+make check                           # 71 python + 55 contract tests, ruff, hygiene
 ```
 
 `make help` lists the rest (board server, worker rebuild, testnet deploy). Nothing in the
@@ -219,7 +220,7 @@ The binding version of every rule below is [RULES.md](RULES.md).
 
 | Gate | Command | What it protects |
 |---|---|---|
-| Python suites | `make test` | 69 tests — receipts 16, bidding 21, market 12, reputation 11, acceptance 9 |
+| Python suites | `make test` | 71 tests — receipts 16, bidding 23, market 12, reputation 11, acceptance 9 |
 | Contract suite | `make contract-test` | 55 tests — every `require!` rejection, the bid window, the one-counter rule, fail-closed accept, 90/10 payout, refunds |
 | Lint | `make lint` | ruff on syntax errors and undefined names, the findings that can break a money path |
 | Hygiene | `make hygiene` | dead links and backticked paths, markdown rows whose cell count differs from their header, leak patterns (reported by length, never content), media budget |

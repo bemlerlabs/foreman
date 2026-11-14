@@ -8,7 +8,8 @@
 Stdlib only, read-only, exits non-zero on a finding. Four groups:
 
   links    relative links and `path/to/file.ext` mentions in markdown that resolve to nothing,
-           which is how documentation silently rots after a rename
+           which is how documentation silently rots after a rename. A name git considers ignored
+           (`.state/…`, the venv) is exempt: that is a file a run creates, not one the repo ships.
   leaks    operator home directories, e-mail addresses, token-shaped strings and private-key
            headers in tracked files
   media    tracked files above the per-file size GitHub will serve, and the total payload a
@@ -82,6 +83,24 @@ def skipped(path: str) -> bool:
     return path in SKIP_EXACT or path.startswith(SKIP_PREFIXES)
 
 
+_ignore_cache: dict[str, bool] = {}
+
+
+def git_ignored(rel: str) -> bool:
+    """Whether git considers this path ignored, so a document may name a file a run creates.
+
+    `.state/operations.json` and the venv are documented because the demo writes them; they are
+    deliberately not in the repository, and a fresh clone has every right to lack them. Ignored is
+    the test that separates "runtime product" from "file this document still thinks we ship": a
+    tracked path that was deleted is not ignored, so it stays a finding.
+    """
+    if rel not in _ignore_cache:
+        rc = subprocess.run(["git", "check-ignore", "-q", "--", rel],
+                            cwd=ROOT, capture_output=True).returncode
+        _ignore_cache[rel] = rc == 0
+    return _ignore_cache[rel]
+
+
 def check_links(files: list[str]) -> list[str]:
     problems = []
     for path in files:
@@ -94,6 +113,8 @@ def check_links(files: list[str]) -> list[str]:
                 continue
             rel = urllib.parse.unquote(target.split("#")[0].split("?")[0])
             if rel and not os.path.exists(os.path.join(ROOT, os.path.dirname(path), rel)):
+                if git_ignored(os.path.join(os.path.dirname(path), rel)):
+                    continue
                 problems.append(f"{path}: broken link -> {target}")
         for m in BACKTICK_PATH.finditer(text):
             rel = m.group(1)
@@ -103,8 +124,11 @@ def check_links(files: list[str]) -> list[str]:
                 continue  # leading slash = an API endpoint path, not a file in this repo
             root_cand = os.path.join(ROOT, rel)
             doc_cand = os.path.join(ROOT, os.path.dirname(path), rel)
-            if not (os.path.exists(root_cand) or os.path.exists(doc_cand)):
-                problems.append(f"{path}: mentions a file that is not in the repo -> {rel}")
+            if os.path.exists(root_cand) or os.path.exists(doc_cand):
+                continue
+            if git_ignored(rel) or git_ignored(os.path.relpath(doc_cand, ROOT)):
+                continue  # a file the run creates, named on purpose
+            problems.append(f"{path}: mentions a file that is not in the repo -> {rel}")
     return problems
 
 

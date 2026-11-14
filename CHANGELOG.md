@@ -59,6 +59,27 @@ is made yet.
   outside the repo, not deleted; they remain in git history, so revoking that key is the owner's
   action (see [SECURITY.md](SECURITY.md)).
 
+### Fixed
+- The bid generator now defaults to the published team swarm when `SWARM_ACCOUNTS` is absent or
+  empty, which is what every fresh clone and every CI runner has. It used to require that the
+  variable be set at all, so six tests passed only on a machine that already held the operator's
+  gitignored `.env` — and the README claim that the whole suite runs from a clean clone was not
+  true until now. Two tests pin both halves: the fallback bids the five accounts the demo jobs were
+  settled with, and a swarm that is configured to anything other than five distinct accounts is
+  still refused with exit 2 and writes no file.
+- The hygiene gate no longer reports a documented runtime product as a missing file. The Intents
+  README names `.state/passkey.json` and `.state/operations.json`, which the run creates and
+  `.gitignore` keeps out of the repository; in a clone that has never run the demo the files are
+  legitimately absent and the gate failed the build. A path is exempted only when `git`
+  itself says it is ignored, so a deleted file that the repo is supposed to ship stays a finding.
+- `scripts/judge_demo.sh` wrote its acceptance report to `/tmp/judge_acceptance.json`, the one
+  place in the demo path that still used a fixed shared path while everything else keeps its run
+  state inside the checkout. It now writes `.state/judge_acceptance.json`.
+- Two install claims were wider than what was measured. The quickstart said `make bootstrap` needs
+  no package index, when only the sandbox wheel is vendored and the four tooling packages come from
+  PyPI; the 0.1.0 entry said the same about the whole receipt path. Both now name the wheel, and
+  the README lists the four packages it does fetch.
+
 ## [0.2.0] — 2026-11-12 — submission freeze
 
 ### Added
@@ -86,7 +107,7 @@ is made yet.
   submit → accept → 90/10 payout → reputation, with determinism diff of zero lines
   (`docs/T5_GATE_2026-11-10.md`).
 - Receipt adapter over the Apache-2.0 `ephemora_cell` sandbox (`core/receipts/`), vendored wheel in
-  `vendor/` so the receipt path runs without a package index.
+  `vendor/` so the sandbox package itself is never fetched from an index.
 - Read-only board (`web/board/`) with on-chain-first data and a sidecar fallback, plus
   `scripts/board_cli.py` for terminals.
 - Deterministic seeded bid generator (`core/bidding/`), Agent Market client with a contract-matching

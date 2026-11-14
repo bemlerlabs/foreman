@@ -24,7 +24,7 @@ bootstrap: ## create the sandbox venv from the vendored wheel (no package index 
 	  vendor/ephemora_cell-2.2.0-py3-none-any.whl
 	@echo "venv ready — the vendored wheel's SHA-256 is in vendor/NOTICE"
 
-test: ## the Python suites (69 tests: receipts, bidding, market, reputation, acceptance)
+test: ## the Python suites (71 tests: receipts, bidding, market, reputation, acceptance)
 	$(PY) -m pytest core
 
 contract-test: ## the on-chain suite (55 tests: every require! rejection, windows, payout, refunds)

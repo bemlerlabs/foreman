@@ -20,9 +20,9 @@ No account, no key and no network is required for the main test paths.
 ```bash
 python3.12 -m venv .venv-receipts
 .venv-receipts/bin/pip install wasmtime cryptography pytest vendor/ephemora_cell-2.2.0-py3-none-any.whl
-make test            # 69 Python tests
+make test            # 71 Python tests
 make contract-test   # 55 Rust contract tests (needs rustup + wasm32-unknown-unknown)
-make check           # everything above + lint + link check
+make check           # everything above + lint + hygiene (links, table shape, leaks, media budget)
 ```
 
 `make help` lists all targets. Toolchain in use during development: cargo-near 0.22.0,

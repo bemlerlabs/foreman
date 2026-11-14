@@ -79,6 +79,14 @@ def _env(name: str, default: Optional[str] = None) -> Optional[str]:
     return os.environ.get(name, default)
 
 
+# The published team swarm, the same list `scripts/_demo_common.sh` carries as AGENTS_DEFAULT.
+# It is the default so a fresh clone with no `.env` still runs the demo suites; a swarm that is
+# configured wrong is still an error rather than a silent substitution (see cli_bids).
+DEFAULT_SWARM_ACCOUNTS = ",".join(
+    f"agent{i}.foreman-team.testnet" for i in range(1, 6)
+)
+
+
 # ---------------------------------------------------------------- data contracts
 @dataclass
 class JobRequest:

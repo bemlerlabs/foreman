@@ -7,9 +7,10 @@ Call:
 Writes exactly one JSON file:
     [{"bidder": "agent1.foreman-team.testnet", "price_yocto": "...", "eta_secs": 40}, ... x5]
 
-Guarantees (T5 repeatability gate):
+Guarantees (the repeated-run gate in docs/T5_GATE_2026-11-10.md):
   * SAME seed ⇒ BYTE-IDENTICAL file (no timestamps/RNG state in the output).
-  * Agents exactly from .env SWARM_ACCOUNTS (5 entries, comma-separated).
+  * Agents from .env SWARM_ACCOUNTS (5 entries, comma-separated), defaulting to the published
+    team swarm when it is absent or empty, so a fresh clone needs no configuration to run the suite.
   * Prices realistically staggered: a deterministic seed ranking yields 5 distinct
     multi-stairs (base 0.5 NEAR-Cent/package, ±fine jitter), never identical.
   * Caps: price ≤ DEMO_MAX_USD (default $3) and price ≤ budget — violation ⇒ exit 2.
@@ -60,10 +61,18 @@ class GenError(RuntimeError):
 
 
 def load_swarm_accounts() -> list:
-    """The 5 swarm accounts exactly from .env SWARM_ACCOUNTS (order preserved)."""
-    from core.bidding.supernova_adapter import _env  # adapter env loader reads .env
+    """The 5 swarm accounts, order preserved: `.env` SWARM_ACCOUNTS, else the published swarm.
 
-    raw = _env("SWARM_ACCOUNTS", "")
+    The fallback is not a placeholder — it is the same five team accounts the demo jobs were
+    settled with, and `scripts/_demo_common.sh` carries them as `AGENTS_DEFAULT`. It exists so a
+    fresh clone with no `.env` runs the suite instead of failing on invisible configuration: an
+    absent or empty value means "use the published swarm". A value that is set to anything else
+    that is not 5 distinct accounts is still an error, so an operator who configures a swarm
+    cannot quietly bid as a different one.
+    """
+    from core.bidding.supernova_adapter import DEFAULT_SWARM_ACCOUNTS, _env  # adapter env loader reads .env
+
+    raw = _env("SWARM_ACCOUNTS", "") or DEFAULT_SWARM_ACCOUNTS
     agents = [a.strip() for a in raw.split(",") if a.strip()]
     if len(agents) != 5:
         raise GenError(f"SWARM_ACCOUNTS must contain 5 accounts, found: {len(agents)} — {raw!r}")

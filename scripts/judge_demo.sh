@@ -30,8 +30,9 @@ r = json.load(open('artifacts/receipt_demo_job50.json'))
 print('verify_receipt:', verify_receipt(r)); print('receipt_hash :', receipt_hash(r))"
 
 echo "-- acceptance gate (machine-checkable criteria) --"
+mkdir -p .state   # run state lives inside the checkout, never in /tmp
 "$PY" scripts/verify_acceptance.py --deliverable artifacts/deliverable_demo.json \
-  --out /tmp/judge_acceptance.json
+  --out .state/judge_acceptance.json
 
 echo "-- proof-chain tests --"
 "$PY" -m pytest core/acceptance core/receipts -q
