@@ -8,7 +8,7 @@ BOARD_PORT ?= 8899
 JOB ?= 50
 
 .DEFAULT_GOAL := help
-.PHONY: help bootstrap test contract-test lint hygiene links receipt gate board cli-board \
+.PHONY: help bootstrap test contract-test typecheck lint hygiene links receipt gate board cli-board \
         demo demo-offline demo-live check build-worker deploy-testnet clean
 
 help: ## show this list
@@ -18,7 +18,7 @@ help: ## show this list
 	@echo "  everyday:      make bootstrap && make check && make board"
 	@echo "  the ten-minute judge path: make demo-offline"
 
-bootstrap: ## create the sandbox venv from the vendored wheel (no package index needed)
+bootstrap: ## create the sandbox venv; the sandbox wheel is vendored, the tooling comes from PyPI
 	python3.12 -m venv $(VENV)
 	$(VENV)/bin/pip install --quiet wasmtime cryptography pytest ruff \
 	  vendor/ephemora_cell-2.2.0-py3-none-any.whl
@@ -30,6 +30,9 @@ test: ## the Python suites (71 tests: receipts, bidding, market, reputation, acc
 contract-test: ## the on-chain suite (55 tests: every require! rejection, windows, payout, refunds)
 	cargo test --manifest-path contracts/foreman/Cargo.toml
 
+typecheck: ## tsc --noEmit over the TypeScript Intents side (needs `npm ci` once)
+	npm run typecheck
+
 lint: ## ruff over our Python (syntax errors + undefined names; see pyproject.toml for why)
 	$(PY) -m ruff check core scripts plugin-pack
 
@@ -39,7 +42,7 @@ hygiene: ## dead links, table shape, leak patterns and media budget across track
 links: ## dead-link check only
 	$(PY) scripts/check_hygiene.py --links
 
-receipt: ## independently verify the signed receipt of job $(JOB) (fail-closed)
+receipt: ## independently verify the signed receipt of job JOB, default 50 (fail-closed)
 	$(PY) -c "import json,sys; sys.path.insert(0,'.'); \
 from core.receipts.ephemora_adapter import verify_receipt, receipt_hash; \
 r=json.load(open('artifacts/receipt_demo_job$(JOB).json')); \
@@ -48,10 +51,10 @@ print('verify_receipt:', verify_receipt(r)); print('receipt_hash :', receipt_has
 gate: ## machine-check the deliverable against its acceptance criteria
 	$(PY) scripts/verify_acceptance.py --deliverable artifacts/deliverable_demo.json
 
-cli-board: ## read job $(JOB) straight from the contract, no browser
+cli-board: ## read job JOB (default 50) straight from the contract, no browser
 	$(PY) scripts/board_cli.py --job $(JOB)
 
-board: ## serve the read-only board on http://127.0.0.1:$(BOARD_PORT)
+board: ## serve the read-only board on 127.0.0.1:8899 (override BOARD_PORT)
 	python3 -m http.server $(BOARD_PORT) -d web/board
 
 demo-offline: ## the whole proof chain from committed artifacts only, no network

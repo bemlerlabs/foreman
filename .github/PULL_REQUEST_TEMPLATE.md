@@ -9,6 +9,7 @@ The reason is not the diff. If this replaces an earlier decision, say which one 
 ## How it is checked
 
 - [ ] `make check` green (Python 71, contract 55, lint, hygiene) — tail pasted below
+- [ ] `npm run typecheck` green if anything under `core/intents/` changed (CI runs it as its own job)
 - [ ] New behaviour has a test, or the claim it supports has an artifact committed with it
 - [ ] Numbers in docs/README match the run that produced them
 - [ ] If RULES.md changed: that is its own PR, and this one links to it

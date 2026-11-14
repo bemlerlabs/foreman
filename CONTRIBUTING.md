@@ -15,14 +15,15 @@ Reading order before you touch anything:
 
 ## Development setup
 
-No account, no key and no network is required for the main test paths.
+No account, no key and no network is required for the main test paths; installing the toolchain is
+the one step that reaches a package index.
 
 ```bash
-python3.12 -m venv .venv-receipts
-.venv-receipts/bin/pip install wasmtime cryptography pytest vendor/ephemora_cell-2.2.0-py3-none-any.whl
+make bootstrap       # venv + the vendored sandbox wheel (the four tooling packages come from PyPI)
 make test            # 71 Python tests
 make contract-test   # 55 Rust contract tests (needs rustup + wasm32-unknown-unknown)
-make check           # everything above + lint + hygiene (links, table shape, leaks, media budget)
+make typecheck       # tsc --noEmit over core/intents (needs `npm ci` once, Node >= 22)
+make check           # python + contract + lint + hygiene (links, table shape, leaks, media budget)
 ```
 
 `make help` lists all targets. Toolchain in use during development: cargo-near 0.22.0,

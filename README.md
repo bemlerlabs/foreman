@@ -222,12 +222,14 @@ The binding version of every rule below is [RULES.md](RULES.md).
 |---|---|---|
 | Python suites | `make test` | 71 tests — receipts 16, bidding 23, market 12, reputation 11, acceptance 9 |
 | Contract suite | `make contract-test` | 55 tests — every `require!` rejection, the bid window, the one-counter rule, fail-closed accept, 90/10 payout, refunds |
+| TypeScript typecheck | `make typecheck` | `tsc --noEmit` over the Intents client and the owner-signing popup — the only gate that reads those files |
 | Lint | `make lint` | ruff on syntax errors and undefined names, the findings that can break a money path |
 | Hygiene | `make hygiene` | dead links and backticked paths, markdown rows whose cell count differs from their header, leak patterns (reported by length, never content), media budget |
 | Receipt replay | `make receipt` | the recorded job-50 receipt re-verifies and re-hashes to the anchored value |
 | Acceptance gate | `make gate` | the deliverable against its criteria; judgement-only criteria come back `MANUAL` |
 
-`make check` runs the first four. The same four run in CI on every push, so a broken claim fails
+`make check` runs Python, contract, lint and hygiene — the gates that need nothing but the venv.
+CI runs those, the typecheck and the two proof replays on every push, so a broken claim fails
 a build rather than waiting for a reader
 ([.github/workflows/ci.yml](.github/workflows/ci.yml)).
 

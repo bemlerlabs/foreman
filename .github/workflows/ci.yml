@@ -1,7 +1,8 @@
 name: ci
-# What a green tick means here: the python suites, the contract suite, the lint and the repo
-# hygiene gate all pass, and the recorded job-50 receipt still verifies and still hashes to the
-# value stored on chain. Nothing in this file holds a key, deploys anything or touches mainnet.
+# What a green tick means here: the python suites, the TypeScript typecheck, the contract suite,
+# the lint and the repo hygiene gate all pass, and the recorded job-50 receipt still verifies and
+# still hashes to the value stored on chain. Nothing in this file holds a key, deploys anything or
+# touches mainnet.
 on:
   push:
     branches: [main]
@@ -58,6 +59,21 @@ jobs:
       - name: Acceptance gate is fail-closed
         run: |
           python scripts/verify_acceptance.py --deliverable artifacts/deliverable_demo.json
+
+  typescript:
+    # The Intents treasury side of the repo is TypeScript, and `tsc --noEmit` is the only gate that
+    # reads those files. Nothing here contacts an API: typecheck compiles, it does not run.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "22"   # package.json engines: >=22
+          cache: npm
+      - name: Install from the lockfile
+        run: npm ci
+      - name: Typecheck the Intents client and popup server
+        run: npm run typecheck
 
   contract:
     runs-on: ubuntu-latest

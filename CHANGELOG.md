@@ -9,6 +9,10 @@ is made yet.
 ## [Unreleased] — 2026-11-14
 
 ### Added
+- A CI job for the TypeScript side. `core/intents/` ships twelve `.ts` files and a `typecheck`
+  script, and no gate read them — the python suites, the contract suite and the hygiene gate all
+  passed with the Intents client uncompilable. `npm ci && npm run typecheck` is now the fourth job,
+  and `make typecheck` is the local equivalent.
 - GIFs and stills cut from the dual-host demo film, placed next to the text they prove
   (`docs/assets/`).
 - The README front page rebuilt around them: a quickstart that shows real measured output, the
@@ -28,6 +32,9 @@ is made yet.
   on-screen events (`docs/assets/dual-tui-demo.mp4`).
 
 ### Changed
+- `CONTRIBUTING.md` set up the venv with a hand-written `pip install` that named three packages
+  where `make bootstrap` installs four, so a contributor who followed it exactly had no `ruff` and
+  `make check` failed on the lint step. It now names `make bootstrap`, and adds the typecheck line.
 - `.gitignore` rewritten: it carried a malformed pattern that matched nothing (`*.json!package.json`)
   and a duplicated WASM negation; it now also covers the caches this repo actually produces.
 - Four `docs/EVIDENCE_LOG.md` rows no longer carry a stray `|` or a surplus column, so their claims
