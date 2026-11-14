@@ -80,6 +80,11 @@ print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_sta
 
 ## See it run
 
+**Interactive live demo (53 s, 1080p, narrated):** [docs/assets/interactive-demo.mp4](docs/assets/interactive-demo.mp4)
+— a real terminal, typed and spoken step by step: Foreman registered as an MCP plugin in OpenCode
+(free GLM model), a plain-English request calls the live board tool, then the CLI board and the
+acceptance gate. Nothing recreated — the agent really runs the tools.
+
 **Proof & Why (62 s, 1080p):** [docs/assets/proof-film.mp4](docs/assets/proof-film.mp4) — the trust layer in
 one pass: fail-closed receipt, machine-checkable acceptance gate, open guest bid + labelled market offer,
 mutual cancel, MCP/CLI portability, the real job-50 numbers, and the honest v1 limits.
