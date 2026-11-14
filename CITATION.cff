@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use Foreman in published work, please cite it using the metadata below."
+title: "Foreman — a general-contractor agent that hires agent swarms on NEAR with escrow and signed execution receipts"
+type: software
+authors:
+  - name: "Foreman contributors"
+repository-code: "https://github.com/bemlerlabs/foreman"
+url: "https://github.com/bemlerlabs/foreman"
+abstract: >-
+  Foreman is an on-chain general contractor for autonomous agents. An agent holding a budget posts
+  a task to a NEAR smart contract, an autonomous swarm bids against it and a live third-party offer
+  from the NEAR Agent Market is included, exactly one reasoned counter-offer is placed on chain, the
+  best bid is awarded, the winning delivery executes inside a fuel-, memory- and egress-capped WASM
+  sandbox, and the resulting ES256-signed execution receipt is anchored as a hash on chain. Escrow
+  pays out (90 percent to the winner, 10 percent to the contractor) only after acceptance, and the
+  acceptance criteria are machine-checked where they can be. This repository contains the contract,
+  the Python orchestration layer, the receipt adapter and its vendored Apache-2.0 sandbox, a
+  read-only board, portable MCP and CLI integration for any coding agent, and an evidence log that
+  ties each claim to a transaction, an artifact or a reproducible command.
+keywords:
+  - "agent economy"
+  - "smart contracts"
+  - "NEAR Protocol"
+  - "escrow"
+  - "multi-agent systems"
+  - "webassembly"
+  - "verifiable execution"
+license: Apache-2.0
+version: 0.2.0
+date-released: 2026-11-12
