@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reproducible testnet setup for the Foreman fleet (Q-012-friendly, throwaway accounts).
+# Reproducible testnet setup for the Foreman fleet (throwaway accounts, no mainnet path).
 # Usage: bash ops/setup-testnet-accounts.sh  (requires near-cli 4 + rustup path)
 set -euo pipefail
 export PATH="$HOME/.cargo/bin:$PATH"

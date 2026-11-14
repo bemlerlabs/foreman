@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
-# phase7: phase runner for the hackathon demo recording.
-# Deliberately PHASED instead of e2e_demo.sh: the lead needs reporting/recording
-# windows between steps, and S6 requires the accept-without-receipt rejection
-# BEFORE the real receipt path (S7/S8).
+# video_run.sh — phase runner for the demo recording, one phase per terminal shot.
+# Deliberately PHASED instead of one end-to-end script: each phase needs a recording
+# window of its own, and the fail-closed shot (accept without a receipt, rejected by the
+# contract) has to be captured BEFORE the real receipt path that makes it succeed.
 #
 # call: scripts/video_run.sh <post|bids|middle|acceptdemo|finish>
 #   post       — generate bids+artifact, post_job, print the job id (then: report the job id!)
 #   bids       — 25-30s hold (countdown >60s in frame), then 5 bids in parallel
 #   middle     — counter_offer (boss) + award (boss)
-#   acceptdemo — S6: accept BEFORE receipt -> expected NOT_DELIVERED (rc!=0, visible in terminal)
+#   acceptdemo — fail-closed shot (markers VIDEO_S6*/VIDEO_S6_OK): accept BEFORE a receipt
+#                exists -> expected NOT_DELIVERED, rc!=0, visible in the terminal
 #   finish     — attach_receipt+submit_work (winner), payout proof, accept, sidecar, VIDEO_OK
 #   dashboard  — start the live board server and print the link
 #   recipe     — write recipe.json/md for the settled job and register it as an ephe skill
@@ -73,7 +74,7 @@ print(json.dumps({'spec':os.environ['SPEC'],'acceptance_criteria':json.loads(os.
     if [[ $RC -ne 0 ]] && grep -q "NOT_DELIVERED" "${LAST_CALL_FILE:-$STATE_DIR/last_call_out}"; then
       say S6_OK "accept without a deliverable rejected: NOT_DELIVERED (rc=$RC) — board stays Awarded"
     else
-      echo "VIDEO_FAIL S6: accept was NOT rejected as expected (rc=$RC) — HOLD the run, inform the lead" >&2
+      echo "VIDEO_FAIL S6: accept was NOT rejected as expected (rc=$RC) — stop the run, the fail-closed guarantee did not hold" >&2
       exit 3
     fi
     ;;

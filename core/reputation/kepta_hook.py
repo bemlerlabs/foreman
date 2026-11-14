@@ -11,7 +11,7 @@
    Parity duty: every change to contract update_rep() ⇒ update this class too
    (test test_contract_parity compares tabulated values).
 
-Baseline: kepta — MIT, PyPI `kepta`, npm `kepta-mcp` (Q-005).
+Baseline: kepta — MIT, PyPI `kepta`, npm `kepta-mcp`.
 """
 from __future__ import annotations
 

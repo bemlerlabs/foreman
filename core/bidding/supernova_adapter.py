@@ -18,7 +18,7 @@ Bid calculation (demo discipline, RULES.md):
     Hard cap: price ≤ DEMO_MAX_USD (from .env) — violation raises BidCapExceeded.
     price ≤ budget is enforced as in the contract (OVER_BUDGET raise).
 
-Baseline: supernova — PyPI supernova-swarm, Apache-2.0 (Q-005); local checkout via SUPERNOVA_PATH.
+Baseline: supernova — PyPI supernova-swarm, Apache-2.0; local checkout via SUPERNOVA_PATH.
 """
 from __future__ import annotations
 
