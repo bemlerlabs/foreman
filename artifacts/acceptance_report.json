@@ -1,0 +1,25 @@
+{
+  "results": [
+    {
+      "criterion": "summary <= 300 words",
+      "pass": true,
+      "evidence": "75 words (limit 300)"
+    },
+    {
+      "criterion": "CSV data table",
+      "pass": true,
+      "evidence": "5 data rows, 2 columns"
+    },
+    {
+      "criterion": "cited sources",
+      "pass": true,
+      "evidence": "3 cited source(s)"
+    }
+  ],
+  "machine_total": 3,
+  "machine_passed": 3,
+  "manual": [],
+  "pass": true,
+  "report_hash": "e298ee9689458070f9cc7a3a1395c5042eb244872b16b4894bd1ffc8b4238179",
+  "job_id": null
+}

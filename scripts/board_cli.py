@@ -69,6 +69,13 @@ def main(argv=None):
             sidecar = json.loads(sc.read_text(encoding="utf-8"))
         except Exception:
             sidecar = {}
+    acceptance = {}
+    ac = REPO_ROOT / "artifacts" / f"acceptance_job{args.job}.json"
+    if ac.is_file():
+        try:
+            acceptance = json.loads(ac.read_text(encoding="utf-8"))
+        except Exception:
+            acceptance = {}
 
     winner = job.get("winner")
     rep_now = None
@@ -96,6 +103,7 @@ def main(argv=None):
         "receipt": {"receipt_hash": job.get("receipt_hash"), "artifact_hash": job.get("artifact_hash"),
                     "payout_tx": sidecar.get("payout_tx"),
                     "explorer": (EXPLORER + sidecar["payout_tx"]) if sidecar.get("payout_tx") else None},
+        "acceptance": (acceptance or None),
         "result": {"winner": winner,
                    "payout_near_cent": cents(int(job["budget"]) - int(job["budget"]) * 10 // 100),
                    "rep_before": win_bid["rep_snapshot"] if win_bid else None,
@@ -112,6 +120,10 @@ def main(argv=None):
         if out["counter_offer"]:
             print(f"Counter-offer: {out['counter_offer']['price_near_cent']} NEAR-cent ({out['counter_offer']['bidder']})")
         print(f"Receipt: {out['receipt']['receipt_hash'] or '—'}")
+        if out["acceptance"]:
+            a = out["acceptance"]
+            print(f"Acceptance gate: {a.get('machine_passed')}/{a.get('machine_total')} machine-checked "
+                  f"({'PASS' if a.get('pass') else 'FAIL'})")
         print(f"Board:   {out['board_url']}")
     return 0
 

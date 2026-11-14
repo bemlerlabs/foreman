@@ -47,6 +47,11 @@ print('verify_receipt:', verify_receipt(r)); print('receipt_hash :', receipt_has
 # → receipt_hash : e7e1673bd9dc9af05c2c0390340c984cd859ded20ebf72146a4671f0c743250e
 #   (the same hash stored as receipt_hash on chain for job 50 — sha256 over JCS-canonical bytes)
 
+# 2b) ACCEPTANCE GATE — machine-check the deliverable against the criteria (fail-closed):
+.venv-receipts/bin/python scripts/verify_acceptance.py --deliverable artifacts/deliverable_demo.json
+# → 3/3 machine-checked PASS (summary <=300 words · CSV table · cited sources); tampered → FAIL
+#   criteria that need human judgement are reported as MANUAL, never auto-passed
+
 # 3) PROOF CHAIN AS TESTS — signature roundtrip, tamper, replay and CLI tests:
 .venv-receipts/bin/python -m pytest core/receipts -q
 # → 16 passed
