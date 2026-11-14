@@ -30,7 +30,7 @@ repos:
         always_run: true
 
       - id: pytest-quick
-        name: python suites (69 tests)
+        name: python suites (71 tests)
         entry: .venv-receipts/bin/python -m pytest core
         language: system
         pass_filenames: false

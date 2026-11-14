@@ -71,6 +71,19 @@ is made yet.
   action (see [SECURITY.md](SECURITY.md)).
 
 ### Fixed
+- Three text claims that did not survive contact with the evidence that produced them. The host
+  matrix named the second filmed model `Qwen3.6-Flash`; the terminal capture of that run shows
+  `qwen3.8-flash-next`, and the endpoint the film pointed Claude Code at is a DGX Spark, so the row
+  now says Qwen 3.8 Flash and gives the slug. The pre-commit hook still announced "python suites
+  (69 tests)" after the suite had grown to 71 — the only place left that carried the old count. And
+  the quickstart block that promises "do X, see Y" omitted one line the command actually prints (the
+  labelled third-party market offer), so a reader comparing their terminal to the page saw a
+  difference where there was none.
+- Cost framing in the 0.2.0 entry claimed the numbers had been rewritten *to* be like-for-like. They
+  had been rewritten to say the opposite: a testnet cent-job and a mainnet USD `per_call` quote are
+  different tasks on different rails, and the published rule is raw numbers plus scope, never a
+  multiplier. The entry now matches `docs/MARKET_NOTES.md`, `docs/EVIDENCE_LOG.md` and
+  `docs/WHY_FOREMAN.md`, which all already said so.
 - The bid generator now defaults to the published team swarm when `SWARM_ACCOUNTS` is absent or
   empty, which is what every fresh clone and every CI runner has. It used to require that the
   variable be set at all, so six tests passed only on a machine that already held the operator's
@@ -106,8 +119,9 @@ is made yet.
 - Narrated demo films and an English-only product surface.
 
 ### Changed
-- Cost framing rewritten to like-for-like numbers; the earlier multiplier comparison is gone because
-  it compared unlike things.
+- Cost framing rewritten: the testnet cent-job and the mainnet USD `per_call` quote are stated as
+  *not* like-for-like, each with its own scope. The earlier multiplier comparison is gone because it
+  compared unlike things.
 - Live board moved to port 8899; flow state moved out of `/tmp` into the checkout.
 
 ## [0.1.0] — 2026-11-10 — the gate

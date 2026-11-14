@@ -55,6 +55,7 @@ Job 50 [Accepted] · budget 900.00 NEAR-cent
   4. agent2.foreman-team.testnet          15.59 ¢  eta 24s  rep 54
   5. agent5.foreman-team.testnet          16.44 ¢  eta 24s  rep 54
 Counter-offer: 12.20 NEAR-cent (boss.foreman-team.testnet)
+Market offer (third-party, off-chain): web-research $0.5/per_call · live=1
 Receipt: e7e1673bd9dc9af05c2c0390340c984cd859ded20ebf72146a4671f0c743250e
 Board:   http://127.0.0.1:8899/?job=50
 ```
@@ -92,15 +93,16 @@ make build-worker
 ## See it run
 
 **Two hosts, one plugin (137 s, 1080p, narrated):** [docs/assets/dual-tui-demo.mp4](docs/assets/dual-tui-demo.mp4)
-— the same Foreman MCP plugin loaded in two different agent CLIs: OpenCode (free GLM model) and
-Claude Code (self-hosted Qwen model on a DGX Spark). Both get the same plain-English question —
+— the same Foreman MCP plugin loaded in two different agent CLIs: OpenCode on the free GLM-5.3-Flash
+tier, and Claude Code on Qwen 3.8 Flash served from our own DGX Spark, so the weights never leave
+that machine. Both get the same plain-English question —
 "Do you see the Foreman plugin? What can it do for me?" — discover the four live tools, then read
 settled job 50 from the contract: winner, payout, receipt hash. Both finish on screen while the
 narration walks through each step. Install once, works in any host.
 
 **Interactive live demo (53 s, 1080p, narrated):** [docs/assets/interactive-demo.mp4](docs/assets/interactive-demo.mp4)
 — a real terminal, typed and spoken step by step: Foreman registered as an MCP plugin in OpenCode
-(free GLM model), a plain-English request calls the live board tool, then the CLI board and the
+(free GLM-5.3-Flash), a plain-English request calls the live board tool, then the CLI board and the
 acceptance gate. Nothing recreated — the agent really runs the tools.
 
 **Proof & Why (62 s, 1080p):** [docs/assets/proof-film.mp4](docs/assets/proof-film.mp4) — the trust layer in
@@ -169,7 +171,7 @@ as a plugin two ways:
 | Host | Status | How it connects |
 |---|---|---|
 | OpenCode | **filmed in this repo** (free GLM-5.3-Flash) | the `mcpServers` block in [plugin-pack/mcp/README.md](plugin-pack/mcp/README.md) |
-| Claude Code | **filmed in this repo** (Qwen3.6-Flash served from a DGX Spark) | the same block, in its MCP config |
+| Claude Code | **filmed in this repo** (Qwen 3.8 Flash, `qwen3.8-flash-next`, served from our own DGX Spark) | the same block, in its MCP config |
 | Any other MCP host (Cursor, Cline, Continue, Windsurf, Zed, Claude Desktop) | same stdio contract, not filmed here | register `python3 <REPO>/plugin-pack/mcp/foreman_mcp.py` |
 | Agents without MCP | supported | the CLI above, or `make cli-board` |
 
