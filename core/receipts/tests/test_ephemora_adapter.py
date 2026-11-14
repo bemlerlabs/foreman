@@ -17,7 +17,6 @@ ec = pytest.importorskip("ephemora_cell", reason="Apache package ephemora_cell +
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-from core.receipts import ephemora_adapter as ad  # noqa: E402
 from core.receipts.ephemora_adapter import (  # noqa: E402
     Caps, ReceiptVerifyError, egress_log_hash, load_or_create_cell_key,
     receipt_hash, run_and_attest, verify_or_raise, verify_receipt,
@@ -108,7 +107,7 @@ def test_nonhex_signature_failclosed(worker_wasm):
 
 def test_wrong_pubkey_failclosed(worker_wasm):
     r = run_and_attest(str(worker_wasm), _inputs())
-    other = load_or_create_cell_key()  # same key ok — "wrong" means: force a different PEM text
+    load_or_create_cell_key()  # ensures the verifier's key exists; "wrong key" below is a foreign PEM
     from cryptography.hazmat.primitives import serialization
     from cryptography.hazmat.primitives.asymmetric import ec
     foreign = ec.generate_private_key(ec.SECP256R1()).public_key().public_bytes(

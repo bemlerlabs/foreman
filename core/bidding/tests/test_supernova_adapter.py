@@ -22,7 +22,6 @@ from core.bidding.supernova_adapter import (  # noqa: E402
     decompose_spec,
     make_bid,
     make_engine,
-    price_yocto_for,
     usd_value,
 )
 

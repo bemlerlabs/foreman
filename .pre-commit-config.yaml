@@ -1,0 +1,37 @@
+# Pre-commit gates, deliberately all `repo: local` so nothing is downloaded at commit time and the
+# checks are exactly the ones `make check` runs. One-time setup:
+#
+#   make bootstrap                  # creates .venv-receipts with ruff
+#   .venv-receipts/bin/pip install pre-commit
+#   .venv-receipts/bin/pre-commit install
+#
+# Skip a hook only with a reason in the commit message; `--no-verify` on a money path is how a
+# fail-closed project becomes fail-open.
+minimum_pre_commit_version: "3.5.0"
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: local
+    hooks:
+      - id: ruff
+        name: ruff (syntax errors + undefined names)
+        entry: .venv-receipts/bin/python -m ruff check --no-cache
+        language: system
+        types: [python]
+        files: ^(core|scripts|plugin-pack)/
+        exclude: ^(vendor/|core/intents/vendor/|\.venv-receipts/)
+
+      - id: hygiene
+        name: repo hygiene (dead links, leak patterns, media budget)
+        entry: .venv-receipts/bin/python scripts/check_hygiene.py
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      - id: pytest-quick
+        name: python suites (69 tests)
+        entry: .venv-receipts/bin/python -m pytest core
+        language: system
+        pass_filenames: false
+        always_run: true

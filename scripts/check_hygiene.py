@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""check_hygiene.py — repo gates that a reviewer would otherwise have to remember.
+
+    python3 scripts/check_hygiene.py            # all checks
+    python3 scripts/check_hygiene.py --links    # just dead links
+
+Stdlib only, read-only, exits non-zero on a finding. Three groups:
+
+  links    relative links and `path/to/file.ext` mentions in markdown that resolve to nothing,
+           which is how documentation silently rots after a rename
+  leaks    operator home directories, e-mail addresses, token-shaped strings and private-key
+           headers in tracked files
+  media    tracked files above the per-file size GitHub will serve, and the total payload a
+           judge has to download to see the demos
+
+Known limitation: the vendored upstream readme (vendor/README.ephemora-cell.md) is kept
+byte-for-byte, so its links are relative to the upstream repository, not this one.
+"""
+from __future__ import annotations
+
+import argparse
+import os
+import re
+import subprocess
+import sys
+import urllib.parse
+
+ROOT = subprocess.run(["git", "rev-parse", "--show-toplevel"],
+                      capture_output=True, text=True, check=True).stdout.strip()
+
+# Files whose contents are someone else's, verbatim: scanning them would only produce noise we
+# would then be tempted to explain away.
+SKIP_PREFIXES = ("vendor/", "node_modules/", ".venv", "core/intents/vendor/")
+SKIP_EXACT = {"vendor/README.ephemora-cell.md", ".pytest_cache/README.md"}
+
+LEAK_PATTERNS = [
+    (re.compile(r"/Users/[A-Za-z0-9._-]+/"), "operator home directory"),
+    (re.compile(r"[A-Za-z0-9._%+-]+@(?:gmail|outlook|googlemail|hotmail|icloud|proton)\.[a-z]{2,}"),
+     "e-mail address"),
+    (re.compile(r"\b(?:naa_|aat_)[A-Za-z0-9_-]{16,}"), "token-shaped string"),
+    (re.compile(r"\beyJ[A-Za-z0-9_-]{24,}\.[A-Za-z0-9_-]{8,}"), "JWT-shaped string"),
+    (re.compile(r"-----BEGIN (?:EC |RSA |OPENSSH |PGP )?PRIVATE KEY-----"), "private key material"),
+]
+
+# Deliberate placeholders: short, obviously fake, and referenced by name in the docs.
+LEAK_ALLOW = re.compile(r"TESTREDACTED|EXAMPLE|placeholder|redacted", re.I)
+
+MD_LINK = re.compile(r"\[[^\]]{0,120}\]\(([^)\s]+)\)")
+BACKTICK_PATH = re.compile(r"`([A-Za-z0-9_./-]+\.(?:md|py|rs|toml|json|sh|wasm|go|html|js|cjs|mjs|ts|yaml|yml|cff|svg|png|gif|mp4))`")
+
+PER_FILE_LIMIT = 95 * 1024 * 1024  # GitHub's hard cap is 100 MiB; stop well before it
+MAX_SCAN_BYTES = 8 * 1024 * 1024   # text files only; recorded media is not scanned line-by-line
+
+
+def tracked_files() -> list[str]:
+    out = subprocess.run(["git", "ls-files", "-z"], capture_output=True, text=True,
+                         check=True).stdout
+    return [p for p in out.split("\0") if p]
+
+
+def scan_files() -> list[str]:
+    """Tracked plus untracked-but-not-ignored.
+
+    Links and leaks are properties of the text in front of us, so the gate reads the work tree:
+    a secret in a file that has not been added yet is still a secret one commit away. The media
+    budget stays on tracked files only, because the number it protects is what the repository
+    actually ships."""
+    others = subprocess.run(["git", "ls-files", "--others", "--exclude-standard", "-z"],
+                            capture_output=True, text=True, check=True).stdout
+    seen, ordered = set(), []
+    for p in tracked_files() + [p for p in others.split("\0") if p]:
+        if p not in seen:
+            seen.add(p)
+            ordered.append(p)
+    return ordered
+
+
+def skipped(path: str) -> bool:
+    return path in SKIP_EXACT or path.startswith(SKIP_PREFIXES)
+
+
+def check_links(files: list[str]) -> list[str]:
+    problems = []
+    for path in files:
+        if not path.endswith(".md") or skipped(path):
+            continue
+        text = open(os.path.join(ROOT, path), encoding="utf-8", errors="replace").read()
+        for m in MD_LINK.finditer(text):
+            target = m.group(1)
+            if target.startswith(("http://", "https://", "mailto:", "#", "tel:")):
+                continue
+            rel = urllib.parse.unquote(target.split("#")[0].split("?")[0])
+            if rel and not os.path.exists(os.path.join(ROOT, os.path.dirname(path), rel)):
+                problems.append(f"{path}: broken link -> {target}")
+        for m in BACKTICK_PATH.finditer(text):
+            rel = m.group(1)
+            # A bare filename in prose ("run `gen_artifact.py`") is not a path claim; only tokens
+            # that look like paths are checked, root-relative or relative to the document.
+            if rel.startswith("/") or "/" not in rel or rel.startswith(("http", "tel:")):
+                continue  # leading slash = an API endpoint path, not a file in this repo
+            root_cand = os.path.join(ROOT, rel)
+            doc_cand = os.path.join(ROOT, os.path.dirname(path), rel)
+            if not (os.path.exists(root_cand) or os.path.exists(doc_cand)):
+                problems.append(f"{path}: mentions a file that is not in the repo -> {rel}")
+    return problems
+
+
+def check_leaks(files: list[str]) -> list[str]:
+    problems = []
+    for path in files:
+        if skipped(path):
+            continue
+        full = os.path.realpath(os.path.join(ROOT, path))
+        if not full.startswith(ROOT + os.sep):
+            problems.append(f"{path}: escapes the repository root — refusing to read it")
+            continue
+        try:
+            if os.path.getsize(full) > MAX_SCAN_BYTES:
+                continue
+            data = open(full, "rb").read()
+        except OSError:
+            continue
+        if b"\0" in data[:4096]:
+            continue  # binary: the wheel and the media files are covered by vendor/NOTICE
+        text = data.decode("utf-8", errors="replace")
+        for lineno, line in enumerate(text.splitlines(), 1):
+            for pattern, label in LEAK_PATTERNS:
+                for m in pattern.finditer(line):
+                    if LEAK_ALLOW.search(line):
+                        continue
+                    # Length only, never the content: a hygiene gate must not put the secret it
+                    # found into the CI log.
+                    problems.append(f"{path}:{lineno}: {label} ({len(m.group(0))} chars)")
+    return problems
+
+
+def check_media(files: list[str]) -> list[str]:
+    problems = []
+    total = 0
+    for path in files:
+        size = os.path.getsize(os.path.join(ROOT, path))
+        total += size
+        if size > PER_FILE_LIMIT:
+            problems.append(f"{path}: {size/1e6:.1f} MB exceeds the {PER_FILE_LIMIT/1e6:.0f} MB gate")
+    print(f"  tracked payload: {total/1e6:.1f} MB in {len(files)} files")
+    return problems
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--links", action="store_true", help="run the dead-link check only")
+    ap.add_argument("--quiet", action="store_true", help="print findings only")
+    args = ap.parse_args()
+
+    files = scan_files()
+    groups = []
+    if args.links:
+        groups.append(("links", check_links(files)))
+    else:
+        groups = [("links", check_links(files)),
+                  ("leaks", check_leaks(files)),
+                  ("media", check_media(tracked_files()))]
+
+    failed = False
+    for name, problems in groups:
+        if problems:
+            failed = True
+            print(f"{name}: {len(problems)} finding(s)")
+            for p in problems:
+                print(f"  {p}")
+        elif not args.quiet and name != "media":
+            print(f"{name}: clean")
+    if failed:
+        print("\nFix the findings above, or add a narrow allow-comment if the string is deliberate.")
+        return 1
+    if not args.quiet:
+        print("hygiene: all checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

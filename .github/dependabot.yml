@@ -1,0 +1,20 @@
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+  - package-ecosystem: npm
+    directory: "/"
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    groups:
+      near-intents:
+        patterns: ["@near-intents-agent-api/*", "near-api-js", "dotenv"]
+  - package-ecosystem: cargo
+    directory: "/contracts/foreman"
+    schedule: { interval: weekly }
+    open-pull-requests-limit: 3
+    groups:
+      near-sdk:
+        patterns: ["near-sdk", "near-*"]

@@ -1,0 +1,39 @@
+name: Feature or design change
+description: A change to what the contract settles, how a claim is proven, or how the board reads
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem you can feel
+      description: What are you trying to do that Foreman makes hard or unverifiable today?
+    validations: {required: true}
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Which component — `contracts/foreman`, `core/*`, `web/board`, `scripts`, `plugin-pack`?
+    validations: {required: true}
+  - type: dropdown
+    id: touches-money
+    attributes:
+      label: Does it change what settles on chain?
+      description: Anything that moves escrow, awards, pays out or gates acceptance needs a test that
+        pins the new behaviour and a note in RULES.md if the rule itself changes.
+      options:
+        - "No — off-chain only"
+        - "Yes, contract behaviour changes"
+        - "Yes, but only how the result is displayed"
+        - "Not sure"
+    validations: {required: true}
+  - type: textarea
+    id: proof
+    attributes:
+      label: How would we know it works?
+      description: The test, artifact or on-chain evidence that would make this claim checkable.
+    validations: {required: true}
+  - type: textarea
+    id: alternative
+    attributes:
+      label: What else did you consider
+      description: Including "do nothing", and why.

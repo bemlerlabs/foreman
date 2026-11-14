@@ -13,7 +13,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 CLI = REPO_ROOT / "core" / "bidding" / "cli_bids.py"
 sys.path.insert(0, str(REPO_ROOT))
 
-from core.bidding.cli_bids import DEFAULT_SPEC, GenError, generate_bids, stair_factors  # noqa: E402
+from core.bidding.cli_bids import GenError, generate_bids, stair_factors  # noqa: E402
 from core.bidding.supernova_adapter import _env, usd_value  # noqa: E402
 
 

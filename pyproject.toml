@@ -1,0 +1,25 @@
+# Tooling configuration only — Foreman's Python side is not distributed as a package.
+# The sandbox dependency is a vendored wheel (vendor/); see vendor/NOTICE for provenance.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+extend-exclude = [
+  "vendor",             # upstream Apache-2.0 wheel and readme, kept verbatim
+  "node_modules",
+  ".venv-receipts",
+  "core/intents/vendor",  # pinned third-party bundle
+]
+
+[tool.ruff.lint]
+# Syntax errors and undefined names are the findings that can actually break a money path.
+# Style rules are deliberately off: the demo scripts carry deliberate `# noqa: E402` because they
+# bootstrap sys.path before importing core.*, which is how the repo runs without an install step.
+select = ["E9", "F"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]   # re-exports
+
+[tool.pytest.ini_options]
+testpaths = ["core"]
+addopts = "-q"

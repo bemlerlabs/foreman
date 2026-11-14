@@ -12,7 +12,6 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from core.market.market_client import (  # noqa: E402
     MOCK_LISTINGS,
-    MarketAuthError,
     MarketClient,
     MarketError,
 )

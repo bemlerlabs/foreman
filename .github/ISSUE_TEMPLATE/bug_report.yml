@@ -1,0 +1,58 @@
+name: Bug report
+description: Something does not behave as the docs, a test or the chain says it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Foreman's claim is that a stranger can check every statement it makes. A bug report is the
+        same exercise: show what you ran, show what came back.
+  - type: textarea
+    id: what
+    attributes:
+      label: What broke
+      description: One paragraph. Which path — contract, receipt, board, CLI, plugin, demo script?
+      placeholder: |
+        `scripts/board_cli.py --job 50` printed an empty receipt line while the contract has a hash.
+    validations: {required: true}
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduce it
+      description: Exact commands, from a clean checkout. Include the commit you built from.
+      value: |
+        ```bash
+        git rev-parse --short HEAD
+        make bootstrap
+        <commands>
+        ```
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual
+      description: Expected comes from a test, a doc line or a contract `require!` — name which.
+    validations: {required: true}
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: OS, `python3 --version`, `cargo --version`, `node --version`
+      placeholder: macOS 15 / Python 3.12.x / cargo 1.8x / node 22
+    validations: {required: true}
+  - type: textarea
+    id: chain
+    attributes:
+      label: Chain evidence
+      description: Tx hash, account, code hash or job id if the report involves on-chain state. Paste the
+        identifier only — never a key, seed or token.
+      placeholder: job 50, accept tx 8arjZu22uJk43smJ3rQxVS7tJZZic9Bi8vBq21NWJ4Em
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed every secret, key and token from the text and screenshots
+          required: true
+        - label: I read SECURITY.md and this is not a vulnerability report (those go privately)
+          required: true

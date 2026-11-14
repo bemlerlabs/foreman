@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a vulnerability privately
+    url: https://github.com/bemlerlabs/foreman/security/advisories/new
+    about: Anything that could move funds it should not, forge a receipt, or bypass acceptance goes here, not to a public issue.
+  - name: Read the design before opening a question
+    url: https://github.com/bemlerlabs/foreman/blob/main/docs/WHY_FOREMAN.md
+    about: WHY_FOREMAN.md and docs/ARCHITECTURE.md answer most questions about scope and shape; if yours is not covered, use the "Feature or design change" template.
