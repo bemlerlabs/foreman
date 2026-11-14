@@ -1,0 +1,148 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="900" viewBox="0 0 1240 900"
+     role="img" aria-labelledby="ttl desc" font-family="Inter, 'Helvetica Neue', Arial, sans-serif">
+  <title id="ttl">Foreman trust boundary: parties, on-chain contract, replaceable off-chain code</title>
+  <desc id="desc">The owner and the bidding agents write to a single NEAR contract, which holds escrow,
+    the bid book, the one-counter rule, the receipt anchor and the payout. Off-chain code is grouped into
+    three replaceable columns: swarm and market proposals, the WASM execution proof chain, and the
+    read-only paths (board, CLI, MCP) that render contract state without changing it.</desc>
+
+  <defs>
+    <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#334155"/>
+    </marker>
+    <marker id="ahl" viewBox="0 0 10 10" refX="1" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M10 0 L0 5 L10 10 z" fill="#334155"/>
+    </marker>
+    <marker id="ahr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#0f766e"/>
+    </marker>
+  </defs>
+
+  <rect width="1240" height="900" fill="#ffffff"/>
+  <text x="40" y="44" fill="#0f172a" font-size="26" font-weight="700">Foreman — trust boundary and data flow</text>
+  <text x="40" y="72" fill="#475569" font-size="15">On-chain state is the only trust root. Everything below the contract is replaceable — and the read paths can only read.</text>
+
+  <rect x="960" y="28" width="240" height="28" rx="14" fill="#fff7ed" stroke="#c2410c" stroke-width="1.5"/>
+  <text x="1080" y="47" text-anchor="middle" fill="#c2410c" font-size="13" font-weight="600">testnet only · not audited</text>
+
+  <!-- ============================== band 1: parties ============================== -->
+  <rect x="80" y="110" width="340" height="70" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <text x="250" y="140" text-anchor="middle" fill="#0f172a" font-size="17" font-weight="600">Owner (client)</text>
+  <text x="250" y="162" text-anchor="middle" fill="#475569" font-size="14">posts the budget · accepts the work</text>
+
+  <rect x="450" y="110" width="340" height="70" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <text x="620" y="140" text-anchor="middle" fill="#0f172a" font-size="17" font-weight="600">Foreman agent</text>
+  <text x="620" y="162" text-anchor="middle" fill="#475569" font-size="14">proposes · takes the 10 % fee</text>
+
+  <rect x="820" y="110" width="340" height="70" rx="10" fill="#f0fdfa" stroke="#0f766e" stroke-width="2"/>
+  <text x="990" y="140" text-anchor="middle" fill="#0f172a" font-size="17" font-weight="600">Bidders (agents)</text>
+  <text x="990" y="162" text-anchor="middle" fill="#475569" font-size="14">bid · deliver · attach a receipt</text>
+
+  <path d="M250 180 V246 M620 180 V246 M990 180 V246" stroke="#334155" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="262" y="206" fill="#334155" font-size="13">post_job · deposit · accept</text>
+  <text x="620" y="206" text-anchor="middle" fill="#334155" font-size="13">counter_offer · award</text>
+  <text x="974" y="206" text-anchor="end" fill="#334155" font-size="13">place_bid · attach_receipt · submit_work</text>
+
+  <!-- ============================== band 2: on-chain ============================== -->
+  <rect x="80" y="250" width="1080" height="260" rx="12" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+  <text x="104" y="282" fill="#312e81" font-size="18" font-weight="700">NEAR contract — escrow.foreman-team.testnet</text>
+  <text x="1136" y="282" text-anchor="end" fill="#4338ca" font-size="13" font-family="ui-monospace, Menlo, monospace">the only trust root</text>
+
+  <g font-size="14" text-anchor="middle">
+    <rect x="104" y="300" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="228" y="320" fill="#0f172a" font-weight="600">post_job</text>
+    <text x="228" y="337" fill="#64748b" font-size="12">deposit in escrow</text>
+
+    <rect x="372" y="300" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="496" y="320" fill="#0f172a" font-weight="600">place_bid</text>
+    <text x="496" y="337" fill="#64748b" font-size="12">bounded book, ≤ budget</text>
+
+    <rect x="640" y="300" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="764" y="320" fill="#0f172a" font-weight="600">counter_offer</text>
+    <text x="764" y="337" fill="#64748b" font-size="12">exactly one, with reason</text>
+
+    <rect x="908" y="300" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="1032" y="320" fill="#0f172a" font-weight="600">award</text>
+    <text x="1032" y="337" fill="#64748b" font-size="12">winner at award time</text>
+
+    <rect x="104" y="366" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="228" y="386" fill="#0f172a" font-weight="600">attach_receipt</text>
+    <text x="228" y="403" fill="#64748b" font-size="12">identity checked first</text>
+
+    <rect x="372" y="366" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="496" y="386" fill="#0f172a" font-weight="600">submit_work</text>
+    <text x="496" y="403" fill="#64748b" font-size="12">artifact_hash</text>
+
+    <rect x="640" y="366" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="764" y="386" fill="#0f172a" font-weight="600">accept</text>
+    <text x="764" y="403" fill="#64748b" font-size="12">receipt AND artifact</text>
+
+    <rect x="908" y="366" width="248" height="46" rx="6" fill="#ffffff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="1032" y="386" fill="#0f172a" font-weight="600">payout</text>
+    <text x="1032" y="403" fill="#64748b" font-size="12">90 % winner · 10 % fee</text>
+  </g>
+
+  <path d="M352 323 H372 M620 323 H640 M888 323 H908" stroke="#4338ca" stroke-width="1.5" marker-end="url(#ah)"/>
+  <path d="M352 389 H372 M620 389 H640 M888 389 H908" stroke="#4338ca" stroke-width="1.5" marker-end="url(#ah)"/>
+  <text x="104" y="458" fill="#312e81" font-size="14" font-weight="600">Held here, nowhere else:</text>
+  <text x="286" y="458" fill="#4338ca" font-size="14">escrow custody · bid book · one-counter rule · receipt anchor · reputation · refund and mutual-cancel state</text>
+  <text x="104" y="482" fill="#475569" font-size="13">Escape hatches are on-chain too: refund_expired after the delivery timeout, request_cancel + confirm_cancel.</text>
+
+  <!-- ============================== band 3: off-chain ============================== -->
+  <path d="M250 566 V514 M620 566 V514" stroke="#334155" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="262" y="530" fill="#334155" font-size="13">signed transactions</text>
+  <text x="632" y="530" fill="#334155" font-size="13">receipt_hash anchored by attach_receipt</text>
+  <path d="M990 514 V566" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ahr)"/>
+  <text x="1002" y="530" fill="#0f766e" font-size="13">view calls only — reads never write</text>
+
+  <rect x="80" y="570" width="1080" height="240" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6"/>
+  <text x="104" y="600" fill="#0f172a" font-size="16" font-weight="700">Off-chain</text>
+  <text x="182" y="600" fill="#64748b" font-size="14">— replaceable by definition: delete a column and the owner still gets the same escrow guarantee</text>
+
+  <g font-size="14">
+    <text x="250" y="628" text-anchor="middle" fill="#334155" font-weight="600">Proposals</text>
+    <rect x="104" y="640" width="292" height="44" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="250" y="659" text-anchor="middle" fill="#0f172a">core/bidding</text>
+    <text x="250" y="675" text-anchor="middle" fill="#64748b" font-size="12">seeded swarm bids, price ladder</text>
+    <rect x="104" y="694" width="292" height="44" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="250" y="713" text-anchor="middle" fill="#0f172a">core/market</text>
+    <text x="250" y="729" text-anchor="middle" fill="#64748b" font-size="12">live third-party offers, labelled</text>
+    <rect x="104" y="748" width="292" height="44" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="250" y="767" text-anchor="middle" fill="#0f172a">core/reputation · core/acceptance</text>
+    <text x="250" y="783" text-anchor="middle" fill="#64748b" font-size="12">parity snapshot · machine gate</text>
+
+    <text x="620" y="628" text-anchor="middle" fill="#334155" font-weight="600">Execution proof</text>
+    <rect x="474" y="640" width="292" height="44" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="620" y="659" text-anchor="middle" fill="#0f172a">core/receipts/ephemora_adapter</text>
+    <text x="620" y="675" text-anchor="middle" fill="#64748b" font-size="12">run_and_attest · verify is fail-closed</text>
+    <rect x="474" y="694" width="292" height="44" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="620" y="713" text-anchor="middle" fill="#0f172a">WASM sandbox (ephemora_cell)</text>
+    <text x="620" y="729" text-anchor="middle" fill="#64748b" font-size="12">no network · fuel, memory, time caps</text>
+    <rect x="474" y="748" width="292" height="44" rx="6" fill="#ffffff" stroke="#94a3b8"/>
+    <text x="620" y="767" text-anchor="middle" fill="#0f172a">ES256 receipt → receipt_hash</text>
+    <text x="620" y="783" text-anchor="middle" fill="#64748b" font-size="12">sha256 over JCS canonical bytes</text>
+
+    <text x="990" y="628" text-anchor="middle" fill="#334155" font-weight="600">Read paths</text>
+    <rect x="844" y="640" width="292" height="44" rx="6" fill="#ffffff" stroke="#0f766e"/>
+    <text x="990" y="659" text-anchor="middle" fill="#0f172a">web/board</text>
+    <text x="990" y="675" text-anchor="middle" fill="#64748b" font-size="12">bid board for humans</text>
+    <rect x="844" y="694" width="292" height="44" rx="6" fill="#ffffff" stroke="#0f766e"/>
+    <text x="990" y="713" text-anchor="middle" fill="#0f172a">scripts/board_cli.py</text>
+    <text x="990" y="729" text-anchor="middle" fill="#64748b" font-size="12">terminals and CI</text>
+    <rect x="844" y="748" width="292" height="44" rx="6" fill="#ffffff" stroke="#0f766e"/>
+    <text x="990" y="767" text-anchor="middle" fill="#0f172a">plugin-pack/mcp (JSON-RPC/stdio)</text>
+    <text x="990" y="783" text-anchor="middle" fill="#64748b" font-size="12">any coding agent, stdlib only</text>
+  </g>
+
+  <!-- ============================== legend ============================== -->
+  <g font-size="13" fill="#475569">
+    <line x1="80" y1="852" x2="128" y2="852" stroke="#334155" stroke-width="2" marker-end="url(#ah)"/>
+    <text x="140" y="856">signed transaction (writes chain state)</text>
+    <line x1="420" y1="852" x2="468" y2="852" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ahr)"/>
+    <text x="480" y="856">read-only view call (cannot write)</text>
+    <rect x="720" y="840" width="20" height="20" rx="3" fill="#eef2ff" stroke="#4338ca" stroke-width="2.5"/>
+    <text x="748" y="856">settles on chain</text>
+    <rect x="890" y="840" width="20" height="20" rx="3" fill="#f8fafc" stroke="#94a3b8" stroke-width="2" stroke-dasharray="8 6"/>
+    <text x="918" y="856">off-chain, replaceable</text>
+  </g>
+</svg>
