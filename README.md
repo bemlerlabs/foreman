@@ -80,6 +80,12 @@ print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_sta
 
 ## See it run
 
+**Two hosts, one plugin (96 s, 1080p, narrated):** [docs/assets/dual-tui-demo.mp4](docs/assets/dual-tui-demo.mp4)
+— the same Foreman MCP plugin loaded in two different agent CLIs: OpenCode (free GLM model) and
+Claude Code (self-hosted Qwen model on a DGX Spark). Both get the same plain-English question —
+"Do you see the Foreman plugin? What can it do for me?" — and both discover the four live tools and
+answer. Install once, works in any host.
+
 **Interactive live demo (53 s, 1080p, narrated):** [docs/assets/interactive-demo.mp4](docs/assets/interactive-demo.mp4)
 — a real terminal, typed and spoken step by step: Foreman registered as an MCP plugin in OpenCode
 (free GLM model), a plain-English request calls the live board tool, then the CLI board and the
