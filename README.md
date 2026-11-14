@@ -139,6 +139,9 @@ The demo film shows this exact run, end to end, on testnet.
 - The winner executes in Ephemora-Cell; the ES256-signed receipt is anchored via `attach_receipt`.
 - `accept` pays 90 % of the budget to the worker and 10 % to the foreman account;
   reputation updates as `(old*9 + score)//10`. `refund_expired` returns orphaned escrow permissionlessly.
+- `request_cancel` + `confirm_cancel` are a cooperative exit: either party requests, the **other**
+  confirms, and the full budget returns to the owner (no fault, no reputation change). This closes
+  the delivered-but-stale stalemate; a unilateral ghost still needs arbitration (honest v2 limit).
 
 ## Evidence & further documents
 

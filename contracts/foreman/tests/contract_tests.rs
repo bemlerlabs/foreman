@@ -753,3 +753,107 @@ fn legacy_state_without_counter_map_still_deserializes() {
         "reputation map readable from old state"
     );
 }
+
+// ---------- request_cancel / confirm_cancel (S3) ----------
+
+/// Helper: awarded job with a delivered receipt (state Delivered, winner agent1).
+fn delivered_one(c: &mut Contract) -> u64 {
+    let job = award_one_bid(c);
+    ctx(T0 + 3 * SEC, &agent(1), 0);
+    c.attach_receipt(job, "r".into());
+    c.submit_work(job, "a".into());
+    job
+}
+
+#[test]
+fn cancel_mutual_awarded_refunds_and_clears() {
+    let mut c = init();
+    let job = award_one_bid(&mut c);
+    ctx(T0 + 3 * SEC, &owner(), 0);
+    c.request_cancel(job);
+    assert_eq!(c.get_cancel_request(job), Some(owner()));
+    ctx(T0 + 4 * SEC, &agent(1), 0);
+    c.confirm_cancel(job);
+    assert_eq!(c.get_job(job).state, JobState::Refunded);
+    assert_eq!(c.get_cancel_request(job), None);
+}
+
+#[test]
+fn cancel_mutual_delivered_refunds() {
+    let mut c = init();
+    let job = delivered_one(&mut c);
+    ctx(T0 + 5 * SEC, &agent(1), 0); // winner requests
+    c.request_cancel(job);
+    ctx(T0 + 6 * SEC, &owner(), 0); // owner confirms
+    c.confirm_cancel(job);
+    assert_eq!(c.get_job(job).state, JobState::Refunded);
+}
+
+#[test]
+fn request_cancel_only_parties() {
+    let mut c = init();
+    let job = award_one_bid(&mut c);
+    expect_panic(
+        || {
+            ctx(T0 + 3 * SEC, &acct("stranger.testnet"), 0);
+            c.request_cancel(job);
+        },
+        "ONLY_PARTIES",
+    );
+}
+
+#[test]
+fn confirm_cancel_requires_other_party() {
+    let mut c = init();
+    let job = award_one_bid(&mut c);
+    ctx(T0 + 3 * SEC, &owner(), 0);
+    c.request_cancel(job);
+    expect_panic(
+        || {
+            ctx(T0 + 4 * SEC, &owner(), 0);
+            c.confirm_cancel(job);
+        },
+        "ONLY_OTHER_PARTY",
+    );
+}
+
+#[test]
+fn confirm_cancel_without_request_rejected() {
+    let mut c = init();
+    let job = award_one_bid(&mut c);
+    expect_panic(
+        || {
+            ctx(T0 + 3 * SEC, &agent(1), 0);
+            c.confirm_cancel(job);
+        },
+        "NO_CANCEL_REQUEST",
+    );
+}
+
+#[test]
+fn request_cancel_bad_state_after_accept() {
+    let mut c = init();
+    let job = delivered_one(&mut c);
+    ctx(T0 + 5 * SEC, &owner(), 0);
+    c.accept(job, 90);
+    expect_panic(
+        || {
+            ctx(T0 + 6 * SEC, &owner(), 0);
+            c.request_cancel(job);
+        },
+        "BAD_STATE",
+    );
+}
+
+#[test]
+fn request_cancel_bad_state_while_bidding() {
+    let mut c = init();
+    let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
+    expect_panic(
+        || {
+            ctx(T0 + SEC, &owner(), 0);
+            c.request_cancel(job);
+        },
+        "BAD_STATE",
+    );
+}

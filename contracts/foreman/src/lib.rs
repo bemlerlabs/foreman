@@ -1,5 +1,5 @@
 /// Foreman escrow contract — v0.2 per docs/SEQUENCE.md + RULES.md (near-sdk 5.x)
-/// API: new · post_job · place_bid · counter_offer · award · attach_receipt · submit_work · accept · refund_expired · get_*
+/// API: new · post_job · place_bid · counter_offer · award · attach_receipt · submit_work · accept · refund_expired · request_cancel · confirm_cancel · get_*
 /// Phase-1 hardened (06.11.): max_bids limit, per-job opened_at window proven by tests, RULES flags in docs/EVIDENCE_LOG.md.
 use near_sdk::borsh::{BorshDeserialize, BorshSerialize};
 use near_sdk::serde::{Deserialize, Serialize};
@@ -275,6 +275,51 @@ impl Contract {
         self.jobs.insert(job_id, job);
     }
 
+    /// Cooperative exit (S3): either party (owner or winner) requests a cancel while the
+    /// job is Awarded or Delivered. Closes the "delivered but both refuse → money sits"
+    /// hole without a pretend arbiter: the OTHER party must confirm. Full budget returns
+    /// to the owner; no reputation change (mutual agreement, no fault proven).
+    pub fn request_cancel(&mut self, job_id: JobId) {
+        let job = self.get_job(job_id);
+        require!(
+            job.state == JobState::Awarded || job.state == JobState::Delivered,
+            "BAD_STATE"
+        );
+        let caller = env::predecessor_account_id();
+        require!(
+            caller == job.created_by || job.winner.as_deref() == Some(caller.as_ref()),
+            "ONLY_PARTIES"
+        );
+        Self::cancel_requests().insert(job_id, caller.clone());
+        env::log_str(&format!("foreman:cancel_requested|id={}|by={}", job_id, caller));
+    }
+
+    /// The OTHER party confirms a pending cancel → refund owner, state Refunded.
+    pub fn confirm_cancel(&mut self, job_id: JobId) {
+        let mut pending = Self::cancel_requests();
+        let requester = pending.get(&job_id).cloned().expect("NO_CANCEL_REQUEST");
+        let mut job = self.get_job(job_id);
+        require!(
+            job.state == JobState::Awarded || job.state == JobState::Delivered,
+            "BAD_STATE"
+        );
+        let caller = env::predecessor_account_id();
+        let other = if requester == job.created_by {
+            job.winner.clone().expect("WINNER")
+        } else {
+            job.created_by.clone()
+        };
+        require!(caller == other, "ONLY_OTHER_PARTY");
+        Promise::new(job.created_by.clone())
+            .transfer(job.budget)
+            .detach();
+        pending.remove(&job_id);
+        let budget = job.budget;
+        job.state = JobState::Refunded;
+        self.jobs.insert(job_id, job);
+        env::log_str(&format!("foreman:cancel_mutual|id={}|refunded={}", job_id, budget));
+    }
+
     // ---- Views ----
     pub fn get_job(&self, job_id: JobId) -> Job {
         self.jobs.get(&job_id).expect("JOB_NOT_FOUND").clone()
@@ -289,12 +334,21 @@ impl Contract {
     pub fn get_counter_reason(&self, job_id: JobId) -> Option<String> {
         Self::counter_reasons().get(&job_id).cloned()
     }
+    /// Pending mutual-cancel requester, if any (S3).
+    pub fn get_cancel_request(&self, job_id: JobId) -> Option<AccountId> {
+        Self::cancel_requests().get(&job_id).cloned()
+    }
 
     // ---- internal helpers ----
     /// Persistent counter reasons: LookupMap prefix b"k" (job_id -> reason).
     /// Transient handle — reads/writes straight against storage, contract layout stable.
     fn counter_reasons() -> LookupMap<JobId, String> {
         LookupMap::new(b"k".to_vec())
+    }
+    /// Pending mutual-cancel requests (S3): transient LookupMap prefix b"c", same
+    /// layout-stable pattern as counter_reasons — no struct field, no Borsh break.
+    fn cancel_requests() -> LookupMap<JobId, AccountId> {
+        LookupMap::new(b"c".to_vec())
     }
     fn assert_foreman(&self) {
         require!(
