@@ -80,7 +80,11 @@ print(builder.build(builder.detect_recipe(Path('core/receipts/worker/latency_sta
 
 ## See it run
 
-**Demo film (98 s, 1080p):** [docs/assets/demo-film.mp4](docs/assets/demo-film.mp4) — one continuous
+**Proof & Why (62 s, 1080p):** [docs/assets/proof-film.mp4](docs/assets/proof-film.mp4) — the trust layer in
+one pass: fail-closed receipt, machine-checkable acceptance gate, open guest bid + labelled market offer,
+mutual cancel, MCP/CLI portability, the real job-50 numbers, and the honest v1 limits.
+
+**Live take (98 s, 1080p):** [docs/assets/demo-film.mp4](docs/assets/demo-film.mp4) — one continuous
 take on testnet: plain-English request → 5 swarm bids → exactly one reasoned counter-offer →
 fail-closed reject without a receipt → signed ES256 receipt → 90/10 payout → reputation update.
 
