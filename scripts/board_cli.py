@@ -104,6 +104,7 @@ def main(argv=None):
                     "payout_tx": sidecar.get("payout_tx"),
                     "explorer": (EXPLORER + sidecar["payout_tx"]) if sidecar.get("payout_tx") else None},
         "acceptance": (acceptance or None),
+        "market_offer": sidecar.get("market_offer"),
         "result": {"winner": winner,
                    "payout_near_cent": cents(int(job["budget"]) - int(job["budget"]) * 10 // 100),
                    "rep_before": win_bid["rep_snapshot"] if win_bid else None,
@@ -119,6 +120,10 @@ def main(argv=None):
             print(f"  {b['rank']}. {b['bidder']:34} {b['price_near_cent']:>7} ¢  eta {b['eta_secs']}s  rep {b['rep_snapshot']}" + ("  <- winner" if b["is_winner"] else ""))
         if out["counter_offer"]:
             print(f"Counter-offer: {out['counter_offer']['price_near_cent']} NEAR-cent ({out['counter_offer']['bidder']})")
+        if out["market_offer"]:
+            m = out["market_offer"]
+            print(f"Market offer (third-party, off-chain): {m.get('provider')} "
+                  f"${m.get('price_usd')}/{m.get('unit')} · live={m.get('live')}")
         print(f"Receipt: {out['receipt']['receipt_hash'] or '—'}")
         if out["acceptance"]:
             a = out["acceptance"]

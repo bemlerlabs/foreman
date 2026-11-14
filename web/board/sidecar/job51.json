@@ -1,0 +1,14 @@
+{
+  "job_id": 51,
+  "openness_proof": {
+    "purpose": "permissionless bid entry: an identity outside the seeded swarm bids on-chain",
+    "guest_bidder": "foremandemofund1.testnet",
+    "guest_is_swarm_member": false,
+    "post_tx": "CEwQVYt9UxinP8aeod9v6YNpZvn98EqGBSdkVKSBmCpn",
+    "guest_bid_tx": "DEhbexpcqRUy3XQi5zYp3eyULMfG9531r5hm3hXWRPdX",
+    "budget_near_cent": 100.0,
+    "guest_price_near_cent": 10.0,
+    "contract_test": "place_bid_permissionless_outside_swarm (guest bids and wins)",
+    "note": "job left Bidding; refund_expired returns the 0.1 NEAR escrow after deadline+60s (permissionless)"
+  }
+}

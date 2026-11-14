@@ -154,6 +154,23 @@ fn place_bid_ok_snapshots_rep_and_time() {
 }
 
 #[test]
+fn place_bid_permissionless_outside_swarm() {
+    let mut c = init();
+    let job = post(&mut c, T0, 1_000, T0 + 3_600 * SEC);
+    // Openness (S2): an identity outside the seeded swarm and outside owner/foreman
+    // may bid — place_bid has no identity gate, only window/price/max/duplicate.
+    let guest = acct("guest.notforeman.testnet");
+    bid(&mut c, job, &guest, 700, T0 + 5 * SEC);
+    let bids = c.get_bids(job);
+    assert_eq!(bids.len(), 1);
+    assert_eq!(bids[0].bidder, guest);
+    // and the open entrant can win: award picks the guest (cheapest/only bid).
+    as_foreman(T0 + 6 * SEC);
+    c.award(job);
+    assert_eq!(c.get_job(job).winner, Some(guest));
+}
+
+#[test]
 fn place_bid_not_bidding_after_award() {
     let mut c = init();
     let job = award_one_bid(&mut c);

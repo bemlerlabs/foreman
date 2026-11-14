@@ -5,5 +5,17 @@
   "accept_tx": "FBmYW7aUYVQNBenQJKVGdBEZ4EsXP42vAVYX6EWD8F2a",
   "counter_reason": "Counter-offer (Foreman boss): all acceptance criteria satisfied — #1 summary <=300 words + #2 CSV data table + #3 cited sources — fixed price 10% under the best bid, ETA 24s. Reference: acceptance_criteria #1-#3.",
   "winner": "agent1.foreman-team.testnet",
-  "e2e_log": ".state/e2e_manual.log"
+  "e2e_log": ".state/e2e_manual.log",
+  "market_offer": {
+    "provider": "web-research",
+    "price_usd": 0.5,
+    "unit": "per_call",
+    "live": 1,
+    "fetched_at": "2026-11-10T08:23:25Z",
+    "delivered_jobs": 49,
+    "success_rate": 71,
+    "sla_seconds": 180,
+    "source": "NEAR Agent Market public listings (T5 gate, docs/EVIDENCE_LOG.md)",
+    "note": "third-party off-chain offer shown for comparison; not an on-chain bid"
+  }
 }

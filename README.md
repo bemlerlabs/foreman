@@ -130,6 +130,9 @@ The demo film shows this exact run, end to end, on testnet.
 ## How the money moves (full rules in RULES.md)
 
 - `post_job` locks the budget (0.9 NEAR in the demo) in escrow; 120 s bid window, max 20 bids.
+- `place_bid` is **permissionless** — any account may bid inside the window (proven by a contract
+  test and a live guest bid from outside the swarm, job 51). The third-party market offer is shown
+  as a labelled off-chain row, never passed off as an on-chain bid.
 - The boss places **exactly one** counter-offer at 10 % under the best bid; the reason is
   stored on chain (`get_counter_reason`).
 - `accept` before a receipt exists panics `NOT_DELIVERED` — fail-closed, even for the boss.
