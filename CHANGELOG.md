@@ -48,6 +48,10 @@ is made yet.
   or live wait loop breaks.
 - Vendored third-party NOTICE now states the wheel's SHA-256 and its provenance read from the
   package metadata.
+- The CI workflow pins moved to `actions/checkout@v7` and `actions/setup-python@v7`, the majors the
+  runners were already warning about on every job. Two automated pull requests proposed the same
+  change; applied here it is one commit on the branch everything else already builds from, and each
+  job's deprecation note is gone rather than merely reviewed.
 
 ### Removed
 - Eight internal preparation documents (submission checklist, outreach drafts, working plans). They
