@@ -122,3 +122,19 @@ but missing from the 107 paths (probably webapp-internal).
 or credit_remaining>0 (the amount only visible after owning a token via /v1/wallet/balance).
 Small funding path: portal registration (USER click) → fetch deposit-intent quote →
 send the smallest accepted source asset to depositAddress → USDC rail → instant hire.
+
+## Cost framing (honest, S4 — supersedes any "N× cheaper" copy)
+
+The demo job and the market quote are **not like-for-like**; never publish a multiplier.
+
+- **Foreman demo job (job 50):** a cent-scale *testnet* latency computation. Budget 900 NEAR-cent,
+  worker payout 810 NEAR-cent (~0.81 testnet NEAR), 10 % fee. Testnet money, not USD.
+- **Market quote:** `web-research` at 0.50 USD `per_call` — a *different* task (web research) on a
+  mainnet USDC rail.
+
+Comparing a testnet cent-job to a 0.50 USD mainnet per_call quote mixes task, rail and network.
+The honest statement is the two raw numbers side by side, each with its scope, labelled
+"not like-for-like". A true like-for-like benchmark would require quoting the *identical* task on
+both venues; the market's fixed listings do not accept arbitrary tasks, so it is not feasible
+zero-cost. **Rule for all public copy:** raw numbers + explicit scope; no "× cheaper", no implied
+savings.
