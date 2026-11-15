@@ -1,4 +1,4 @@
-// Shared near-api-js resolution for the local signing scripts (near_send / near_transfer).
+// Shared near-api-js resolution for the local signing script (near_send).
 // Order: NEAR_CLI_MODULES env -> locally resolvable near-api-js -> global near-cli install
 // (`npm root -g`/near-cli/node_modules). No hardcoded machine paths.
 const path = require('path');

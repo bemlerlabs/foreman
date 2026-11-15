@@ -57,8 +57,8 @@ Workflow — always in this order:
    prints the link http://127.0.0.1:8899/?job=<id> — offer it, opening it is optional.
 8. Recipe: `python3 R/scripts/foreman_flow.py recipe` writes recipe.json and recipe.md (job spec,
    acceptance criteria, all bids, the single counter-offer with its reason, receipt hash,
-   payout transaction, reputation move) and registers the recipe as an ephe skill, so it
-   shows up in the agent's skill list as well. The recipe is what the user keeps.
+   payout transaction, reputation move). The recipe is what the user keeps: two plain files,
+   readable by a person and importable into any agent's skill list.
 
 Rules:
 - Every claim is backed by a transaction id, a code_hash, an artifact_hash or a

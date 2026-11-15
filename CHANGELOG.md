@@ -9,6 +9,13 @@ is made yet.
 ## [Unreleased] — 2026-11-14
 
 ### Added
+- Two more hygiene groups, both born from this audit. `language` fails German in the shipped
+  surface — code, scripts, plugin pack, documents — while leaving `web/board/sidecar/` and
+  `artifacts/` alone, because those record what the run said and one of them mirrors text that is
+  on chain and cannot be edited. `tool references` fails any script under `scripts/` that nothing
+  in the repository calls or documents, which is how a half-finished helper survives a cleanup and
+  then reads like part of the demo. Matching is case-sensitive, so the MIT licence is not a
+  finding; `make hygiene` runs both, `--language` and `--tools` run one.
 - A CI job for the TypeScript side. `core/intents/` ships twelve `.ts` files and a `typecheck`
   script, and no gate read them — the python suites, the contract suite and the hygiene gate all
   passed with the Intents client uncompilable. `npm ci && npm run typecheck` is now the fourth job,
@@ -32,6 +39,20 @@ is made yet.
   on-screen events (`docs/assets/dual-tui-demo.mp4`).
 
 ### Changed
+- The recipe stopped being one host's skill. `scripts/make_recipe.py` wrote the recipe files and
+  then POSTed a skill definition to `http://127.0.0.1:8765/api/skills` — the local API of the agent
+  the films happened to be recorded in. Anywhere else that request returns a connection error,
+  which the script swallowed as `skill-register skipped`, so a clean clone ended the demo with a
+  line about a failure that had not happened. The two files are the deliverable:
+  `artifacts/recipes/recipe_job<N>.json` and its `.md` carry the spec, the criteria, every bid, the
+  one counter-offer with its reason, the receipt hash, the payout and the reputation move, and they
+  read the same in any host that will look at a file. The skill instructions
+  (`plugin-pack/foreman/skills/foreman/SKILL.md`) describe it that way now, and the `RECIPE_OK`
+  line the flow waits on no longer reports a `skill=` field.
+- Two comments in shipped source were still German — `core/market/__init__.py` and
+  `core/receipts/worker/latency_stats.go`. They are English now, and the recorded
+  `artifacts/worker/latency_stats.wasm` was deliberately not rebuilt: the hash the job-50 receipt
+  carries still describes the artifact that is committed here.
 - The install story stopped being one host's install story. `plugin-pack/install.sh` copied a plugin
   pack into `~/.ephe/plugins/` — a name that promised a universal installer and delivered a
   host-specific one. It now prints the `mcpServers` block for this checkout, and `--probe` starts
@@ -89,6 +110,14 @@ is made yet.
   published swarm, so every one was rebased onto `main` and its checks read again before the merge.
 
 ### Removed
+- `scripts/probe_chat.py` and `scripts/near_transfer.cjs`. The first was a development probe that
+  posted a chat message to one host's local API (`127.0.0.1:8765`, `/api/chat/stream`) to see
+  whether the plugin got routed — a question about the recording rig, not about Foreman, and the
+  endpoint is not part of this product. The second signed an account-to-account NEAR transfer,
+  which is exactly what [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) tells an operator never to do to
+  another role account to make a demo pass; funding is a human action with a faucet. Neither was
+  referenced by any script, document or test, and the top-up it performed is recorded by its
+  transaction hash in the evidence log, so nothing a reader can check disappeared with them.
 - Eight internal preparation documents (submission checklist, outreach drafts, working plans). They
   described how the entry was pitched rather than what the software does, and every claim that cited
   them now cites the vendored package or an on-chain transaction.
@@ -99,6 +128,10 @@ is made yet.
   action (see [SECURITY.md](SECURITY.md)).
 
 ### Fixed
+- `scripts/make_recipe.py` justified the `Origin` header of its skill-registration request by
+  pointing at `docs/SECURITY_AND_PRIVACY.md`, which is not a file this repository contains. <!-- hygiene:links --> It sat
+  inside a code comment, and the dead-link check reads markdown, so nothing looked at it — the
+  reference left together with the request it explained.
 - Three text claims that did not survive contact with the evidence that produced them. The host
   matrix named the second filmed model `Qwen3.6-Flash`; the terminal capture of that run shows
   `qwen3.8-flash-next`, and the endpoint the film pointed Claude Code at is a DGX Spark, so the row

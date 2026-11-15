@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 """Foreman recipe — the reusable artefact the user keeps after a settled job.
 
-Writes recipe.json + recipe.md from REAL on-chain state (board_cli JSON + sidecar).
-Also registers the recipe as an ephe skill (POST /api/skills), so it appears in the
-agent's skill list (dashboard) as well as in the chat.
+Writes recipe.json + recipe.md from REAL on-chain state (board_cli JSON + sidecar). The two
+files are the deliverable: plain, host-agnostic, and importable into whatever the user's agent
+reads, which is why nothing here talks to one host's private API.
 
-Usage: python3 scripts/make_recipe.py <job_id> [--api http://127.0.0.1:8765]
+Usage: python3 scripts/make_recipe.py <job_id>
 """
 from __future__ import annotations
 
 import json
 import sys
-import urllib.parse
-import urllib.request
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -126,51 +124,14 @@ def write(recipe: dict) -> tuple[Path, Path]:
     return j, m
 
 
-def register_as_skill(recipe: dict, api: str) -> str | None:
-    """Registers the settled job as a reusable ephe skill (a 'recipe'), so it shows up
-    in the agent's skill list and the dashboard."""
-    body = {
-        "name": f"foreman-recipe-{recipe['job_id']}",
-        "trigger": f"/foreman-recipe-{recipe['job_id']}",
-        "description": f"Re-run the foreman escrow recipe proven on job #{recipe['job_id']}: "
-                       f"hire, bid round, one counter-offer, verified accept.",
-        "tools": ["run_shell", "read_file"],
-        "system_prompt": (
-            f"You reproduce the foreman escrow recipe settled on job #{recipe['job_id']} "
-            f"({recipe['contract']}). Spec: {recipe['spec']}. "
-            f"Budget {recipe['budget_near_cent']} NEAR-cent, winning bid "
-            f"{(recipe['counter_offer'] or {}).get('price_near_cent')} NEAR-cent after exactly one "
-            f"counter-offer. Order: post the job, run the bid round, place exactly one reasoned "
-            f"counter-offer, prove the fail-closed reject without a receipt, attach the signed "
-            f"receipt, accept and report the payout. Cite transaction and receipt hashes only."
-        ),
-    }
-    # The server's CSRF gate accepts the app origin from local programs (docs/SECURITY_AND_PRIVACY.md).
-    origin = f"{urllib.parse.urlsplit(api).scheme}://{urllib.parse.urlsplit(api).netloc}"
-    req = urllib.request.Request(api.rstrip("/") + "/api/skills",
-                                 data=json.dumps(body).encode(),
-                                 headers={"Content-Type": "application/json", "Origin": origin},
-                                 method="POST")
-    try:
-        with urllib.request.urlopen(req, timeout=15) as r:
-            return json.loads(r.read()).get("name")
-    except Exception as exc:  # noqa: BLE001 — registration is best effort
-        print(f"skill-register skipped: {type(exc).__name__}: {exc}")
-        return None
-
-
 def main() -> int:
     if len(sys.argv) < 2:
         print(__doc__)
         return 2
     job = int(sys.argv[1])
-    api = "http://127.0.0.1:8765"
-    if "--api" in sys.argv:
-        api = sys.argv[sys.argv.index("--api") + 1]
     recipe = build(job)
     j, m = write(recipe)
-    name = register_as_skill(recipe, api)
-    print(f"RECIPE_OK job={job} json={j} md={m} skill={name}")
+    print(f"RECIPE_OK job={job} json={j} md={m}")
     return 0
 
 

@@ -41,7 +41,7 @@ near-cli 4.0.13, Node 22 for `core/intents`.
 | `core/reputation/` | Reputation snapshot parity with the contract formula. |
 | `core/intents/` | Treasury loop through the NEAR Intents Agent API. `dry:true` first, execute behind the `AGENT_EXECUTE` gate. |
 | `web/board/` | Zero-dependency read-only board (vanilla JS) + `sidecar/` job files. |
-| `scripts/` | Operator-facing entry points: `board_cli.py`, `e2e_demo.sh`, `judge_demo.sh`, deploy and funding helpers. |
+| `scripts/` | Operator-facing entry points: `board_cli.py`, `e2e_demo.sh`, `judge_demo.sh`, the deploy helpers and the locally-signed `send_tx` helper. |
 | `plugin-pack/` | The portable MCP stdio server and the host plugin registration files. |
 | `vendor/` | Third-party artifacts with their own licence and provenance — see `vendor/NOTICE`. |
 | `artifacts/` | Receipts, recipes, the prebuilt worker WASM: evidence, kept in the repo on purpose. |

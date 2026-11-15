@@ -153,6 +153,13 @@ Full detail, including the receipt chain and what breaks when each boundary fail
 [RULES.md](RULES.md), and every number in this file is backed by an artifact in
 [docs/EVIDENCE_LOG.md](docs/EVIDENCE_LOG.md).
 
+What each directory is responsible for, and which ones exist on purpose, is tabulated in
+[CONTRIBUTING.md](CONTRIBUTING.md#layout). Measured on this checkout: the parts you need to run
+Foreman — contract source, `core/`, `scripts/`, the board, the plugin pack and the vendored
+sandbox — are 0.86 MB across 93 files. The rest of the 46 MB clone is the evidence: 36 MB of it is
+the four demo films, 3.35 MB is the prebuilt worker WASM a reviewer would otherwise have to
+compile to reproduce a receipt, and the remaining 0.17 MB is the documentation that explains them.
+
 ## Use Foreman in any coding agent
 
 Foreman is not locked to one host. The whole workflow is a single host-agnostic CLI, and it loads as
@@ -273,7 +280,8 @@ Stated as limits, not as a roadmap:
 - **Early recorded evidence is partly German.** `payout_tx_label` strings and job 18's counter
   reason in the sidecar and recipe files were written when the demo was scripted in German, and
   job 18's reason is what is actually stored on chain — immutable. We kept the records instead of
-  editing them; newer jobs are English.
+  editing them; newer jobs are English, and the hygiene gate keeps German out of the code, scripts
+  and documents, which is the part that ships.
 - **A unilateral ghost still needs arbitration.** Mutual cancel covers both parties agreeing to
   stop; it does not decide a one-sided failure.
 

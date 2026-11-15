@@ -1,6 +1,6 @@
 package main
 
-// Mini-Demo-Worker: liest JSON {latencies_ms:[...]} von stdin, liefert Stats-JSON.
+// Demo worker: reads JSON {latencies_ms:[...]} on stdin, writes the stats JSON to stdout.
 import (
 	"encoding/json"
 	"fmt"
