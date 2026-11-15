@@ -6,7 +6,7 @@ follow [Semantic Versioning](https://semver.org/) with one honest caveat: this i
 project, so `0.x` means the on-chain surface is stable enough to demo but no compatibility promise
 is made yet.
 
-## [Unreleased] — 2026-11-14
+## [Unreleased] — 2026-11-15
 
 ### Added
 - Two more hygiene groups, both born from this audit. `language` fails German in the shipped
@@ -39,6 +39,15 @@ is made yet.
   on-screen events (`docs/assets/dual-tui-demo.mp4`).
 
 ### Changed
+- The README's account of what the repository weighs was re-measured instead of remembered, because
+  it conflated two different numbers. It now separates the committed tree (46.3 MB across 162
+  files), the part you run (0.93 MB across 97 files: `contracts/`, `core/`, `scripts/`, `web/`,
+  `plugin-pack/`, `ops/`, the vendored sandbox and the build files), and what a reviewer actually
+  transfers (65.1 MB for the full history, 40.8 MB for `git clone --depth 1`). The gap is
+  documented as what it is: three earlier cuts of the dual-host film.
+- `CONTRIBUTING.md#layout` now lists every top-level directory, including the three a reader could
+  previously not account for — `docs/`, `ops/` and `.github/` — and `ops/` is described as the
+  account-provisioning script it is rather than as metadata.
 - The recipe stopped being one host's skill. `scripts/make_recipe.py` wrote the recipe files and
   then POSTed a skill definition to `http://127.0.0.1:8765/api/skills` — the local API of the agent
   the films happened to be recorded in. Anywhere else that request returns a connection error,

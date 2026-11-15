@@ -154,11 +154,15 @@ Full detail, including the receipt chain and what breaks when each boundary fail
 [docs/EVIDENCE_LOG.md](docs/EVIDENCE_LOG.md).
 
 What each directory is responsible for, and which ones exist on purpose, is tabulated in
-[CONTRIBUTING.md](CONTRIBUTING.md#layout). Measured on this checkout: the parts you need to run
-Foreman — contract source, `core/`, `scripts/`, the board, the plugin pack and the vendored
-sandbox — are 0.86 MB across 93 files. The rest of the 46 MB clone is the evidence: 36 MB of it is
-the four demo films, 3.35 MB is the prebuilt worker WASM a reviewer would otherwise have to
-compile to reproduce a receipt, and the remaining 0.17 MB is the documentation that explains them.
+[CONTRIBUTING.md](CONTRIBUTING.md#layout). Measured on the committed tree (46.3 MB across 162
+files): everything you need to *run* Foreman — `contracts/`, `core/`, `scripts/`, `web/`,
+`plugin-pack/`, `ops/`, the vendored sandbox and the build files — is **0.93 MB across 97 files**.
+The other 45 MB is the evidence, and it divides cleanly: 36.0 MB is the four demo films, 5.8 MB the
+stills and GIFs that show the same runs inside the documents, 3.35 MB the prebuilt worker WASM a
+reviewer would otherwise have to compile to reproduce a receipt, and 0.17 MB the 26 markdown files
+that explain all of it. If the download bothers you, `git clone --depth 1` transfers 40.8 MB rather
+than 65.1 MB: the difference is three earlier cuts of the dual-host film, which was re-rendered to
+fix an opening-title collision.
 
 ## Use Foreman in any coding agent
 

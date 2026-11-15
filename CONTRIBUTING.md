@@ -45,6 +45,9 @@ near-cli 4.0.13, Node 22 for `core/intents`.
 | `plugin-pack/` | The portable MCP stdio server and the host plugin registration files. |
 | `vendor/` | Third-party artifacts with their own licence and provenance — see `vendor/NOTICE`. |
 | `artifacts/` | Receipts, recipes, the prebuilt worker WASM: evidence, kept in the repo on purpose. |
+| `docs/` | Architecture, deployment, market notes and the evidence log, plus `docs/assets/` with the films and stills they cite. |
+| `ops/` | One script: it provisions the throwaway `foreman-team.testnet` accounts the demo runs on, which is why `docs/DEPLOYMENT.md` can reproduce the fleet instead of describing it. |
+| `.github/` | CI, the proof-replay job, Dependabot and the issue/PR templates. |
 
 ## What makes a change acceptable
 
