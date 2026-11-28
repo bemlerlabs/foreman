@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/bemlerlabs/foreman#readme",
   "dependencies": {
-    "@near-intents-agent-api/sdk": "^0.9.3",
+    "@near-intents-agent-api/sdk": "^0.9.5",
     "dotenv": "^18.0.10",
     "near-api-js": "^7.5.3"
   },
